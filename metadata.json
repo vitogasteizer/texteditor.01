@@ -1,0 +1,8 @@
+{
+  "name": "TexT By AVMA",
+  "description": "უფასო ონლაინ ტექსტური რედაქტორი სადაც შეგიძლია შექმენა, დაარედაქტირო და შეინახო ლოკალურად შენი მონაცემები ბრაუზერის საცავში",
+  "requestFramePermissions": [
+    "microphone",
+    "geolocation"
+  ]
+}

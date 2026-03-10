@@ -1,0 +1,278 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Avma Text</title>
+    <link rel="icon" href="https://i.postimg.cc/MH7btH7f/avma-text.png" type="image/png">
+    <link rel="apple-touch-icon" href="https://i.postimg.cc/MH7btH7f/avma-text.png">
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arimo:wght@300;400;500;700;900&family=FiraGO:wght@300;400;500;700;900&family=Lato:wght@300;400;700;900&family=Lobster&family=Merriweather:wght@400;700&family=Montserrat:wght@300;400;500;700;900&family=Noto+Sans+Georgian:wght@300;400;500;700;900&family=Oswald:wght@400;700&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Raleway:wght@400;700&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Google API Scripts -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js" async defer></script>
+    <!-- KaTeX for Math Formulas -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+  <style>
+    @media (max-width: 768px) {
+      /* Ensure full height for app container */
+      html, body, #root, #root > div {
+        height: 100%;
+        overflow: hidden; /* Prevent body scroll */
+      }
+
+      /* Make the main app layout a flex column that takes full height */
+      .h-screen.flex.flex-col {
+        height: 100%;
+      }
+
+      /* The main content area should take up all remaining vertical space */
+      main.flex-grow {
+        padding: 0; /* Remove any desktop padding */
+        display: flex; /* Use flex to control the child */
+        flex-direction: column;
+        overflow: hidden; /* Prevent its own scrollbars */
+      }
+      
+      /* The zoom container should not scale and should fill the main area */
+      .editor-zoom-container {
+        transform: none !important;
+        padding: 0 !important;
+        width: 100% !important;
+        flex-grow: 1; /* Make it grow */
+        display: flex; /* Make it a flex container for the page */
+        flex-direction: column;
+        overflow-y: auto; /* Allow this container to scroll */
+        overflow-x: hidden;
+        align-items: stretch !important;
+      }
+
+      /* The page itself should have no margin/shadow and fill the zoom container */
+      #editor-page {
+        width: 100% !important;
+        min-height: 100% !important; /* Use min-height 100% to fill screen */
+        flex-grow: 1; /* Grow to fill parent */
+        margin: 0 !important;
+        box-shadow: none !important;
+        display: flex; /* Use flex to make the content div grow */
+        flex-direction: column;
+        padding: 0 !important; /* Remove page margins for mobile view */
+        border-radius: 0 !important;
+      }
+      
+      /* The content wrapper (div with inline styles for margins) */
+      .editor-content-wrapper {
+        padding: 1rem 1rem 5rem 1rem !important; /* Override inline style margins with small padding and extra bottom padding for toolbar */
+        min-height: auto !important; /* Allow auto height */
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* The editable content div */
+      #editor-page > div > div[contenteditable="true"] {
+        flex-grow: 1;
+        overflow-wrap: break-word; /* Ensure long words wrap */
+        word-break: break-word; /* Alternative for wrapping */
+        outline: none;
+      }
+  
+      main.bg-gray-200, main.dark\\:bg-gray-600 {
+        background-color: white !important;
+      }
+    }
+    /* Handle dark mode for mobile */
+    @media (prefers-color-scheme: dark) {
+      @media (max-width: 768px) {
+        main.bg-gray-200.dark\\:bg-gray-600 {
+          background-color: #111827 !important; /* Tailwind dark:bg-gray-900 */
+        }
+      }
+    }
+    
+    /* Styles for direct browser printing (Ctrl+P) */
+    @media print {
+      /* Hide non-editor UI elements */
+      header, footer, aside, [class*="Toolbar"], [class*="MenuBar"], [class*="StatusBar"] {
+        display: none !important;
+      }
+
+      /* Reset layout for printing */
+      body, #root, #root > div {
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+        background-color: #fff !important;
+      }
+      
+      main.flex-grow {
+         background-color: #fff !important;
+         padding: 0 !important;
+         margin: 0 !important;
+      }
+      
+      /* Remove zoom and centering from page wrapper */
+      .editor-zoom-container {
+        transform: none !important;
+        padding: 0 !important;
+        display: block !important;
+        overflow: visible !important;
+      }
+      
+      /* Style the editor page itself for print */
+      #editor-page {
+        box-shadow: none !important;
+        margin: 0 !important;
+        width: 100% !important;
+        min-height: 0 !important;
+      }
+      
+      /* The actual editable content area gets standard print margins */
+      #editor-page > div[contenteditable="true"] {
+        padding: 1in !important;
+      }
+
+      /* Handle the page break correctly */
+      .page-break-indicator {
+        page-break-after: always !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 0 !important;
+        visibility: hidden !important;
+        color: transparent !important;
+        background: none !important;
+        box-shadow: none !important;
+      }
+      /* Hide the text inside the indicator for printing */
+      .page-break-indicator * { display: none !important; }
+    }
+
+    /* Editor-specific styles */
+    #editor-page > div > div[contenteditable="true"] ul:not([data-type="checklist"]) {
+      list-style-type: disc;
+      padding-left: 2em;
+    }
+    #editor-page > div > div[contenteditable="true"] ol {
+      list-style-type: decimal;
+      padding-left: 2em;
+    }
+
+    /* Checklist styles */
+    ul[data-type="checklist"] {
+      list-style-type: none !important;
+      padding-left: 0 !important;
+      margin-left: 0 !important;
+    }
+    ul[data-type="checklist"] > li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-left: 0;
+      padding-left: 0;
+    }
+    ul[data-type="checklist"] > li > span:first-of-type {
+      flex-shrink: 0;
+      user-select: none;
+    }
+    ul[data-type="checklist"] > li[data-checked="true"] > div:last-of-type {
+      text-decoration: line-through;
+      color: #888;
+    }
+    ul[data-type="checklist"] input[type="checkbox"] {
+      width: 1rem;
+      height: 1rem;
+      cursor: pointer;
+    }
+
+    /* Math Styles */
+    .math-node {
+      display: inline-block;
+      cursor: pointer;
+      user-select: none;
+      padding: 0 2px;
+    }
+    .math-node:hover {
+      background-color: rgba(59, 130, 246, 0.1);
+      border-radius: 4px;
+    }
+
+    /* Visual Page Break in Editor */
+    /* IMPORTANT: This targets divs with this class specifically to create the "gap" effect */
+    .page-break-indicator {
+      display: block;
+      position: relative;
+      height: 30px; /* Thicker gap */
+      background-color: #e5e7eb; /* gray-200 background matching editor view bg */
+      
+      /* Negative margins to pull the gap out to the edge of the paper container.
+         These CSS variables are set on #editor-page by App.tsx */
+      margin-left: calc(-1 * var(--page-margin-left, 1in)) !important;
+      margin-right: calc(-1 * var(--page-margin-right, 1in)) !important;
+      width: calc(100% + var(--page-margin-left, 1in) + var(--page-margin-right, 1in)) !important;
+      max-width: none !important;
+      
+      margin-top: 30px;
+      margin-bottom: 30px;
+      
+      /* Borders to simulate page edges */
+      border-top: 1px solid #d1d5db; /* Bottom of page 1 */
+      border-bottom: 1px solid #d1d5db; /* Top of page 2 */
+      
+      /* Shadow to create depth */
+      box-shadow: inset 0 4px 6px -2px rgba(0, 0, 0, 0.1), inset 0 -4px 6px -2px rgba(0, 0, 0, 0.1);
+      
+      user-select: none;
+      pointer-events: none;
+    }
+    
+    .dark .page-break-indicator {
+      background-color: #4b5563; /* gray-600 matching dark mode bg */
+      border-color: #374151;
+      box-shadow: inset 0 4px 6px -2px rgba(0, 0, 0, 0.5), inset 0 -4px 6px -2px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Table Resizing Cursor */
+    .col-resize {
+        cursor: col-resize;
+    }
+  </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-gray-100">
+    <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./service-worker.js')
+            .then(registration => {
+              console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            })
+            .catch(error => {
+              console.log('ServiceWorker registration failed: ', error);
+            });
+        });
+      }
+    </script>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

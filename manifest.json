@@ -1,0 +1,23 @@
+{
+  "short_name": "Avma Text",
+  "name": "Avma Text",
+  "description": "მარტივი და უფასო ონლაინ ტექსტური რედაქტორი ძირითადი ფორმატირებისთვის. დამოკიდებულებების გარეშე, მზად არის GitHub Pages-ზე განსათავსებლად.",
+  "icons": [
+    {
+      "src": "https://i.postimg.cc/MH7btH7f/avma-text.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://i.postimg.cc/MH7btH7f/avma-text.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff"
+}
