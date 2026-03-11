@@ -1119,7 +1119,7 @@ const App: React.FC = () => {
                 />
             </div>
             
-            <div className="hidden md:block w-full border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+            <div className="hidden md:block w-full bg-white dark:bg-gray-900">
                 <Toolbar 
                   editorRef={editorRef} 
                   onCopyFormatting={handleCopyFormatting} 
@@ -1133,7 +1133,7 @@ const App: React.FC = () => {
             <div className="flex-grow flex overflow-hidden relative">
                 <TableOfContents editorRef={editorRef} content={content} />
                 <main className="flex-grow flex flex-col bg-gray-200 dark:bg-gray-600 print-view relative overflow-hidden">
-                    <div className="flex-grow overflow-auto relative flex flex-col items-center">
+                    <div className="flex-grow overflow-auto relative flex flex-col items-center pb-20 md:pb-0">
                         {isRulerVisible && (
                             <div className="sticky top-0 z-20 hidden md:flex flex-col items-center bg-gray-200 dark:bg-gray-600 w-full md:min-w-max">
                                  <div className="bg-white dark:bg-gray-800 border-b border-gray-300 dark:border-gray-600 h-6 flex shadow-sm">
@@ -1249,8 +1249,8 @@ const App: React.FC = () => {
             </div>
 
             <StatusBar stats={wordCountStats} zoomLevel={zoomLevel} onZoomIn={() => handleZoom('in')} onZoomOut={() => handleZoom('out')} t={t} />
-
-            {/* Mobile Bottom Navigation */}
+            
+            {/* Mobile/Tablet Bottom Navigation */}
             <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] pb-[env(safe-area-inset-bottom)]">
                 <div className="flex flex-col">
                     <Toolbar 
@@ -1260,26 +1260,9 @@ const App: React.FC = () => {
                       onToggleAiSidekick={() => { if (!checkAiAvailability()) return; setIsAiSidekickVisible(prev => !prev); setActivePanel(null); setIsCommentsSidebarVisible(false); setIsShortcutsSidebarVisible(false); }}
                       onInsertChecklist={handleInsertChecklist}
                       onOpenMenu={() => setIsMobileMenuOpen(true)}
+                      isBottom={true}
                       t={t}
                     />
-                    <div className="flex items-center justify-around p-2 border-t border-gray-100 dark:border-gray-800">
-                        <button onClick={handleNewDocument} className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex flex-col items-center gap-1">
-                            <FilePlusIcon className="w-5 h-5" />
-                            <span className="text-[10px]">{t('menu.fileNew')}</span>
-                        </button>
-                        <button onClick={() => setView('drive')} className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex flex-col items-center gap-1">
-                            <FolderIcon className="w-5 h-5" />
-                            <span className="text-[10px]">{t('menu.fileViewSaved')}</span>
-                        </button>
-                        <button onClick={handleSaveDocument} className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex flex-col items-center gap-1">
-                            <SaveIcon className="w-5 h-5" />
-                            <span className="text-[10px]">{t('menu.fileSave')}</span>
-                        </button>
-                        <button onClick={() => setIsShortcutsSidebarVisible(true)} className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex flex-col items-center gap-1">
-                            <KeyboardIcon className="w-5 h-5" />
-                            <span className="text-[10px]">{t('menu.helpShortcuts')}</span>
-                        </button>
-                    </div>
                 </div>
             </div>
         </>

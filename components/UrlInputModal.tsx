@@ -51,35 +51,58 @@ const UrlInputModal: React.FC<UrlInputModalProps> = ({
 
   return (
     <div 
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity" 
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100] transition-all duration-300 animate-in fade-in" 
         onClick={handleWrapperClick}
         role="dialog"
         aria-modal="true"
         aria-labelledby="url-input-title"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-        <h3 id="url-input-title" className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">{title}</h3>
-        <div>
-          <label htmlFor="url-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
-          <input
-            ref={inputRef}
-            type="text"
-            id="url-input"
-            value={value}
-            onChange={e => setValue(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            placeholder={placeholder}
-            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-          />
+      <div 
+        className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-200 dark:border-gray-800 animate-in zoom-in-95 duration-300" 
+        onClick={e => e.stopPropagation()}
+      >
+        <header className="p-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-900">
+            <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.5)]"></div>
+                <h3 id="url-input-title" className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-widest">{title}</h3>
+            </div>
+            <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-400">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </header>
+
+        <div className="p-6 space-y-4 bg-gray-50 dark:bg-gray-950">
+          <div>
+            <label htmlFor="url-input" className="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 ml-1">{label}</label>
+            <input
+              ref={inputRef}
+              type="text"
+              id="url-input"
+              value={value}
+              onChange={e => setValue(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-all font-medium"
+              placeholder={placeholder}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+            />
+          </div>
         </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <button onClick={onClose} type="button" className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-600 border border-transparent rounded-md hover:bg-gray-200 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+
+        <footer className="p-5 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3 bg-white dark:bg-gray-900">
+          <button 
+            onClick={onClose} 
+            type="button" 
+            className="px-6 py-2.5 text-xs font-bold text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all active:scale-95 uppercase tracking-wider"
+          >
             {t('modals.sourceCode.cancel')}
           </button>
-          <button onClick={handleSubmit} type="button" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+          <button 
+            onClick={handleSubmit} 
+            type="button" 
+            className="px-8 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95 uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             {submitButtonText}
           </button>
-        </div>
+        </footer>
       </div>
     </div>
   );

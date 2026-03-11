@@ -1,7 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { MenuIcon, CloseIcon, FilePlusIcon, SaveIcon, FolderIcon, DownloadIcon, PrinterIcon, UndoIcon, RedoIcon, ScissorsIcon, CopyIcon, ClipboardIcon, SelectAllIcon, SearchIcon, LinkIcon, ImageIcon, TableIcon, MinusIcon, MessageSquareIcon, CodeIcon, BarChartIcon, EyeIcon, MaximizeIcon, InfoIcon, OmegaIcon, PaintBrushIcon, PdfIcon, SquareIcon, CircleIcon, TriangleIcon, TypeIcon, ChevronRightIcon, FileTextIcon, SplitSquareVerticalIcon, RectangleVerticalIcon, RectangleHorizontalIcon, LanguageIcon, SparklesIcon, Volume2Icon, KeyboardIcon, ChecklistIcon, UploadCloudIcon, PencilIcon, SlashIcon, MathIcon } from './icons/EditorIcons';
+import { useUIStore } from '../store/uiStore';
+import { MenuIcon, CloseIcon, FilePlusIcon, SaveIcon, FolderIcon, DownloadIcon, PrinterIcon, UndoIcon, RedoIcon, ScissorsIcon, CopyIcon, ClipboardIcon, SelectAllIcon, SearchIcon, LinkIcon, ImageIcon, TableIcon, MinusIcon, MessageSquareIcon, CodeIcon, BarChartIcon, EyeIcon, MaximizeIcon, InfoIcon, OmegaIcon, PaintBrushIcon, PdfIcon, SquareIcon, CircleIcon, TriangleIcon, TypeIcon, ChevronRightIcon, FileTextIcon, SplitSquareVerticalIcon, RectangleVerticalIcon, RectangleHorizontalIcon, LanguageIcon, SparklesIcon, Volume2Icon, KeyboardIcon, ChecklistIcon, UploadCloudIcon, PencilIcon, SlashIcon, MathIcon, SunIcon, MoonIcon } from './icons/EditorIcons';
 import type { ShapeType } from '../App';
 import type { Language } from '../lib/translations';
 
@@ -121,46 +122,61 @@ const MenuDropdown: React.FC<{ label: string; items: MenuItem[] }> = ({ label, i
         onClick={() => setIsOpen(!isOpen)}
         aria-haspopup="true"
         aria-expanded={isOpen}
-        className="px-3 py-1.5 text-sm rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors duration-150"
+        className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none ${
+          isOpen 
+            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 shadow-sm' 
+            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+        }`}
       >
         {label}
       </button>
       {isOpen && (
-        <div className="absolute left-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-10 border border-gray-200 dark:border-gray-700" role="menu" onMouseLeave={() => setOpenSubmenu(null)}>
+        <div 
+          className="absolute left-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl py-2 z-50 border border-gray-200 dark:border-gray-700 animate-in fade-in zoom-in-95 duration-200 origin-top-left" 
+          role="menu" 
+          onMouseLeave={() => setOpenSubmenu(null)}
+        >
           {items.map((item, index) =>
             item.separator ? (
-              <div key={`sep-${index}`} className="border-t border-gray-200 dark:border-gray-700 my-1" />
+              <div key={`sep-${index}`} className="border-t border-gray-100 dark:border-gray-700 my-1.5 mx-2" />
             ) : (
-              <div key={item.label} onMouseEnter={(e) => handleSubmenuEnter(e, item)}>
+              <div key={item.label} className="px-1.5" onMouseEnter={(e) => handleSubmenuEnter(e, item)}>
                   <button
                     onClick={() => handleAction(item.action)}
-                    className="text-left w-full px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center justify-between"
+                    className={`text-left w-full px-3 py-2 text-sm rounded-lg flex items-center justify-between transition-all duration-150 ${
+                      openSubmenu === item.label
+                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                    }`}
                     role="menuitem"
                     disabled={!item.action && !item.items}
                   >
-                    <div className="flex items-center">
-                      {item.icon}
-                      <span>{item.label}</span>
+                    <div className="flex items-center gap-3">
+                      <span className={`transition-transform duration-200 ${openSubmenu === item.label ? 'scale-110' : ''}`}>
+                        {item.icon}
+                      </span>
+                      <span className="font-medium">{item.label}</span>
                     </div>
-                    {item.items && <ChevronRightIcon />}
+                    {item.items && <ChevronRightIcon className="w-4 h-4 opacity-50" />}
                   </button>
                   {item.items && openSubmenu === item.label && submenuPosition && createPortal(
                     <div 
-                        className="fixed w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-20 border border-gray-200 dark:border-gray-700"
+                        className="fixed w-56 bg-white dark:bg-gray-800 rounded-xl shadow-2xl py-2 z-[60] border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-left-2 duration-200"
                         style={{ top: `${submenuPosition.top}px`, left: `${submenuPosition.left}px`}}
                         onMouseEnter={() => setOpenSubmenu(item.label)}
                         role="menu"
                     >
                         {item.items.map(subItem => (
-                             <button
-                                key={subItem.label}
-                                onClick={() => handleAction(subItem.action)}
-                                className="text-left w-full px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center"
-                                role="menuitem"
-                            >
-                                {subItem.icon}
-                                <span>{subItem.label}</span>
-                            </button>
+                             <div key={subItem.label} className="px-1.5">
+                                <button
+                                    onClick={() => handleAction(subItem.action)}
+                                    className="text-left w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg flex items-center gap-3 transition-colors font-medium"
+                                    role="menuitem"
+                                >
+                                    <span className="opacity-70">{subItem.icon}</span>
+                                    <span>{subItem.label}</span>
+                                </button>
+                             </div>
                         ))}
                     </div>,
                     document.body
@@ -254,6 +270,7 @@ const AutoSaveStatus: React.FC<{ isSaving: boolean; lastSaved: number | null; is
 
 const MenuBar: React.FC<MenuBarProps> = (props) => {
     const { t } = props;
+    const { theme, toggleTheme } = useUIStore();
     const [internalIsMobileMenuOpen, setInternalIsMobileMenuOpen] = useState(false);
     const isMobileMenuOpen = props.isMobileMenuOpen !== undefined ? props.isMobileMenuOpen : internalIsMobileMenuOpen;
     const setIsMobileMenuOpen = props.setIsMobileMenuOpen !== undefined ? props.setIsMobileMenuOpen : setInternalIsMobileMenuOpen;
@@ -405,6 +422,24 @@ const MenuBar: React.FC<MenuBarProps> = (props) => {
                         </button>
                     </div>
                     <ul className="flex-grow overflow-y-auto pb-20">
+                        <li className="border-b border-gray-100 dark:border-gray-800">
+                            <button
+                                onClick={toggleTheme}
+                                className="w-full text-left flex justify-between items-center p-5 active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <span className="text-gray-600 dark:text-gray-400">
+                                        {theme === 'light' ? <MoonIcon className="w-6 h-6" /> : <SunIcon className="w-6 h-6" />}
+                                    </span>
+                                    <span className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                                        {theme === 'light' ? t('toolbar.darkMode') : t('toolbar.lightMode')}
+                                    </span>
+                                </div>
+                                <div className={`w-12 h-6 rounded-full relative transition-colors duration-200 ${theme === 'dark' ? 'bg-blue-600' : 'bg-gray-300'}`}>
+                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-200 ${theme === 'dark' ? 'left-7' : 'left-1'}`} />
+                                </div>
+                            </button>
+                        </li>
                         {menus.map(menu => (
                             <MobileAccordionItem 
                                 key={menu.label} 

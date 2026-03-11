@@ -33,6 +33,11 @@
         overflow: hidden; /* Prevent body scroll */
       }
 
+      /* Hide rulers on mobile/tablet to save space */
+      .sticky.left-0.w-6, .sticky.top-0.z-20 {
+        display: none !important;
+      }
+
       /* Make the main app layout a flex column that takes full height */
       .h-screen.flex.flex-col {
         height: 100%;
@@ -51,6 +56,7 @@
         transform: none !important;
         padding: 0 !important;
         width: 100% !important;
+        max-width: 100% !important;
         flex-grow: 1; /* Make it grow */
         display: flex; /* Make it a flex container for the page */
         flex-direction: column;
@@ -62,23 +68,22 @@
       /* The page itself should have no margin/shadow and fill the zoom container */
       #editor-page {
         width: 100% !important;
+        max-width: 100% !important;
         min-height: 100% !important; /* Use min-height 100% to fill screen */
-        flex-grow: 1; /* Grow to fill parent */
         margin: 0 !important;
         box-shadow: none !important;
-        display: flex; /* Use flex to make the content div grow */
-        flex-direction: column;
         padding: 0 !important; /* Remove page margins for mobile view */
         border-radius: 0 !important;
       }
       
       /* The content wrapper (div with inline styles for margins) */
       .editor-content-wrapper {
-        padding: 1rem 1rem 5rem 1rem !important; /* Override inline style margins with small padding and extra bottom padding for toolbar */
-        min-height: auto !important; /* Allow auto height */
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
+        padding: 1.5rem 1rem 8rem 1rem !important; /* Override inline style margins with small padding and extra bottom padding for toolbar */
+        min-height: 100vh !important;
+        width: 100% !important;
+        max-width: 800px !important; /* Keep text readable on wide tablets */
+        margin: 0 auto !important; /* Center the content area */
+        box-sizing: border-box !important;
       }
 
       /* The editable content div */
@@ -87,6 +92,7 @@
         overflow-wrap: break-word; /* Ensure long words wrap */
         word-break: break-word; /* Alternative for wrapping */
         outline: none;
+        font-size: 16px !important; /* Better default size for mobile */
       }
   
       main.bg-gray-200, main.dark\\:bg-gray-600 {
@@ -247,6 +253,21 @@
     /* Table Resizing Cursor */
     .col-resize {
         cursor: col-resize;
+    }
+    
+    /* Hide scrollbar utility */
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* Ensure bottom nav is hidden on desktop */
+    @media (min-width: 768px) {
+      .fixed.bottom-0.z-50 {
+        display: none !important;
+      }
     }
   </style>
   <script type="importmap">

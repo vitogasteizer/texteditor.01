@@ -18,13 +18,18 @@ const CommentCard: React.FC<{ comment: Comment; onResolve: (id: string) => void;
   });
 
   return (
-    <div className="bg-white dark:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
-      <p className="text-sm text-gray-800 dark:text-gray-100 mb-2">{comment.text}</p>
-      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-        <span>{formattedDate}</span>
+    <div className="group bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200">
+      <div className="flex items-start justify-between mb-2">
+        <p className="text-sm font-medium text-gray-800 dark:text-gray-100 leading-relaxed">{comment.text}</p>
+      </div>
+      <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50 dark:border-gray-700/50">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+          <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{formattedDate}</span>
+        </div>
         <button 
             onClick={() => onResolve(comment.id)}
-            className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+            className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors px-2 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
         >
             {t('comments.resolve')}
         </button>
@@ -35,14 +40,17 @@ const CommentCard: React.FC<{ comment: Comment; onResolve: (id: string) => void;
 
 const CommentsSidebar: React.FC<CommentsSidebarProps> = ({ comments, onResolve, onClose, onAddComment, t }) => {
   return (
-    <aside className="w-full md:w-80 bg-gray-100 dark:bg-gray-800 md:border-l border-gray-200 dark:border-gray-700 flex flex-col h-full">
-      <header className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
-        <h2 className="font-semibold text-gray-800 dark:text-gray-100">{t('comments.title')}</h2>
-        <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" aria-label={t('comments.close')}>
-          <CloseIcon />
+    <aside className="w-full md:w-80 bg-gray-50 dark:bg-gray-900 md:border-l border-gray-200 dark:border-gray-800 flex flex-col h-full animate-in slide-in-from-right duration-300">
+      <header className="p-5 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between flex-shrink-0 bg-white dark:bg-gray-900">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.5)]"></div>
+          <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-widest">{t('comments.title')}</h2>
+        </div>
+        <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-400" aria-label={t('comments.close')}>
+          <CloseIcon className="w-5 h-5" />
         </button>
       </header>
-      <div className="flex-grow p-4 overflow-y-auto">
+      <div className="flex-grow p-5 overflow-y-auto custom-scrollbar">
         {comments.length > 0 ? (
           <div className="space-y-4">
             {comments.map(comment => (
@@ -50,16 +58,18 @@ const CommentsSidebar: React.FC<CommentsSidebarProps> = ({ comments, onResolve, 
             ))}
           </div>
         ) : (
-          <div className="text-center text-sm text-gray-500 dark:text-gray-400 pt-10 flex flex-col items-center">
-            <MessageSquareIcon />
-            <p className="mt-2">{t('comments.noComments')}</p>
+          <div className="text-center py-20 flex flex-col items-center opacity-40">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+              <MessageSquareIcon className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('comments.noComments')}</p>
           </div>
         )}
       </div>
-      <footer className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+      <footer className="p-5 border-t border-gray-200 dark:border-gray-800 flex-shrink-0 bg-white dark:bg-gray-900">
           <button
             onClick={onAddComment}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="w-full flex items-center justify-center gap-3 px-6 py-3 text-sm font-bold text-white bg-blue-600 rounded-xl shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95"
           >
             <MessageSquareIcon className="w-5 h-5" />
             {t('comments.addComment')}
