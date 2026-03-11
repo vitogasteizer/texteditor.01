@@ -13,7 +13,7 @@ interface StatusBarProps {
 
 const StatusBar: React.FC<StatusBarProps> = ({ stats, zoomLevel, onZoomIn, onZoomOut, t }) => {
   return (
-    <footer className="h-8 px-4 bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 flex-shrink-0 z-10">
+    <footer className="hidden md:flex h-8 px-4 bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 items-center justify-between text-sm text-gray-600 dark:text-gray-400 flex-shrink-0 z-10">
       <div className="flex items-center gap-4">
         <span>{t('statusbar.words')}: {stats.words}</span>
         <span>{t('statusbar.characters')}: {stats.characters}</span>

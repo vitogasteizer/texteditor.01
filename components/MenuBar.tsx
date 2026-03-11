@@ -62,6 +62,8 @@ interface MenuBarProps {
   onToggleRuler: () => void;
   isRulerVisible: boolean;
   onOpenFileImport: () => void;
+  isMobileMenuOpen?: boolean;
+  setIsMobileMenuOpen?: (open: boolean) => void;
   t: (key: string, replacements?: { [key: string]: string | number }) => string;
 }
 
@@ -181,32 +183,34 @@ const MobileAccordionItem: React.FC<{
     onToggle: () => void;
 }> = ({ label, items, onAction, isOpen, onToggle }) => {
     return (
-        <li className="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+        <li className="border-b border-gray-100 dark:border-gray-800 last:border-b-0">
             <button
                 onClick={onToggle}
-                className="w-full text-left flex justify-between items-center p-4"
+                className="w-full text-left flex justify-between items-center p-5 active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
                 aria-expanded={isOpen}
             >
-                <span className="text-lg font-medium">{label}</span>
-                <svg className={`w-5 h-5 transform transition-transform text-gray-500 ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                <span className="text-lg font-semibold text-gray-800 dark:text-gray-100">{label}</span>
+                <ChevronRightIcon className={`w-5 h-5 transform transition-transform text-gray-400 ${isOpen ? 'rotate-90' : ''}`} />
             </button>
             {isOpen && (
-                <div className="pb-2 px-4">
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
+                <div className="pb-4 px-2 bg-gray-50/50 dark:bg-gray-800/30">
+                    <div className="space-y-1">
                         {items.map((item, index) =>
                             item.separator ? (
-                                <div key={`sep-${index}`} className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                                <div key={`sep-${index}`} className="border-t border-gray-200 dark:border-gray-700 my-2 mx-4" />
                             ) : item.items ? (
-                                <div key={item.label}>
-                                    <h3 className="px-2 py-2 text-sm font-semibold text-gray-500 dark:text-gray-400 flex items-center">{item.icon} {item.label}</h3>
-                                    <div className="pl-4">
+                                <div key={item.label} className="mt-2">
+                                    <h3 className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 flex items-center gap-2">
+                                        {item.icon} {item.label}
+                                    </h3>
+                                    <div className="space-y-1">
                                         {item.items.map(subItem => (
                                              <button
                                                 key={subItem.label}
                                                 onClick={() => onAction(subItem.action)}
-                                                className="text-left block w-full px-2 py-2 text-base text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md flex items-center"
+                                                className="text-left block w-full px-6 py-3 text-base text-gray-700 dark:text-gray-200 active:bg-gray-200 dark:active:bg-gray-700 rounded-lg flex items-center gap-3"
                                             >
-                                                {subItem.icon}
+                                                <span className="opacity-70">{subItem.icon}</span>
                                                 <span>{subItem.label}</span>
                                             </button>
                                         ))}
@@ -216,9 +220,9 @@ const MobileAccordionItem: React.FC<{
                                 <button
                                     key={item.label}
                                     onClick={() => onAction(item.action)}
-                                    className="text-left block w-full px-2 py-2 text-base text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md flex items-center"
+                                    className="text-left block w-full px-4 py-3 text-base text-gray-700 dark:text-gray-200 active:bg-gray-200 dark:active:bg-gray-700 rounded-lg flex items-center gap-3"
                                 >
-                                    {item.icon}
+                                    <span className="opacity-70">{item.icon}</span>
                                     <span>{item.label}</span>
                                 </button>
                             )
@@ -250,7 +254,10 @@ const AutoSaveStatus: React.FC<{ isSaving: boolean; lastSaved: number | null; is
 
 const MenuBar: React.FC<MenuBarProps> = (props) => {
     const { t } = props;
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [internalIsMobileMenuOpen, setInternalIsMobileMenuOpen] = useState(false);
+    const isMobileMenuOpen = props.isMobileMenuOpen !== undefined ? props.isMobileMenuOpen : internalIsMobileMenuOpen;
+    const setIsMobileMenuOpen = props.setIsMobileMenuOpen !== undefined ? props.setIsMobileMenuOpen : setInternalIsMobileMenuOpen;
+    
     const [openAccordion, setOpenAccordion] = useState<string | null>(null);
 
     const handleAccordionToggle = (label: string) => {
@@ -371,7 +378,7 @@ const MenuBar: React.FC<MenuBarProps> = (props) => {
 
     return (
         <nav className="px-2 py-1 flex items-center md:w-full">
-            <div className="md:hidden">
+            <div className="hidden">
                 <button
                     onClick={() => setIsMobileMenuOpen(true)}
                     className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
@@ -390,14 +397,14 @@ const MenuBar: React.FC<MenuBarProps> = (props) => {
             <AutoSaveStatus isSaving={props.isSaving} lastSaved={props.lastSaved} isDocumentSaved={props.isDocumentSaved} t={t} />
             
             {isMobileMenuOpen && (
-                <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex flex-col" role="dialog" aria-modal="true">
-                    <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-                        <h2 className="text-lg font-semibold">Menu</h2>
-                        <button onClick={() => setIsMobileMenuOpen(false)} className="p-2" aria-label="Close menu">
-                            <CloseIcon />
+                <div className="fixed inset-0 bg-white dark:bg-gray-900 z-[100] flex flex-col animate-in slide-in-from-bottom duration-300" role="dialog" aria-modal="true">
+                    <div className="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('menu.file')} & {t('menu.tools')}</h2>
+                        <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full" aria-label="Close menu">
+                            <CloseIcon className="w-6 h-6" />
                         </button>
                     </div>
-                    <ul className="flex-grow overflow-y-auto">
+                    <ul className="flex-grow overflow-y-auto pb-20">
                         {menus.map(menu => (
                             <MobileAccordionItem 
                                 key={menu.label} 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon, ListOrderedIcon, ListUnorderedIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon, AlignJustifyIcon, UndoIcon, RedoIcon, ClearFormattingIcon, ChevronDownIcon, TextColorIcon, BgColorIcon, LineHeightIcon, PaintBrushIcon, TextShadowIcon, SparklesIcon, ChecklistIcon, ChevronRightIcon, SunIcon, MoonIcon } from './icons/EditorIcons';
+import { BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon, ListOrderedIcon, ListUnorderedIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon, AlignJustifyIcon, UndoIcon, RedoIcon, ClearFormattingIcon, ChevronDownIcon, TextColorIcon, BgColorIcon, LineHeightIcon, PaintBrushIcon, TextShadowIcon, SparklesIcon, ChecklistIcon, ChevronRightIcon, SunIcon, MoonIcon, MenuIcon } from './icons/EditorIcons';
 import TextShadowDropdown from './TextShadowDropdown';
 import { useUIStore } from '../store/uiStore';
 
@@ -12,6 +12,7 @@ interface ToolbarProps {
   isFormatPainterActive: boolean;
   onToggleAiSidekick: () => void;
   onInsertChecklist: () => void;
+  onOpenMenu?: () => void;
   t: (key: string, replacements?: { [key: string]: string | number }) => string;
 }
 
@@ -470,7 +471,7 @@ const FontSizeCombobox: React.FC<{ value: string; onChange: (size: number) => vo
 };
 
 
-const Toolbar: React.FC<ToolbarProps> = ({ editorRef, onCopyFormatting, isFormatPainterActive, onToggleAiSidekick, onInsertChecklist, t }) => {
+const Toolbar: React.FC<ToolbarProps> = ({ editorRef, onCopyFormatting, isFormatPainterActive, onToggleAiSidekick, onInsertChecklist, onOpenMenu, t }) => {
     const { theme, toggleTheme } = useUIStore();
     const [toolbarState, setToolbarState] = useState({
         fontName: 'Arial',
@@ -657,15 +658,22 @@ const Toolbar: React.FC<ToolbarProps> = ({ editorRef, onCopyFormatting, isFormat
 
 
   return (
-    <div className="p-2 bg-transparent flex items-center justify-between">
-      <div className="flex-1 min-w-0 flex items-center flex-nowrap gap-1 overflow-x-auto md:overflow-visible">
-        <div className="flex items-center gap-1 border-r border-gray-300 dark:border-gray-600 pr-2 mr-2">
+    <div className="p-1 md:p-2 bg-white dark:bg-gray-900 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+      <div className="flex-1 min-w-0 flex items-center flex-nowrap gap-0.5 md:gap-1 overflow-x-auto md:overflow-visible">
+        {onOpenMenu && (
+          <div className="md:hidden flex items-center pr-1 border-r border-gray-300 dark:border-gray-600 mr-1">
+            <ToolbarButton onAction={onOpenMenu} tooltip="Menu">
+              <MenuIcon />
+            </ToolbarButton>
+          </div>
+        )}
+        <div className="flex items-center gap-0.5 md:gap-1 border-r border-gray-300 dark:border-gray-600 pr-1 md:pr-2 mr-1 md:mr-2">
           <ToolbarButton onAction={() => executeCommand('undo')} tooltip={t('toolbar.undo')}><UndoIcon /></ToolbarButton>
           <ToolbarButton onAction={() => executeCommand('redo')} tooltip={t('toolbar.redo')}><RedoIcon /></ToolbarButton>
           <ToolbarButton onAction={onCopyFormatting} tooltip={t('toolbar.formatPainter')} isActive={isFormatPainterActive}><PaintBrushIcon /></ToolbarButton>
         </div>
         
-        <div className="flex items-center gap-2 border-r border-gray-300 dark:border-gray-600 pr-2 mr-2">
+        <div className="flex items-center gap-1 md:gap-2 border-r border-gray-300 dark:border-gray-600 pr-1 md:pr-2 mr-1 md:mr-2">
            <FontFamilyDropdown label={fontLabel} items={fontFamilies} onSelect={applyFontFamily} />
            <FontSizeCombobox value={toolbarState.fontSize} onChange={applyFontSize} />
         </div>
@@ -705,9 +713,6 @@ const Toolbar: React.FC<ToolbarProps> = ({ editorRef, onCopyFormatting, isFormat
       <div className="flex items-center pl-2 gap-1">
         <ToolbarButton onAction={toggleTheme} tooltip={theme === 'light' ? t('toolbar.darkMode') : t('toolbar.lightMode')}>
             {theme === 'light' ? <MoonIcon /> : <SunIcon />}
-        </ToolbarButton>
-        <ToolbarButton onAction={onToggleAiSidekick} tooltip={t('toolbar.aiAssistant')}>
-            <SparklesIcon className="text-yellow-500" />
         </ToolbarButton>
       </div>
       {isTextShadowDropdownOpen && (

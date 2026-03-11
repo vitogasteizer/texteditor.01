@@ -29,6 +29,7 @@ import TemplatesModal from './components/TemplatesModal';
 import InsertMathModal from './components/InsertMathModal';
 import Ruler from './components/Ruler';
 import TableOfContents from './components/TableOfContents';
+import { FilePlusIcon, FolderIcon, SaveIcon, KeyboardIcon } from './components/icons/EditorIcons';
 import { translations, Language } from './lib/translations';
 import { saveDocument, getAllDocuments, deleteDocument, saveAllDocuments } from './lib/db';
 import { initGoogleDrive, handleAuthClick, handleSignOut, listDriveFiles, saveToDrive, loadFromDrive } from './lib/googleDrive';
@@ -157,6 +158,7 @@ const App: React.FC = () => {
   const [previewDocContent, setPreviewDocContent] = useState('');
   const [isAboutModalVisible, setIsAboutModalVisible] = useState(false);
   const [isShortcutsSidebarVisible, setIsShortcutsSidebarVisible] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isImportModalVisible, setIsImportModalVisible] = useState(false);
   const [isDrawingModalVisible, setIsDrawingModalVisible] = useState(false);
   const [editingDrawingElement, setEditingDrawingElement] = useState<HTMLImageElement | null>(null);
@@ -1020,7 +1022,7 @@ const App: React.FC = () => {
     <div className="h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col font-sans overflow-hidden">
       {view === 'editor' ? (
         <>
-            <header className="sticky top-0 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm flex items-center md:block border-b border-gray-200/50 dark:border-gray-700/50">
+            <header className="sticky top-0 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm hidden md:block border-b border-gray-200/50 dark:border-gray-700/50">
                  <MenuBar 
                   onNewDocument={handleNewDocument}
                   onNewFromTemplate={() => setIsTemplatesModalVisible(true)}
@@ -1062,19 +1064,71 @@ const App: React.FC = () => {
                   isRulerVisible={isRulerVisible}
                   onOpenFileImport={() => { saveSelection(); setIsImportModalVisible(true); }}
                   onInsertDrawing={() => { saveSelection(); setIsDrawingModalVisible(true); setEditingDrawingElement(null); }}
+                  isMobileMenuOpen={isMobileMenuOpen}
+                  setIsMobileMenuOpen={setIsMobileMenuOpen}
                   t={t}
                 />
-                <div className="w-full md:border-t md:border-gray-200 md:dark:border-gray-700 max-md:fixed max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:z-50 max-md:bg-white max-md:dark:bg-gray-900 max-md:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] max-md:pb-[env(safe-area-inset-bottom)]">
-                    <Toolbar 
-                      editorRef={editorRef} 
-                      onCopyFormatting={handleCopyFormatting} 
-                      isFormatPainterActive={isFormatPainterActive}
-                      onToggleAiSidekick={() => { if (!checkAiAvailability()) return; setIsAiSidekickVisible(prev => !prev); setActivePanel(null); setIsCommentsSidebarVisible(false); setIsShortcutsSidebarVisible(false); }}
-                      onInsertChecklist={handleInsertChecklist}
-                      t={t}
-                    />
-                </div>
             </header>
+            
+            {/* Mobile MenuBar (hidden nav, but needed for portal) */}
+            <div className="md:hidden">
+                <MenuBar 
+                  onNewDocument={handleNewDocument}
+                  onNewFromTemplate={() => setIsTemplatesModalVisible(true)}
+                  onSave={handleSaveDocument}
+                  onViewSaved={() => setView('drive')}
+                  onExportToWord={handleExportToWord}
+                  onExportToPdf={handleExportToPdf}
+                  onPrint={() => printOrPreview(true)}
+                  onEditAction={handleEditAction}
+                  onOpenFindReplace={() => openPanel('findReplace')}
+                  onCopyFormatting={handleCopyFormatting}
+                  onInsertLink={() => openPanel('link')}
+                  onInsertImage={() => openPanel('image')}
+                  onInsertTable={() => openPanel('table')}
+                  onInsertShape={handleInsertShape}
+                  onInsertHorizontalRule={() => handleEditAction('insertHorizontalRule')}
+                  onAddComment={() => { saveSelection(); handleOpenCommentModal(); }}
+                  onOpenSourceCode={() => setIsSourceCodeVisible(true)}
+                  onOpenWordCount={() => setIsWordCountVisible(true)}
+                  onToggleFullscreen={handleToggleFullscreen}
+                  onPreview={() => printOrPreview(false)}
+                  onShowComments={() => { setIsCommentsSidebarVisible(prev => !prev); setActivePanel(null); setIsAiSidekickVisible(false); setIsShortcutsSidebarVisible(false); }}
+                  onToggleAiSidekick={() => { if (!checkAiAvailability()) return; setIsAiSidekickVisible(prev => !prev); setActivePanel(null); setIsCommentsSidebarVisible(false); setIsShortcutsSidebarVisible(false); }}
+                  onOpenShortcuts={() => { setIsShortcutsSidebarVisible(prev => !prev); setActivePanel(null); setIsCommentsSidebarVisible(false); setIsAiSidekickVisible(false); }}
+                  onOpenSpecialCharacters={() => { saveSelection(); setIsSpecialCharVisible(true); }}
+                  isSaving={isSaving}
+                  lastSaved={lastSaved}
+                  isDocumentSaved={!!currentDocId}
+                  onOpenPageSetup={() => setIsPageSetupVisible(true)}
+                  onOpenAboutModal={() => setIsAboutModalVisible(true)}
+                  onInsertPageBreak={handleInsertPageBreak}
+                  onInsertMath={() => { saveSelection(); setEditingMathElement(null); setIsMathModalVisible(true); }}
+                  onSetLanguage={setLanguage}
+                  onReadAloud={handleReadAloud}
+                  isReadingAloud={isReadingAloud}
+                  onToggleSpellcheck={() => setIsSpellcheckEnabled(prev => !prev)}
+                  isSpellcheckEnabled={isSpellcheckEnabled}
+                  onToggleRuler={() => setIsRulerVisible(prev => !prev)}
+                  isRulerVisible={isRulerVisible}
+                  onOpenFileImport={() => { saveSelection(); setIsImportModalVisible(true); }}
+                  onInsertDrawing={() => { saveSelection(); setIsDrawingModalVisible(true); setEditingDrawingElement(null); }}
+                  isMobileMenuOpen={isMobileMenuOpen}
+                  setIsMobileMenuOpen={setIsMobileMenuOpen}
+                  t={t}
+                />
+            </div>
+            
+            <div className="hidden md:block w-full border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                <Toolbar 
+                  editorRef={editorRef} 
+                  onCopyFormatting={handleCopyFormatting} 
+                  isFormatPainterActive={isFormatPainterActive}
+                  onToggleAiSidekick={() => { if (!checkAiAvailability()) return; setIsAiSidekickVisible(prev => !prev); setActivePanel(null); setIsCommentsSidebarVisible(false); setIsShortcutsSidebarVisible(false); }}
+                  onInsertChecklist={handleInsertChecklist}
+                  t={t}
+                />
+            </div>
             
             <div className="flex-grow flex overflow-hidden relative">
                 <TableOfContents editorRef={editorRef} content={content} />
@@ -1195,6 +1249,39 @@ const App: React.FC = () => {
             </div>
 
             <StatusBar stats={wordCountStats} zoomLevel={zoomLevel} onZoomIn={() => handleZoom('in')} onZoomOut={() => handleZoom('out')} t={t} />
+
+            {/* Mobile Bottom Navigation */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] pb-[env(safe-area-inset-bottom)]">
+                <div className="flex flex-col">
+                    <Toolbar 
+                      editorRef={editorRef} 
+                      onCopyFormatting={handleCopyFormatting} 
+                      isFormatPainterActive={isFormatPainterActive}
+                      onToggleAiSidekick={() => { if (!checkAiAvailability()) return; setIsAiSidekickVisible(prev => !prev); setActivePanel(null); setIsCommentsSidebarVisible(false); setIsShortcutsSidebarVisible(false); }}
+                      onInsertChecklist={handleInsertChecklist}
+                      onOpenMenu={() => setIsMobileMenuOpen(true)}
+                      t={t}
+                    />
+                    <div className="flex items-center justify-around p-2 border-t border-gray-100 dark:border-gray-800">
+                        <button onClick={handleNewDocument} className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex flex-col items-center gap-1">
+                            <FilePlusIcon className="w-5 h-5" />
+                            <span className="text-[10px]">{t('menu.fileNew')}</span>
+                        </button>
+                        <button onClick={() => setView('drive')} className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex flex-col items-center gap-1">
+                            <FolderIcon className="w-5 h-5" />
+                            <span className="text-[10px]">{t('menu.fileViewSaved')}</span>
+                        </button>
+                        <button onClick={handleSaveDocument} className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex flex-col items-center gap-1">
+                            <SaveIcon className="w-5 h-5" />
+                            <span className="text-[10px]">{t('menu.fileSave')}</span>
+                        </button>
+                        <button onClick={() => setIsShortcutsSidebarVisible(true)} className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex flex-col items-center gap-1">
+                            <KeyboardIcon className="w-5 h-5" />
+                            <span className="text-[10px]">{t('menu.helpShortcuts')}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </>
       ) : (
         <DriveView
