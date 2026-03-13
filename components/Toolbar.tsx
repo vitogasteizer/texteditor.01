@@ -58,7 +58,7 @@ const ToolbarButton: React.FC<{ onAction: (e: React.MouseEvent<HTMLButtonElement
         ref={buttonRef} 
         onMouseDown={handleMouseDown} 
         aria-label={tooltip} 
-        className={`p-2 rounded-xl transition-all duration-200 active:scale-90 ${
+        className={`p-3 md:p-2 rounded-xl transition-all duration-200 active:scale-90 ${
           isActive 
             ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' 
             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
@@ -141,7 +141,7 @@ const FontFamilyMenuItem: React.FC<{
     const SubmenuPortal = (!isMobile && item.weights && isSubmenuOpen && submenuPosition) ? createPortal(
         <div 
             data-menu-part="true"
-            className="fixed w-48 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-[100] border border-white/20 dark:border-white/5 animate-in fade-in zoom-in-95 slide-in-from-left-2 duration-200"
+            className="fixed w-48 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-[110] border border-white/20 dark:border-white/5 animate-in fade-in zoom-in-95 slide-in-from-left-2 duration-200"
             style={{ top: submenuPosition.top, left: submenuPosition.left }}
             onMouseEnter={handleMouseEnter} 
             onMouseLeave={handleMouseLeave}
@@ -218,16 +218,22 @@ const FontFamilyDropdown: React.FC<{
     
             let top = rect.bottom + 4;
             let left = rect.left;
+            const viewportWidth = window.innerWidth;
     
-            if (left + menuWidth > window.innerWidth) {
-                left = rect.right - menuWidth;
+            if (viewportWidth < 640) {
+                left = (viewportWidth - menuWidth) / 2;
+                top = (window.innerHeight - Math.min(menuMaxHeight, window.innerHeight * 0.8)) / 2;
+            } else {
+                if (left + menuWidth > viewportWidth) {
+                    left = rect.right - menuWidth;
+                }
+                if (left < 4) { left = 4; }
+
+                if (isBottom || (top + menuMaxHeight > window.innerHeight && rect.top > menuMaxHeight)) {
+                    top = rect.top - menuMaxHeight - 4;
+                }
+                if (top < 0) { top = 4; }
             }
-            if (left < 0) { left = 4; }
-    
-            if (isBottom || (top + menuMaxHeight > window.innerHeight && rect.top > menuMaxHeight)) {
-                top = rect.top - menuMaxHeight - 4;
-            }
-            if (top < 0) { top = 4; }
     
             setMenuPosition({ top, left });
             setIsOpen(true);
@@ -253,7 +259,7 @@ const FontFamilyDropdown: React.FC<{
         <div data-menu-part="true" ref={menuRef} style={{ 
             top: `${menuPosition.top}px`, 
             left: `${menuPosition.left}px` 
-        }} className="fixed w-64 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-2xl py-3 z-[100] border border-white/20 dark:border-white/5 max-h-80 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 custom-scrollbar" role="menu">
+        }} className="fixed w-64 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-2xl py-3 z-[110] border border-white/20 dark:border-white/5 max-h-80 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 custom-scrollbar" role="menu">
             {items.map(item => (
                 <FontFamilyMenuItem key={item.value} item={item} onSelect={handleSelect} />
             ))}
@@ -299,16 +305,22 @@ const ToolbarDropdown: React.FC<{ label: React.ReactNode; items: { value: string
     
             let top = rect.bottom + 4;
             let left = rect.left;
+            const viewportWidth = window.innerWidth;
     
-            if (left + menuWidth > window.innerWidth) {
-                left = rect.right - menuWidth;
+            if (viewportWidth < 640) {
+                left = (viewportWidth - menuWidth) / 2;
+                top = (window.innerHeight - Math.min(menuHeight, window.innerHeight * 0.8)) / 2;
+            } else {
+                if (left + menuWidth > viewportWidth) {
+                    left = rect.right - menuWidth;
+                }
+                if (left < 4) { left = 4; }
+
+                if (isBottom || (top + menuHeight > window.innerHeight && rect.top > menuHeight)) {
+                    top = rect.top - menuHeight - 4;
+                }
+                if (top < 0) { top = 4; }
             }
-            if (left < 0) { left = 4; }
-    
-            if (isBottom || (top + menuHeight > window.innerHeight && rect.top > menuHeight)) {
-                top = rect.top - menuHeight - 4;
-            }
-            if (top < 0) { top = 4; }
     
             setMenuPosition({ top, left });
             setIsOpen(true);
@@ -338,7 +350,7 @@ const ToolbarDropdown: React.FC<{ label: React.ReactNode; items: { value: string
     }, [isOpen]);
 
     const MenuPortal = menuPosition ? createPortal(
-        <div style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }} className={`${widthClass} fixed bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-[100] border border-white/20 dark:border-white/5 flex flex-col animate-in fade-in zoom-in-95 duration-200`} role="menu">
+        <div style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }} className={`${widthClass} fixed bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-[110] border border-white/20 dark:border-white/5 flex flex-col animate-in fade-in zoom-in-95 duration-200`} role="menu">
             {items.map(item => (
                 <button 
                     key={item.value} 
@@ -493,7 +505,7 @@ const FontSizeCombobox: React.FC<{ value: string; onChange: (size: number) => vo
                         left: `${containerRect?.left}px`,
                         width: `${containerRect?.width}px`
                     }}
-                    className="fixed bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-[100] border border-white/20 dark:border-white/5 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 custom-scrollbar"
+                    className="fixed bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-[110] border border-white/20 dark:border-white/5 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 custom-scrollbar"
                 >
                     {fontSizes.map(size => (
                         <button 
@@ -699,15 +711,15 @@ const Toolbar: React.FC<ToolbarProps> = ({ editorRef, onCopyFormatting, isFormat
 
 
   return (
-    <div className="p-2 md:p-2 bg-white dark:bg-gray-900 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 min-h-[56px] md:min-h-0">
-      <div className="flex-1 min-w-0 flex items-center flex-nowrap gap-0.5 md:gap-1 overflow-x-auto md:overflow-visible scrollbar-hide">
-        {onOpenMenu && (
-          <div className="md:hidden flex items-center pr-1 border-r border-gray-300 dark:border-gray-600 mr-1">
-            <ToolbarButton onAction={onOpenMenu} tooltip="Menu">
-              <MenuIcon />
-            </ToolbarButton>
-          </div>
-        )}
+    <div className="p-3 md:p-2 bg-white dark:bg-gray-900 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 min-h-[72px] md:min-h-0">
+      {onOpenMenu && (
+        <div className="md:hidden flex items-center pr-2 border-r border-gray-300 dark:border-gray-600 mr-2 flex-shrink-0">
+          <ToolbarButton onAction={onOpenMenu} tooltip="Menu">
+            <MenuIcon size={24} />
+          </ToolbarButton>
+        </div>
+      )}
+      <div className="flex-1 min-w-0 flex items-center flex-nowrap gap-1 md:gap-1 overflow-x-auto md:overflow-visible custom-scrollbar">
         <div className="flex items-center gap-0.5 md:gap-1 border-r border-gray-300 dark:border-gray-600 pr-1 md:pr-2 mr-1 md:mr-2">
           <ToolbarButton onAction={() => executeCommand('undo')} tooltip={t('toolbar.undo')}><UndoIcon /></ToolbarButton>
           <ToolbarButton onAction={() => executeCommand('redo')} tooltip={t('toolbar.redo')}><RedoIcon /></ToolbarButton>

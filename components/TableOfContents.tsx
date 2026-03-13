@@ -45,19 +45,20 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({ editorRef, content })
   if (items.length === 0) return null;
 
   return (
-    <div className="hidden lg:block w-64 flex-shrink-0 bg-gray-50 dark:bg-gray-800/50 border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-4">
-      <div className="flex items-center gap-2 mb-4 text-gray-500 dark:text-gray-400 font-semibold text-xs uppercase tracking-wider">
-        <List className="w-4 h-4" />
+    <div className="hidden lg:block w-64 flex-shrink-0 bg-white/40 dark:bg-gray-950/40 backdrop-blur-xl border-r border-white/20 dark:border-white/5 overflow-y-auto p-6 custom-scrollbar">
+      <div className="flex items-center gap-3 mb-6 text-gray-900 dark:text-gray-100 font-black text-[11px] uppercase tracking-[0.2em]">
+        <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.5)]"></div>
+        <List className="w-4 h-4 opacity-50" />
         <span>სარჩევი</span>
       </div>
-      <div className="space-y-1">
+      <div className="space-y-2">
         {items.map((item) => (
           <button
             key={item.id}
             onClick={() => {
               item.element.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }}
-            className={`block w-full text-left text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 truncate transition-colors`}
+            className={`block w-full text-left text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 truncate transition-all hover:translate-x-1`}
             style={{ paddingLeft: `${(item.level - 1) * 12}px` }}
             title={item.text}
           >

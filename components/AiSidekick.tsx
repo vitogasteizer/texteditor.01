@@ -300,36 +300,36 @@ const AiSidekick: React.FC<AiSidekickProps> = ({ ai, onClose, onInsertText, setT
     );
 
     return (
-        <aside className="w-full md:w-96 bg-gray-50 dark:bg-gray-800 md:border-l border-gray-200 dark:border-gray-700 flex flex-col h-full shadow-2xl z-50">
-            <header className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gray-900">
-                <div className="flex items-center gap-2">
+        <aside className="w-full md:w-96 bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl md:border-l border-white/20 dark:border-white/5 flex flex-col h-full animate-in slide-in-from-right duration-500 ease-out">
+            <header className="p-6 border-b border-white/20 dark:border-white/5 flex items-center justify-between flex-shrink-0 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md">
+                <div className="flex items-center gap-3">
                     <SparklesIcon className="text-yellow-500 w-6 h-6 animate-pulse" />
-                    <h2 className="font-bold text-gray-800 dark:text-gray-100">{t('sidekick.title')}</h2>
+                    <h2 className="text-[11px] font-black text-gray-900 dark:text-gray-100 uppercase tracking-[0.2em]">{t('sidekick.title')}</h2>
                 </div>
-                <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><CloseIcon /></button>
+                <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-200/50 dark:hover:bg-white/10 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white active:scale-90"><CloseIcon /></button>
             </header>
 
-            <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-                <div className="flex justify-around bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-                    <button onClick={() => setActiveTab('chat')} className={`px-4 py-1.5 text-sm font-medium rounded-md flex-1 transition-all ${activeTab === 'chat' ? 'bg-white dark:bg-gray-700 shadow text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}>{t('sidekick.chat')}</button>
-                    <button onClick={() => setActiveTab('image')} className={`px-4 py-1.5 text-sm font-medium rounded-md flex-1 transition-all ${activeTab === 'image' ? 'bg-white dark:bg-gray-700 shadow text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}>{t('sidekick.image')}</button>
-                    <button onClick={() => setActiveTab('live')} className={`px-4 py-1.5 text-sm font-medium rounded-md flex-1 transition-all ${activeTab === 'live' ? 'bg-white dark:bg-gray-700 shadow text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}>{t('sidekick.live')}</button>
+            <div className="p-3 border-b border-white/20 dark:border-white/5 bg-white/20 dark:bg-gray-900/20 backdrop-blur-sm">
+                <div className="flex justify-around bg-gray-200/50 dark:bg-white/5 rounded-2xl p-1.5">
+                    <button onClick={() => setActiveTab('chat')} className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-xl flex-1 transition-all ${activeTab === 'chat' ? 'bg-white dark:bg-gray-800 shadow-lg text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}>{t('sidekick.chat')}</button>
+                    <button onClick={() => setActiveTab('image')} className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-xl flex-1 transition-all ${activeTab === 'image' ? 'bg-white dark:bg-gray-800 shadow-lg text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}>{t('sidekick.image')}</button>
+                    <button onClick={() => setActiveTab('live')} className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-xl flex-1 transition-all ${activeTab === 'live' ? 'bg-white dark:bg-gray-800 shadow-lg text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}>{t('sidekick.live')}</button>
                 </div>
             </div>
 
             {/* Chat Tab */}
             {activeTab === 'chat' && (
-                <div className="flex-grow flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-800">
-                    <div className="p-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50">
-                        <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex-grow flex flex-col overflow-hidden">
+                    <div className="p-4 border-b border-white/20 dark:border-white/5 bg-white/10 dark:bg-gray-900/10">
+                        <div className="flex items-center justify-between gap-2 mb-4">
                             <ChatModeButton mode="default" icon={<BotIcon />} label={t('sidekick.chatModes.default')} />
                             <ChatModeButton mode="search" icon={<SearchIcon />} label={t('sidekick.chatModes.search')} />
                             <ChatModeButton mode="maps" icon={<MapIcon />} label={t('sidekick.chatModes.maps')} />
                             <ChatModeButton mode="thinking" icon={<BrainCircuitIcon />} label={t('sidekick.chatModes.thinking')} />
                         </div>
                         {chatMode === 'thinking' && (
-                             <div className="px-1 pt-2 pb-1 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-100 dark:border-blue-800/30">
-                                <label className="text-xs font-semibold text-blue-600 dark:text-blue-400 flex justify-between mb-1">
+                             <div className="p-4 bg-blue-500/5 dark:bg-blue-400/5 rounded-2xl border border-blue-500/20">
+                                <label className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest flex justify-between mb-2">
                                     <span>Thinking Budget</span>
                                     <span>{thinkingBudget} tokens</span>
                                 </label>
@@ -340,36 +340,36 @@ const AiSidekick: React.FC<AiSidekickProps> = ({ ai, onClose, onInsertText, setT
                                     step="1024" 
                                     value={thinkingBudget} 
                                     onChange={(e) => setThinkingBudget(parseInt(e.target.value))}
-                                    className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-blue-600"
+                                    className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
                                 />
-                                <p className="text-[10px] text-gray-500 mt-1">Higher budget allows specifically designed "thinking" models to reason more deeply.</p>
+                                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">Higher budget allows specifically designed "thinking" models to reason more deeply.</p>
                              </div>
                         )}
                     </div>
-                    <div ref={chatBodyRef} className="flex-grow p-4 overflow-y-auto space-y-4">
+                    <div ref={chatBodyRef} className="flex-grow p-6 overflow-y-auto space-y-6 custom-scrollbar">
                         {chatHistory.length === 0 && (
-                            <div className="flex flex-col items-center justify-center h-full text-gray-400 opacity-50">
-                                <BotIcon className="w-12 h-12 mb-2" />
-                                <p className="text-sm">Start a conversation...</p>
+                            <div className="flex flex-col items-center justify-center h-full text-gray-400/50">
+                                <BotIcon className="w-16 h-16 mb-4 opacity-20" />
+                                <p className="text-[11px] font-bold uppercase tracking-widest">Start a conversation...</p>
                             </div>
                         )}
                         {chatHistory.map((msg, i) => (
                             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none border border-gray-100 dark:border-gray-600'}`}>
+                                <div className={`max-w-[90%] rounded-2xl px-5 py-4 shadow-sm ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none shadow-blue-500/20' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-bl-none border border-white/20 dark:border-white/5'}`}>
                                     <div className="text-sm leading-relaxed" dangerouslySetInnerHTML={{__html: msg.text.replace(/\n/g, '<br/>')}}></div>
                                     {msg.isThinking && (
-                                        <div className="flex items-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400 animate-pulse">
+                                        <div className="flex items-center gap-2 mt-3 text-[10px] font-bold uppercase tracking-widest text-blue-500 animate-pulse">
                                             <BrainCircuitIcon className="w-3 h-3" />
                                             <span>Thinking...</span>
                                         </div>
                                     )}
                                     {msg.sources && msg.sources.length > 0 && (
-                                        <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600/50">
-                                            <p className="text-[10px] font-semibold text-gray-500 uppercase mb-1">Sources</p>
-                                            <div className="flex flex-col gap-1">
+                                        <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700/50">
+                                            <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-2">Sources</p>
+                                            <div className="flex flex-col gap-2">
                                                 {msg.sources.map((s, si) => (
-                                                    <a key={si} href={s.web?.uri || s.maps?.uri} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-500 hover:underline truncate">
-                                                        <span className="w-1 h-1 rounded-full bg-blue-500"></span>
+                                                    <a key={si} href={s.web?.uri || s.maps?.uri} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[11px] font-medium text-blue-500 hover:text-blue-600 transition-colors truncate">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500/50"></span>
                                                         {s.web?.title || s.maps?.title}
                                                     </a>
                                                 ))}
@@ -380,7 +380,7 @@ const AiSidekick: React.FC<AiSidekickProps> = ({ ai, onClose, onInsertText, setT
                             </div>
                         ))}
                     </div>
-                    <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                    <div className="p-4 border-t border-white/20 dark:border-white/5 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md">
                         <div className="relative flex items-center">
                             <input
                                 type="text"
@@ -388,15 +388,15 @@ const AiSidekick: React.FC<AiSidekickProps> = ({ ai, onClose, onInsertText, setT
                                 onChange={(e) => setChatInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleChatSubmit()}
                                 placeholder={t('sidekick.chatPlaceholder')}
-                                className="flex-grow w-full pl-4 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-full bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+                                className="flex-grow w-full pl-5 pr-14 py-4 border border-gray-200 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm text-sm"
                                 disabled={isChatting}
                             />
                             <button 
                                 onClick={handleChatSubmit} 
                                 disabled={isChatting || !chatInput.trim()} 
-                                className="absolute right-1.5 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:bg-gray-400 transition-all shadow-md"
+                                className="absolute right-2 p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:bg-gray-400 transition-all shadow-lg shadow-blue-500/25 active:scale-90"
                             >
-                                <SendIcon className="w-4 h-4" />
+                                <SendIcon className="w-5 h-5" />
                             </button>
                         </div>
                     </div>
@@ -405,31 +405,34 @@ const AiSidekick: React.FC<AiSidekickProps> = ({ ai, onClose, onInsertText, setT
 
             {/* Image Tab */}
             {activeTab === 'image' && (
-                 <div className="flex-grow flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-800">
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{t('sidekick.imageDescription')}</p>
+                 <div className="flex-grow flex flex-col overflow-hidden">
+                    <div className="p-5 border-b border-white/20 dark:border-white/5 bg-white/10 dark:bg-gray-900/10">
+                        <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed uppercase tracking-wider">{t('sidekick.imageDescription')}</p>
                     </div>
-                    <div className="flex-grow p-4 overflow-y-auto">
+                    <div className="flex-grow p-6 overflow-y-auto custom-scrollbar">
                         {isGenerating && (
-                            <div className="flex flex-col items-center justify-center h-40 gap-3">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                                <span className="text-sm text-gray-500">{t('sidekick.imageGenerating')}</span>
+                            <div className="flex flex-col items-center justify-center h-40 gap-4">
+                                <div className="relative">
+                                    <div className="w-12 h-12 rounded-full border-4 border-blue-500/20 border-t-blue-600 animate-spin"></div>
+                                    <SparklesIcon className="absolute inset-0 m-auto w-4 h-4 text-blue-600 animate-pulse" />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{t('sidekick.imageGenerating')}</span>
                             </div>
                         )}
                         {!isGenerating && generatedImages.length === 0 && (
-                             <div className="flex flex-col items-center justify-center h-full text-gray-400 opacity-50">
-                                <ImageIcon className="w-12 h-12 mb-2" />
-                                <p className="text-sm">Enter a prompt to generate images</p>
+                             <div className="flex flex-col items-center justify-center h-full text-gray-400/50">
+                                <ImageIcon className="w-16 h-16 mb-4 opacity-20" />
+                                <p className="text-[11px] font-bold uppercase tracking-widest">Enter a prompt to generate images</p>
                             </div>
                         )}
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-4">
                             {generatedImages.map((src, i) => (
-                                <div key={i} className="group relative rounded-lg overflow-hidden shadow-md aspect-square bg-white dark:bg-gray-700">
-                                    <img src={src} alt="Generated" className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <div key={i} className="group relative rounded-2xl overflow-hidden shadow-lg aspect-square bg-white dark:bg-gray-800 border border-white/20 dark:border-white/5">
+                                    <img src={src} alt="Generated" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                    <div className="absolute inset-0 bg-gray-900/60 opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-[2px] flex items-center justify-center">
                                         <button 
                                             onClick={() => onInsertText(`<img src="${src}" style="max-width:100%" />`)}
-                                            className="px-3 py-1 bg-white text-black text-xs font-bold rounded-full transform scale-90 group-hover:scale-100 transition-transform"
+                                            className="px-5 py-2.5 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-xl transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-xl active:scale-95"
                                         >
                                             Insert
                                         </button>
@@ -438,7 +441,7 @@ const AiSidekick: React.FC<AiSidekickProps> = ({ ai, onClose, onInsertText, setT
                             ))}
                         </div>
                     </div>
-                    <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                    <div className="p-4 border-t border-white/20 dark:border-white/5 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md">
                         <div className="relative flex items-center">
                             <input
                                 type="text"
@@ -446,15 +449,15 @@ const AiSidekick: React.FC<AiSidekickProps> = ({ ai, onClose, onInsertText, setT
                                 onChange={e => setImagePrompt(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && handleGenerateImage()}
                                 placeholder={t('sidekick.imagePlaceholder')}
-                                className="flex-grow w-full pl-4 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-full bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+                                className="flex-grow w-full pl-5 pr-14 py-4 border border-gray-200 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all shadow-sm text-sm"
                                 disabled={isGenerating}
                             />
                             <button 
                                 onClick={handleGenerateImage} 
                                 disabled={isGenerating || !imagePrompt.trim()} 
-                                className="absolute right-1.5 p-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 disabled:opacity-50 disabled:bg-gray-400 transition-all shadow-md"
+                                className="absolute right-2 p-2.5 bg-purple-600 text-white rounded-xl hover:bg-purple-700 disabled:opacity-50 disabled:bg-gray-400 transition-all shadow-lg shadow-purple-500/25 active:scale-90"
                             >
-                                <ImageIcon className="w-4 h-4" />
+                                <ImageIcon className="w-5 h-5" />
                             </button>
                         </div>
                     </div>
@@ -463,34 +466,34 @@ const AiSidekick: React.FC<AiSidekickProps> = ({ ai, onClose, onInsertText, setT
             
             {/* Live Tab */}
             {activeTab === 'live' && (
-                <div className="flex-grow flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-                    <div className={`w-32 h-32 rounded-full flex items-center justify-center mb-8 transition-all duration-500 ${isLive ? 'bg-red-50 dark:bg-red-900/20 shadow-[0_0_40px_rgba(239,68,68,0.3)]' : 'bg-blue-50 dark:bg-blue-900/20'}`}>
+                <div className="flex-grow flex flex-col items-center justify-center p-8 text-center">
+                    <div className={`w-40 h-40 rounded-full flex items-center justify-center mb-10 transition-all duration-700 ${isLive ? 'bg-red-500/10 shadow-[0_0_60px_rgba(239,68,68,0.3)] scale-110' : 'bg-blue-500/5 border border-white/20 dark:border-white/5'}`}>
                         {isLive ? (
                             <div className="relative">
                                 <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-20"></div>
-                                <MicIcon className="w-12 h-12 text-red-500 relative z-10" />
+                                <MicIcon className="w-16 h-16 text-red-500 relative z-10" />
                             </div>
                         ) : (
-                            <MicIcon className="w-12 h-12 text-blue-500 opacity-50" />
+                            <MicIcon className="w-16 h-16 text-blue-500 opacity-20" />
                         )}
                     </div>
                     
-                    <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">Gemini Live</h3>
-                    <p className="mb-8 text-sm text-gray-500 dark:text-gray-400 max-w-xs leading-relaxed">{t('sidekick.liveDescription')}</p>
+                    <h3 className="text-2xl font-black text-gray-900 dark:text-gray-100 mb-3 tracking-tight">Gemini Live</h3>
+                    <p className="mb-10 text-[11px] font-medium text-gray-500 dark:text-gray-400 max-w-xs leading-relaxed uppercase tracking-widest">{t('sidekick.liveDescription')}</p>
                     
                     <button 
                         onClick={isLive ? cleanupLive : handleStartLive} 
-                        className={`flex items-center gap-3 px-8 py-4 rounded-full text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 ${isLive ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700'}`}
+                        className={`flex items-center gap-4 px-10 py-5 rounded-2xl text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl hover:scale-105 transition-all duration-500 active:scale-95 ${isLive ? 'bg-red-500 shadow-red-500/25 hover:bg-red-600' : 'bg-blue-600 shadow-blue-500/25 hover:bg-blue-700'}`}
                     >
                         {isLive ? <StopCircleIcon className="w-6 h-6" /> : <MicIcon className="w-6 h-6" />}
                         <span>{isLive ? t('sidekick.liveStop') : t('sidekick.liveStart')}</span>
                     </button>
 
                     {isLive && liveTranscript && (
-                        <div className="mt-8 w-full text-left p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl border border-gray-100 dark:border-gray-700 shadow-lg h-40 overflow-y-auto">
-                           {liveTranscript.user && <p className="text-sm mb-2"><strong className="text-blue-500">You:</strong> {liveTranscript.user}</p>}
-                           {liveTranscript.model && <p className="text-sm"><strong className="text-green-500">Gemini:</strong> {liveTranscript.model}</p>}
-                           {!liveTranscript.user && !liveTranscript.model && <p className="text-xs text-center text-gray-400 italic">Listening...</p>}
+                        <div className="mt-10 w-full text-left p-6 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-2xl border border-white/20 dark:border-white/5 shadow-2xl h-48 overflow-y-auto custom-scrollbar">
+                           {liveTranscript.user && <p className="text-sm mb-3 leading-relaxed"><strong className="text-[10px] font-black uppercase tracking-widest text-blue-500 block mb-1">You</strong> {liveTranscript.user}</p>}
+                           {liveTranscript.model && <p className="text-sm leading-relaxed"><strong className="text-[10px] font-black uppercase tracking-widest text-emerald-500 block mb-1">Gemini</strong> {liveTranscript.model}</p>}
+                           {!liveTranscript.user && !liveTranscript.model && <p className="text-[10px] font-bold text-center text-gray-400 italic uppercase tracking-widest animate-pulse">Listening...</p>}
                         </div>
                     )}
                 </div>

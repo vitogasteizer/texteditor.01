@@ -100,9 +100,20 @@ const DrawingModal: React.FC<DrawingModalProps> = ({ isOpen, onClose, onSave, in
     };
   };
 
-  const startDrawing = (e: React.MouseEvent) => {
+  const getTouchPos = (e: React.TouchEvent): { x: number; y: number } => {
+    const rect = canvasRef.current!.getBoundingClientRect();
+    const touch = e.touches[0];
+    return {
+      x: touch.clientX - rect.left,
+      y: touch.clientY - rect.top,
+    };
+  };
+
+  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
     if (!contextRef.current) return;
-    const { x, y } = getMousePos(e);
+    if (e.cancelable) e.preventDefault();
+    
+    const { x, y } = 'touches' in e ? getTouchPos(e) : getMousePos(e);
     setIsDrawing(true);
     startPos.current = { x, y };
     contextRef.current.beginPath();
@@ -110,9 +121,11 @@ const DrawingModal: React.FC<DrawingModalProps> = ({ isOpen, onClose, onSave, in
     snapshot.current = contextRef.current.getImageData(0, 0, canvasRef.current!.width, canvasRef.current!.height);
   };
   
-  const draw = (e: React.MouseEvent) => {
+  const draw = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isDrawing || !contextRef.current) return;
-    const { x, y } = getMousePos(e);
+    if (e.cancelable) e.preventDefault();
+
+    const { x, y } = 'touches' in e ? getTouchPos(e) : getMousePos(e);
     
     contextRef.current.lineWidth = lineWidth;
     contextRef.current.strokeStyle = color;
@@ -137,7 +150,7 @@ const DrawingModal: React.FC<DrawingModalProps> = ({ isOpen, onClose, onSave, in
     }
   };
   
-  const stopDrawing = () => {
+  const stopDrawing = (e?: React.MouseEvent | React.TouchEvent) => {
     if (!isDrawing) return;
     setIsDrawing(false);
     contextRef.current?.closePath();
@@ -171,13 +184,13 @@ const DrawingModal: React.FC<DrawingModalProps> = ({ isOpen, onClose, onSave, in
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="drawing-title"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl h-full flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl h-full flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
         <header className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <h3 id="drawing-title" className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('modals.drawing.title')}</h3>
         </header>
@@ -207,7 +220,10 @@ const DrawingModal: React.FC<DrawingModalProps> = ({ isOpen, onClose, onSave, in
               onMouseMove={draw}
               onMouseUp={stopDrawing}
               onMouseLeave={stopDrawing}
-              className="cursor-crosshair bg-white w-full h-full"
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchEnd={stopDrawing}
+              className="cursor-crosshair bg-white w-full h-full touch-none"
             />
         </main>
         

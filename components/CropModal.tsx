@@ -35,24 +35,27 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, onApply, imageSr
 
   if (!isOpen || !imageSrc) return null;
 
-  const getCoords = (e: React.MouseEvent) => {
+  const getCoords = (e: React.MouseEvent | React.TouchEvent) => {
     const rect = e.currentTarget.getBoundingClientRect();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+      x: clientX - rect.left,
+      y: clientY - rect.top,
     };
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+    if (e.cancelable) e.preventDefault();
     const { x, y } = getCoords(e);
     setIsCropping(true);
     cropStartCoords.current = { x, y };
     setCrop({ x, y, width: 0, height: 0 });
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isCropping || !imageRef.current) return;
+    if (e.cancelable) e.preventDefault();
     const { x, y } = getCoords(e);
     const startX = cropStartCoords.current.x;
     const startY = cropStartCoords.current.y;
@@ -117,7 +120,7 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, onApply, imageSr
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -130,11 +133,14 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, onApply, imageSr
         <h3 id="crop-title" className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">{t('panes.image.cropImage')}</h3>
         <div className="flex-grow overflow-auto flex items-center justify-center bg-gray-200 dark:bg-gray-900 rounded-md">
             <div 
-                className="relative select-none" 
+                className="relative select-none touch-none" 
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
+                onTouchStart={handleMouseDown}
+                onTouchMove={handleMouseMove}
+                onTouchEnd={handleMouseUp}
             >
                 <img 
                     ref={imageRef} 

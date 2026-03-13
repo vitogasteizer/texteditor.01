@@ -54,25 +54,27 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ x, y, onClose, onSelect, t }) => 
   return (
     <div
       ref={menuRef}
-      className="fixed z-50 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 py-2 w-56 text-sm transform transition-all duration-200 ease-out animate-in fade-in zoom-in-95"
+      className="fixed z-50 bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 dark:border-white/5 py-3 w-64 transform transition-all duration-200 ease-out animate-in fade-in zoom-in-95"
       style={{ top: position.top, left: position.left }}
     >
-      <div className="px-3 py-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+      <div className="px-5 py-2 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">
         Basic Blocks
       </div>
-      {items.map((item) => (
-        <button
-          key={item.id}
-          onClick={() => {
-            onSelect(item.id);
-            onClose();
-          }}
-          className="w-full text-left px-3 py-2 hover:bg-blue-50 dark:hover:bg-gray-700 flex items-center gap-3 text-gray-700 dark:text-gray-200 transition-colors"
-        >
-          {item.icon}
-          <span>{item.label}</span>
-        </button>
-      ))}
+      <div className="space-y-1 px-2">
+        {items.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => {
+              onSelect(item.id);
+              onClose();
+            }}
+            className="w-full text-left px-4 py-2.5 hover:bg-blue-600 hover:text-white flex items-center gap-3 text-gray-700 dark:text-gray-200 transition-all rounded-xl font-black text-[10px] uppercase tracking-[0.15em] group"
+          >
+            <span className="opacity-50 group-hover:opacity-100 transition-opacity">{item.icon}</span>
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 };

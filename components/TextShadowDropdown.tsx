@@ -55,16 +55,38 @@ const TextShadowDropdown: React.FC<TextShadowDropdownProps> = ({ targetRef, init
     useEffect(() => {
         if (targetRef.current) {
             const rect = targetRef.current.getBoundingClientRect();
-            const dropdownHeight = 360; // Estimated height
-            let top = rect.bottom + 4;
-            let left = rect.left;
+            const dropdownHeight = 360; 
+            const dropdownWidth = window.innerWidth < 640 ? Math.min(window.innerWidth - 32, 320) : 288;
+            
+            let top = 0;
+            let left = 0;
 
-            if (isBottom || (top + dropdownHeight > window.innerHeight)) {
-                top = rect.top - dropdownHeight - 4;
-            }
+            // Positioning logic
+            if (window.innerWidth < 640) {
+                // Center on mobile (both horizontally and vertically)
+                left = (window.innerWidth - dropdownWidth) / 2;
+                top = (window.innerHeight - Math.min(dropdownHeight, window.innerHeight * 0.8)) / 2;
+            } else {
+                // Desktop relative positioning
+                top = rect.bottom + 4;
+                left = rect.left;
 
-            if (left + 256 > window.innerWidth) {
-                left = window.innerWidth - 256 - 16;
+                // Vertical positioning
+                if (isBottom || (top + dropdownHeight > window.innerHeight)) {
+                    top = rect.top - dropdownHeight - 4;
+                }
+                
+                // Ensure top is not off-screen
+                if (top < 8) top = 8;
+                if (top + dropdownHeight > window.innerHeight) {
+                    top = window.innerHeight - dropdownHeight - 8;
+                }
+
+                // Horizontal positioning
+                if (left + dropdownWidth > window.innerWidth) {
+                    left = window.innerWidth - dropdownWidth - 16;
+                }
+                if (left < 16) left = 16;
             }
 
             setPosition({ top, left });
@@ -147,8 +169,17 @@ const TextShadowDropdown: React.FC<TextShadowDropdownProps> = ({ targetRef, init
     return createPortal(
         <div 
             ref={dropdownRef} 
-            style={{ top: `${position.top}px`, left: `${position.left}px` }} 
-            className="fixed w-72 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-[60] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200 max-h-[80vh]"
+            style={window.innerWidth < 640 ? {
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: `${Math.min(window.innerWidth - 32, 320)}px`
+            } : { 
+                top: `${position.top}px`, 
+                left: `${position.left}px`,
+                width: '288px'
+            }} 
+            className="fixed bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-[110] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] sm:max-h-[80vh]"
             onMouseDown={e => e.stopPropagation()}
         >
             <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
@@ -164,7 +195,7 @@ const TextShadowDropdown: React.FC<TextShadowDropdownProps> = ({ targetRef, init
                 </button>
             </div>
 
-            <div className="p-5 space-y-6 overflow-y-auto custom-scrollbar">
+            <div className="flex-1 p-5 space-y-6 overflow-y-auto custom-scrollbar">
                 {renderSlider(t('panes.image.xOffset'), 'offsetX', -20, 20)}
                 {renderSlider(t('panes.image.yOffset'), 'offsetY', -20, 20)}
                 {renderSlider(t('panes.image.blur'), 'blur', 0, 30)}

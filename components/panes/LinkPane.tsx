@@ -48,33 +48,38 @@ const LinkPane: React.FC<LinkPaneProps> = ({ onApplyLink, onClose, editingElemen
     }
 
     return (
-        <div className="space-y-4">
-            <div>
-                <label htmlFor="link-text" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('panes.link.textToDisplay')}</label>
-                <input
-                    type="text"
-                    id="link-text"
-                    value={text}
-                    onChange={e => setText(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                />
+        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="bg-white/40 dark:bg-gray-900/40 backdrop-blur-md p-6 rounded-2xl border border-white/20 dark:border-white/5 space-y-6 shadow-xl">
+                <div className="space-y-2">
+                    <label htmlFor="link-text" className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] ml-1">{t('panes.link.textToDisplay')}</label>
+                    <input
+                        type="text"
+                        id="link-text"
+                        value={text}
+                        onChange={e => setText(e.target.value)}
+                        className="w-full px-4 py-3 bg-white/60 dark:bg-gray-800/60 border border-white/20 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-black uppercase tracking-wider shadow-sm backdrop-blur-sm"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <label htmlFor="link-url" className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] ml-1">{t('panes.link.url')}</label>
+                    <div className="relative group">
+                        <input
+                            type="text"
+                            id="link-url"
+                            value={url}
+                            onChange={e => setUrl(e.target.value)}
+                            placeholder="https://example.com"
+                            className="w-full px-4 py-3 bg-white/60 dark:bg-gray-800/60 border border-white/20 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-black uppercase tracking-wider shadow-sm backdrop-blur-sm"
+                        />
+                    </div>
+                </div>
             </div>
-            <div>
-                <label htmlFor="link-url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('panes.link.url')}</label>
-                <input
-                    type="text"
-                    id="link-url"
-                    value={url}
-                    onChange={e => setUrl(e.target.value)}
-                    placeholder="https://example.com"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                />
-            </div>
-            <div className="flex justify-between items-center pt-2">
+
+            <div className="flex justify-between items-center px-2">
                  <button
                     onClick={handleApply}
                     type="button"
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    className="px-10 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white bg-blue-600 rounded-xl shadow-xl shadow-blue-500/25 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50"
                  >
                     {isEditing ? t('panes.link.update') : t('panes.link.apply')}
                 </button>
@@ -83,9 +88,9 @@ const LinkPane: React.FC<LinkPaneProps> = ({ onApplyLink, onClose, editingElemen
                         onClick={handleRemoveLink}
                         type="button"
                         title={t('panes.link.removeLink')}
-                        className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full"
+                        className="p-3.5 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 hover:bg-red-600/10 rounded-xl transition-all active:scale-90 border border-white/20 dark:border-white/5 shadow-sm backdrop-blur-md"
                     >
-                        <LinkOffIcon />
+                        <LinkOffIcon className="w-5 h-5" />
                     </button>
                 )}
             </div>

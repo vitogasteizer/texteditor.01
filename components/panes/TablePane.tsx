@@ -17,34 +17,36 @@ const TablePane: React.FC<TablePaneProps> = ({ onInsertTable, t }) => {
     };
 
     return (
-        <div className="space-y-4">
-            <div>
-                <label htmlFor="table-rows" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('panes.table.rows')}</label>
-                <input
-                    type="number"
-                    id="table-rows"
-                    value={rows}
-                    onChange={e => setRows(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                    min="1"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                />
-            </div>
-            <div>
-                <label htmlFor="table-cols" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('panes.table.columns')}</label>
-                <input
-                    type="number"
-                    id="table-cols"
-                    value={cols}
-                    onChange={e => setCols(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                    min="1"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                />
+        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="space-y-4 p-5 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md rounded-2xl border border-white/20 dark:border-white/5 shadow-xl">
+                <div className="space-y-2">
+                    <label htmlFor="table-rows" className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] ml-1">{t('panes.table.rows')}</label>
+                    <input
+                        type="number"
+                        id="table-rows"
+                        value={rows}
+                        onChange={e => setRows(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                        min="1"
+                        className="w-full px-4 py-3 bg-white/60 dark:bg-gray-800/60 border border-white/20 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-black uppercase tracking-wider shadow-sm backdrop-blur-sm"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <label htmlFor="table-cols" className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] ml-1">{t('panes.table.columns')}</label>
+                    <input
+                        type="number"
+                        id="table-cols"
+                        value={cols}
+                        onChange={e => setCols(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                        min="1"
+                        className="w-full px-4 py-3 bg-white/60 dark:bg-gray-800/60 border border-white/20 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-black uppercase tracking-wider shadow-sm backdrop-blur-sm"
+                    />
+                </div>
             </div>
             <div className="flex justify-end pt-2">
                  <button
                     onClick={handleInsert}
                     type="button"
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="px-10 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white bg-blue-600 rounded-xl shadow-xl shadow-blue-500/25 hover:bg-blue-700 transition-all active:scale-95"
                  >
                     {t('panes.table.insert')}
                 </button>

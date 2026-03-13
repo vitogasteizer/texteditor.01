@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Doc } from '../App';
 import { GridViewIcon, ListViewIcon, MoreVerticalIcon, FileTextIcon, Trash2Icon, EditIcon, ArrowLeftIcon, CopyIcon } from './icons/EditorIcons';
+import { ConfirmDialog, PromptDialog } from './Dialogs';
 
 interface DriveViewProps {
   documents: Doc[];
@@ -78,18 +79,27 @@ const DocumentItem: React.FC<{
   onDuplicateDocument: (docId: string) => void;
   t: (key: string, replacements?: { [key: string]: string | number }) => string;
 }> = ({ doc, viewMode, onOpenDocument, onRenameDocument, onDeleteDocument, onDuplicateDocument, t }) => {
+  const [isRenameOpen, setIsRenameOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   
   const handleRename = () => {
-    const newName = prompt(t('drive.renamePrompt'), doc.name);
+    setIsRenameOpen(true);
+  };
+
+  const handleConfirmRename = (newName: string) => {
     if (newName && newName.trim() !== "") {
       onRenameDocument(doc.id, newName.trim());
     }
+    setIsRenameOpen(false);
   };
 
   const handleDelete = () => {
-    if (window.confirm(t('drive.deleteConfirm', { name: doc.name }))) {
-      onDeleteDocument(doc.id);
-    }
+    setIsDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    onDeleteDocument(doc.id);
+    setIsDeleteOpen(false);
   };
   
   const handleDuplicate = () => {
@@ -100,44 +110,62 @@ const DocumentItem: React.FC<{
     year: 'numeric', month: 'short', day: 'numeric',
   });
 
-  if (viewMode === 'grid') {
-    return (
-      <div
-        onClick={() => onOpenDocument(doc.id)}
-        className="group cursor-pointer flex flex-col bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-200"
-      >
-        <div className="flex-grow p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-center h-32">
-          <FileTextIcon className="w-12 h-12 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 transition-colors" />
-        </div>
-        <div className="p-3 flex items-center justify-between">
-          <div className="flex-grow overflow-hidden">
-            <p className="font-medium text-sm truncate text-gray-800 dark:text-gray-100">{doc.name}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{t('drive.updated')}: {formattedDate}</p>
-          </div>
-          <div className="flex-shrink-0 -mr-2">
-            <DocumentItemMenu onRename={handleRename} onDelete={handleDelete} onDuplicate={handleDuplicate} t={t} />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div
-      onClick={() => onOpenDocument(doc.id)}
-      className="group cursor-pointer flex items-center p-3 bg-white dark:bg-gray-800 rounded-md border border-transparent hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-200 dark:hover:border-gray-700 transition-colors duration-150"
-    >
-      <FileTextIcon className="w-6 h-6 mr-4 text-gray-400 dark:text-gray-500" />
-      <div className="flex-grow">
-        <p className="font-medium text-sm text-gray-800 dark:text-gray-100">{doc.name}</p>
-      </div>
-      <div className="text-sm text-gray-500 dark:text-gray-400 w-40 text-right hidden md:block">
-        {t('drive.updated')}: {formattedDate}
-      </div>
-      <div className="ml-4 flex-shrink-0">
-         <DocumentItemMenu onRename={handleRename} onDelete={handleDelete} onDuplicate={handleDuplicate} t={t} />
-      </div>
-    </div>
+    <>
+      <PromptDialog
+        isOpen={isRenameOpen}
+        title={t('drive.renamePrompt')}
+        defaultValue={doc.name}
+        onConfirm={handleConfirmRename}
+        onCancel={() => setIsRenameOpen(false)}
+        confirmText={t('drive.rename')}
+        cancelText={t('modals.import.cancel')}
+      />
+      <ConfirmDialog
+        isOpen={isDeleteOpen}
+        title={t('drive.deleteConfirmTitle') || 'Delete Document'}
+        message={t('drive.deleteConfirm', { name: doc.name })}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setIsDeleteOpen(false)}
+        confirmText={t('drive.delete')}
+        cancelText={t('modals.import.cancel')}
+      />
+      {viewMode === 'grid' ? (
+        <div
+          onClick={() => onOpenDocument(doc.id)}
+          className="group cursor-pointer flex flex-col bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-200"
+        >
+          <div className="flex-grow p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-center h-32">
+            <FileTextIcon className="w-12 h-12 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 transition-colors" />
+          </div>
+          <div className="p-3 flex items-center justify-between">
+            <div className="flex-grow overflow-hidden">
+              <p className="font-medium text-sm truncate text-gray-800 dark:text-gray-100">{doc.name}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t('drive.updated')}: {formattedDate}</p>
+            </div>
+            <div className="flex-shrink-0 -mr-2">
+              <DocumentItemMenu onRename={handleRename} onDelete={handleDelete} onDuplicate={handleDuplicate} t={t} />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div
+          onClick={() => onOpenDocument(doc.id)}
+          className="group cursor-pointer flex items-center p-3 bg-white dark:bg-gray-800 rounded-md border border-transparent hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-200 dark:hover:border-gray-700 transition-colors duration-150"
+        >
+          <FileTextIcon className="w-6 h-6 mr-4 text-gray-400 dark:text-gray-500" />
+          <div className="flex-grow">
+            <p className="font-medium text-sm text-gray-800 dark:text-gray-100">{doc.name}</p>
+          </div>
+          <div className="text-sm text-gray-500 dark:text-gray-400 w-40 text-right hidden md:block">
+            {t('drive.updated')}: {formattedDate}
+          </div>
+          <div className="ml-4 flex-shrink-0">
+             <DocumentItemMenu onRename={handleRename} onDelete={handleDelete} onDuplicate={handleDuplicate} t={t} />
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

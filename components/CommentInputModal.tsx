@@ -42,36 +42,60 @@ const CommentInputModal: React.FC<CommentInputModalProps> = ({
 
   return (
     <div 
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity" 
+        className="fixed inset-0 bg-gray-900/40 backdrop-blur-md flex items-center justify-center z-[100] transition-all duration-300 animate-in fade-in" 
         onClick={handleWrapperClick}
         role="dialog"
         aria-modal="true"
         aria-labelledby="comment-input-title"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-        <h3 id="comment-input-title" className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">{t('modals.comment.title')}</h3>
-        <div>
-          <textarea
-            ref={textareaRef}
-            value={text}
-            onChange={e => setText(e.target.value)}
-            className="w-full h-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            placeholder={t('modals.comment.placeholder')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                handleSubmit();
-              }
-            }}
-          />
+      <div 
+        className="bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-white/20 dark:border-white/5 animate-in zoom-in-95 duration-300" 
+        onClick={e => e.stopPropagation()}
+      >
+        <header className="p-6 border-b border-white/20 dark:border-white/5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.6)]"></div>
+                <h3 id="comment-input-title" className="text-[10px] font-black text-gray-900 dark:text-gray-100 uppercase tracking-[0.2em]">{t('modals.comment.title')}</h3>
+            </div>
+            <button onClick={onClose} className="p-2.5 rounded-xl hover:bg-white/10 dark:hover:bg-white/10 transition-all text-gray-400 active:scale-90">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </header>
+
+        <div className="p-8 space-y-6">
+          <div>
+            <textarea
+              ref={textareaRef}
+              value={text}
+              onChange={e => setText(e.target.value)}
+              className="w-full h-32 px-4 py-3.5 bg-white/20 dark:bg-gray-900/40 border border-white/20 dark:border-white/5 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-gray-900 dark:text-gray-100 text-xs font-black transition-all resize-none"
+              placeholder={t('modals.comment.placeholder')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                  handleSubmit();
+                }
+              }}
+            />
+          </div>
         </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <button onClick={onClose} type="button" className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-600 border border-transparent rounded-md hover:bg-gray-200 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+
+        <footer className="p-6 border-t border-white/20 dark:border-white/5 flex justify-end gap-3">
+          <button 
+            onClick={onClose} 
+            type="button" 
+            className="px-6 py-3.5 text-[10px] font-black text-gray-500 dark:text-gray-400 bg-white/20 dark:bg-white/5 border border-white/20 dark:border-white/5 rounded-2xl hover:bg-white/30 dark:hover:bg-white/10 transition-all active:scale-95 uppercase tracking-[0.2em]"
+          >
             {t('modals.comment.cancel')}
           </button>
-          <button onClick={handleSubmit} type="button" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!text.trim()}>
+          <button 
+            onClick={handleSubmit} 
+            type="button" 
+            className="px-8 py-3.5 text-[10px] font-black text-white bg-blue-600 rounded-2xl shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95 uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed" 
+            disabled={!text.trim()}
+          >
             {t('modals.comment.comment')}
           </button>
-        </div>
+        </footer>
       </div>
     </div>
   );

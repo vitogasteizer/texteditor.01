@@ -78,7 +78,7 @@
       
       /* The content wrapper (div with inline styles for margins) */
       .editor-content-wrapper {
-        padding: 1.5rem 1rem 8rem 1rem !important; /* Override inline style margins with small padding and extra bottom padding for toolbar */
+        padding: 1.5rem 1rem 10rem 1rem !important; /* Increased bottom padding for thicker toolbar */
         min-height: 100vh !important;
         width: 100% !important;
         max-width: 800px !important; /* Keep text readable on wide tablets */
@@ -99,6 +99,30 @@
         background-color: white !important;
       }
     }
+
+    /* Custom scrollbar styling - very thin and subtle */
+    ::-webkit-scrollbar {
+      width: 3px;
+      height: 3px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 10px;
+      transition: background 0.3s;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 0, 0, 0.15);
+    }
+    .dark ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
     /* Handle dark mode for mobile */
     @media (prefers-color-scheme: dark) {
       @media (max-width: 768px) {

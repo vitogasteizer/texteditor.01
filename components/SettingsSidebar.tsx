@@ -42,17 +42,17 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = (props) => {
     }
     
     return (
-        <aside className="w-full md:w-80 bg-gray-50 dark:bg-gray-900 md:border-l border-gray-200 dark:border-gray-800 flex flex-col h-full animate-in slide-in-from-right duration-300">
-            <header className="p-5 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between flex-shrink-0 bg-white dark:bg-gray-900">
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.5)]"></div>
-                    <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-widest">{title}</h2>
+        <aside className="w-full md:w-80 bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl md:border-l border-white/20 dark:border-white/5 flex flex-col h-full animate-in slide-in-from-right duration-500 ease-out">
+            <header className="p-6 border-b border-white/20 dark:border-white/5 flex items-center justify-between flex-shrink-0 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md">
+                <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_12px_rgba(37,99,235,0.6)] animate-pulse"></div>
+                    <h2 className="text-[11px] font-black text-gray-900 dark:text-gray-100 uppercase tracking-[0.2em]">{title}</h2>
                 </div>
-                <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-400" aria-label={t('settings.close')}>
+                <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-200/50 dark:hover:bg-white/10 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white active:scale-90" aria-label={t('settings.close')}>
                     <CloseIcon className="w-5 h-5" />
                 </button>
             </header>
-            <div className="flex-grow p-5 overflow-y-auto custom-scrollbar">
+            <div className="flex-grow p-6 overflow-y-auto custom-scrollbar">
                 {activePanel === 'link' && <LinkPane onApplyLink={props.onApplyLink} onClose={onClose} editingElement={editingElement as HTMLAnchorElement | null} t={t} />}
                 {activePanel === 'image' && <ImagePane onApplyImageSettings={props.onApplyImageSettings} onClose={onClose} editingElement={editingElement as HTMLImageElement | null} onUpdateElementStyle={props.onUpdateElementStyle} onChangeZIndex={props.onChangeZIndex} onAiImageEdit={props.onAiImageEdit} onOpenCropModal={props.onOpenCropModal} t={t} />}
                 {activePanel === 'table' && !editingElement && <TablePane onInsertTable={props.onInsertTable} t={t} />}

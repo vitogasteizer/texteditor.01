@@ -1205,8 +1205,8 @@ const App: React.FC = () => {
                 
                 {isAnySidebarOpen && (
                     <>
-                        <div className="md:hidden fixed inset-0 bg-black bg-opacity-25 z-30" onClick={handleCloseSidebars} />
-                        <div className="absolute top-0 right-0 h-full w-screen max-w-sm md:w-auto md:max-w-none md:relative z-40 md:flex-shrink-0 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                        <div className="md:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-30" onClick={handleCloseSidebars} />
+                        <div className="absolute top-0 right-0 h-full w-screen max-w-sm md:w-auto md:max-w-none md:relative z-40 md:flex-shrink-0 border-l border-white/20 dark:border-white/5 bg-transparent">
                             {isAiSidekickVisible ? (
                                 <AiSidekick
                                     ai={aiRef.current}
