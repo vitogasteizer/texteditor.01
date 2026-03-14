@@ -45,7 +45,7 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({ editorRef, content })
   if (items.length === 0) return null;
 
   return (
-    <div className="hidden lg:block w-64 flex-shrink-0 bg-white/40 dark:bg-gray-950/40 backdrop-blur-xl border-r border-white/20 dark:border-white/5 overflow-y-auto p-6 custom-scrollbar">
+    <div className="hidden lg:block w-64 flex-shrink-0 bg-white/95 dark:bg-gray-950/95 backdrop-blur-md border-r border-white/20 dark:border-white/5 overflow-y-auto p-6 custom-scrollbar">
       <div className="flex items-center gap-3 mb-6 text-gray-900 dark:text-gray-100 font-black text-[11px] uppercase tracking-[0.2em]">
         <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.5)]"></div>
         <List className="w-4 h-4 opacity-50" />

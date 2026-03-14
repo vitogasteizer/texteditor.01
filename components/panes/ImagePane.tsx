@@ -174,15 +174,15 @@ const ImagePane: React.FC<ImagePaneProps> = ({ onApplyImageSettings, editingElem
     return (
         <div className="space-y-6 text-sm animate-in fade-in slide-in-from-right-4 duration-300 custom-scrollbar max-h-[calc(100vh-180px)] overflow-y-auto pr-2 pb-8">
             {isEditing && (
-                <div className="space-y-4 p-5 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md rounded-2xl border border-white/20 dark:border-white/5 shadow-xl">
-                    <h3 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-2">{t('panes.image.actions')}</h3>
+                <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-800">
+                    <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">{t('panes.image.actions')}</h3>
                     <div className="space-y-3">
-                        <button onClick={onOpenCropModal} className="w-full flex items-center justify-center gap-3 px-5 py-3.5 text-[10px] font-black uppercase tracking-[0.15em] text-gray-700 dark:text-gray-200 bg-white/40 dark:bg-gray-800/40 border border-white/20 dark:border-white/5 rounded-xl hover:bg-blue-600 hover:text-white transition-all active:scale-95 shadow-sm backdrop-blur-md">
+                        <button onClick={onOpenCropModal} className="w-full flex items-center justify-center gap-3 px-4 py-2.5 text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-blue-600 hover:text-white transition-all active:scale-95">
                             <ScissorsIcon className="w-4 h-4 opacity-70" />
                             <span>{t('panes.image.cropImage')}</span>
                         </button>
                         <div className="space-y-2">
-                            <label htmlFor="ai-image-edit" className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] ml-1">{t('panes.image.aiEdit')}</label>
+                            <label htmlFor="ai-image-edit" className="block text-xs font-medium text-gray-500 dark:text-gray-400 ml-1">{t('panes.image.aiEdit')}</label>
                             <div className="flex gap-2">
                                 <input
                                     type="text"
@@ -191,14 +191,13 @@ const ImagePane: React.FC<ImagePaneProps> = ({ onApplyImageSettings, editingElem
                                     onChange={e => setAiEditPrompt(e.target.value)}
                                     placeholder={t('panes.image.aiEditPlaceholder')}
                                     onKeyDown={(e) => e.key === 'Enter' && handleAiEdit()}
-                                    className="flex-grow px-4 py-3 bg-white/60 dark:bg-gray-800/60 border border-white/20 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-black uppercase tracking-wider backdrop-blur-sm"
+                                    className="flex-grow px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-medium"
                                 />
                                 <button 
                                     onClick={handleAiEdit} 
-                                    className="p-3.5 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-blue-500/30 relative overflow-hidden group/ai" 
+                                    className="p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 relative overflow-hidden group/ai" 
                                     disabled={!aiEditPrompt.trim()}
                                 >
-                                    <div className="absolute inset-0 bg-white/20 opacity-0 group-hover/ai:opacity-100 transition-opacity"></div>
                                     <SparklesIcon className="w-4 h-4 relative z-10" />
                                 </button>
                             </div>
@@ -209,38 +208,38 @@ const ImagePane: React.FC<ImagePaneProps> = ({ onApplyImageSettings, editingElem
 
             {!isEditing && (
               <div className="space-y-4">
-                <div className="flex p-1 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md rounded-2xl border border-white/20 dark:border-white/5 shadow-sm">
-                    <button onClick={() => setSourceType('url')} className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-xl flex-1 transition-all ${sourceType === 'url' ? 'bg-white dark:bg-gray-800 text-blue-600 shadow-xl' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}>{t('panes.image.fromUrl')}</button>
-                    <button onClick={() => setSourceType('upload')} className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-xl flex-1 transition-all ${sourceType === 'upload' ? 'bg-white dark:bg-gray-800 text-blue-600 shadow-xl' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}>{t('panes.image.upload')}</button>
+                <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <button onClick={() => setSourceType('url')} className={`px-4 py-2 text-xs font-semibold rounded-lg flex-1 transition-all ${sourceType === 'url' ? 'bg-white dark:bg-gray-700 text-blue-600' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}>{t('panes.image.fromUrl')}</button>
+                    <button onClick={() => setSourceType('upload')} className={`px-4 py-2 text-xs font-semibold rounded-lg flex-1 transition-all ${sourceType === 'upload' ? 'bg-white dark:bg-gray-700 text-blue-600' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}>{t('panes.image.upload')}</button>
                 </div>
 
                 {sourceType === 'url' ? (
                      <div className="space-y-2">
-                        <label htmlFor="image-url" className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] ml-1">{t('panes.image.imageUrl')}</label>
+                        <label htmlFor="image-url" className="block text-xs font-medium text-gray-500 dark:text-gray-400 ml-1">{t('panes.image.imageUrl')}</label>
                         <input
                             type="text"
                             id="image-url"
                             value={url}
                             onChange={e => setUrl(e.target.value)}
                             placeholder="https://example.com/image.png"
-                            className="w-full px-4 py-3 bg-white/40 dark:bg-gray-900/40 border border-white/20 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-black uppercase tracking-wider backdrop-blur-md"
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-medium"
                         />
                     </div>
                 ) : (
                     <div className="space-y-2">
-                        <label htmlFor="image-upload" className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] ml-1">{t('panes.image.uploadFile')}</label>
+                        <label htmlFor="image-upload" className="block text-xs font-medium text-gray-500 dark:text-gray-400 ml-1">{t('panes.image.uploadFile')}</label>
                         <div className="relative group">
                             <input
                                 type="file"
                                 id="image-upload"
                                 onChange={handleFileChange}
                                 accept="image/*"
-                                className="w-full text-xs text-gray-500 file:mr-4 file:py-3 file:px-5 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-[0.15em] file:bg-blue-600/10 file:text-blue-600 hover:file:bg-blue-600 hover:file:text-white transition-all cursor-pointer"
+                                className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600/10 file:text-blue-600 hover:file:bg-blue-600 hover:file:text-white transition-all cursor-pointer"
                             />
                         </div>
                          {fileSrc && (
-                             <div className="mt-4 p-3 bg-white/40 dark:bg-gray-900/40 rounded-2xl border border-white/20 dark:border-white/5 shadow-xl backdrop-blur-md">
-                                <img src={fileSrc} alt="Preview" className="rounded-xl max-w-full h-auto shadow-sm" />
+                             <div className="mt-4 p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                                <img src={fileSrc} alt="Preview" className="rounded-lg max-w-full h-auto" />
                              </div>
                          )}
                     </div>
@@ -248,36 +247,36 @@ const ImagePane: React.FC<ImagePaneProps> = ({ onApplyImageSettings, editingElem
               </div>
             )}
             
-            <div className="space-y-5 p-5 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md rounded-2xl border border-white/20 dark:border-white/5 shadow-xl">
-                <h3 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-2">{t('panes.image.transform')}</h3>
+            <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-700">
+                <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">{t('panes.image.transform')}</h3>
                 <div className="grid grid-cols-2 gap-4">
                      <div className="space-y-2">
-                        <label htmlFor="image-width" className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] ml-1">{t('panes.image.width')}</label>
+                        <label htmlFor="image-width" className="block text-xs font-medium text-gray-500 dark:text-gray-400 ml-1">{t('panes.image.width')}</label>
                         <input
                             type="number"
                             id="image-width"
                             value={parseStyle(styles.width, 0)}
                             onChange={e => handleStyleChange({ width: `${e.target.value}px` })}
                             placeholder="auto"
-                            className="w-full px-4 py-3 bg-white/60 dark:bg-gray-800/60 border border-white/20 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-black uppercase tracking-wider backdrop-blur-sm"
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-medium"
                         />
                     </div>
                      <div className="space-y-2">
-                        <label htmlFor="image-height" className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] ml-1">{t('panes.image.height')}</label>
+                        <label htmlFor="image-height" className="block text-xs font-medium text-gray-500 dark:text-gray-400 ml-1">{t('panes.image.height')}</label>
                         <input
                             type="number"
                             id="image-height"
                             value={parseStyle(styles.height, 0)}
                             onChange={e => handleStyleChange({ height: `${e.target.value}px` })}
                             placeholder="auto"
-                            className="w-full px-4 py-3 bg-white/60 dark:bg-gray-800/60 border border-white/20 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-black uppercase tracking-wider backdrop-blur-sm"
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-medium"
                         />
                     </div>
                 </div>
                 <div className="space-y-3">
                     <div className="flex justify-between items-center px-1">
-                        <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">{t('panes.image.rotation')}</label>
-                        <span className="text-[10px] font-black text-blue-600 bg-blue-600/10 px-2.5 py-1 rounded-full shadow-sm">{currentRotation}°</span>
+                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">{t('panes.image.rotation')}</label>
+                        <span className="text-xs font-semibold text-blue-600 bg-blue-600/10 px-2 py-0.5 rounded-full">{currentRotation}°</span>
                     </div>
                     <input
                         type="range"
@@ -288,12 +287,12 @@ const ImagePane: React.FC<ImagePaneProps> = ({ onApplyImageSettings, editingElem
                     />
                 </div>
                 <div className="space-y-2">
-                    <label htmlFor="image-wrapping" className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] ml-1">{t('panes.image.wrapping')}</label>
+                    <label htmlFor="image-wrapping" className="block text-xs font-medium text-gray-500 dark:text-gray-400 ml-1">{t('panes.image.wrapping')}</label>
                     <select
                         id="image-wrapping"
                         value={styles.align}
                         onChange={e => handleAlignmentChange(e.target.value as ImageOptions['align'])}
-                        className="w-full px-4 py-3 bg-white/60 dark:bg-gray-800/60 border border-white/20 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-black uppercase tracking-wider text-gray-900 dark:text-gray-100 cursor-pointer backdrop-blur-sm"
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-medium text-gray-900 dark:text-gray-100 cursor-pointer"
                     >
                         <option value="none">{t('panes.image.wrappingOptions.inline')}</option>
                         <option value="left">{t('panes.image.wrappingOptions.squareLeft')}</option>
@@ -304,13 +303,13 @@ const ImagePane: React.FC<ImagePaneProps> = ({ onApplyImageSettings, editingElem
                 </div>
             </div>
             
-            <div className="space-y-5 p-5 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md rounded-2xl border border-white/20 dark:border-white/5 shadow-xl">
-                <h3 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-2">{t('panes.image.style')}</h3>
-                <div className="space-y-5">
+            <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-700">
+                <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">{t('panes.image.style')}</h3>
+                <div className="space-y-4">
                     <div className="space-y-3">
                         <div className="flex justify-between items-center px-1">
-                            <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">{t('panes.image.opacity')}</label>
-                            <span className="text-[10px] font-black text-blue-600 bg-blue-600/10 px-2.5 py-1 rounded-full shadow-sm">{Math.round(styles.opacity * 100)}%</span>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">{t('panes.image.opacity')}</label>
+                            <span className="text-xs font-semibold text-blue-600 bg-blue-600/10 px-2 py-0.5 rounded-full">{Math.round(styles.opacity * 100)}%</span>
                         </div>
                         <input
                             type="range" min="0" max="1" step="0.1"
@@ -320,45 +319,45 @@ const ImagePane: React.FC<ImagePaneProps> = ({ onApplyImageSettings, editingElem
                         />
                     </div>
                      <div className="space-y-2">
-                        <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] ml-1">{t('panes.image.cornerRadius')}</label>
+                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 ml-1">{t('panes.image.cornerRadius')}</label>
                         <input 
                             type="number" min="0" 
                             value={parseStyle(styles.borderRadius, 0)} 
                             onChange={e => handleStyleChange({ borderRadius: `${e.target.value}px` })} 
-                            className="w-full px-4 py-3 bg-white/60 dark:bg-gray-800/60 border border-white/20 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-black uppercase tracking-wider backdrop-blur-sm"/>
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-medium"/>
                     </div>
                 </div>
             </div>
 
-            <div className="space-y-5 p-5 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md rounded-2xl border border-white/20 dark:border-white/5 shadow-xl">
+            <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-700">
                 <div className="flex justify-between items-center">
-                    <h3 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">{t('panes.image.shadow')}</h3>
+                    <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400">{t('panes.image.shadow')}</h3>
                     <div className="flex items-center group cursor-pointer">
-                        <input id="shadow-enabled" type="checkbox" checked={currentShadow.enabled} onChange={e => handleShadowChange('enabled', e.target.checked)} className="h-4 w-4 text-blue-600 border-white/20 dark:border-white/5 rounded-lg focus:ring-blue-500/20 bg-white dark:bg-gray-800 transition-all cursor-pointer" />
-                        <label htmlFor="shadow-enabled" className="ml-2 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] cursor-pointer group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">{t('panes.image.enableShadow')}</label>
+                        <input id="shadow-enabled" type="checkbox" checked={currentShadow.enabled} onChange={e => handleShadowChange('enabled', e.target.checked)} className="h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-700 rounded focus:ring-blue-500/20 bg-white dark:bg-gray-800 transition-all cursor-pointer" />
+                        <label htmlFor="shadow-enabled" className="ml-2 text-xs font-medium text-gray-500 dark:text-gray-400 cursor-pointer group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">{t('panes.image.enableShadow')}</label>
                     </div>
                 </div>
                 {currentShadow.enabled && (
-                    <div className="space-y-5 pt-2 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="space-y-4 pt-2 animate-in fade-in zoom-in-95 duration-200">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] ml-1">{t('panes.image.xOffset')}</label>
-                                <input type="number" value={currentShadow.offsetX} onChange={e => handleShadowChange('offsetX', parseInt(e.target.value, 10))} className="w-full px-4 py-3 bg-white/60 dark:bg-gray-800/60 border border-white/20 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-black uppercase tracking-wider backdrop-blur-sm"/>
+                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 ml-1">{t('panes.image.xOffset')}</label>
+                                <input type="number" value={currentShadow.offsetX} onChange={e => handleShadowChange('offsetX', parseInt(e.target.value, 10))} className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-medium"/>
                             </div>
                             <div className="space-y-2">
-                                <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] ml-1">{t('panes.image.yOffset')}</label>
-                                <input type="number" value={currentShadow.offsetY} onChange={e => handleShadowChange('offsetY', parseInt(e.target.value, 10))} className="w-full px-4 py-3 bg-white/60 dark:bg-gray-800/60 border border-white/20 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-black uppercase tracking-wider backdrop-blur-sm"/>
+                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 ml-1">{t('panes.image.yOffset')}</label>
+                                <input type="number" value={currentShadow.offsetY} onChange={e => handleShadowChange('offsetY', parseInt(e.target.value, 10))} className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-medium"/>
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] ml-1">{t('panes.image.blur')}</label>
-                            <input type="number" min="0" value={currentShadow.blur} onChange={e => handleShadowChange('blur', parseInt(e.target.value, 10))} className="w-full px-4 py-3 bg-white/60 dark:bg-gray-800/60 border border-white/20 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-black uppercase tracking-wider backdrop-blur-sm"/>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 ml-1">{t('panes.image.blur')}</label>
+                            <input type="number" min="0" value={currentShadow.blur} onChange={e => handleShadowChange('blur', parseInt(e.target.value, 10))} className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-medium"/>
                         </div>
                         <div className="space-y-2">
-                            <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] ml-1">{t('panes.image.color')}</label>
-                            <div className="flex items-center gap-4 p-2 bg-white/60 dark:bg-gray-800/60 border border-white/20 dark:border-white/5 rounded-xl shadow-sm backdrop-blur-sm">
-                                <input type="color" value={currentShadow.color} onChange={e => handleShadowChange('color', e.target.value)} className="w-10 h-10 p-0 border-none rounded-lg cursor-pointer bg-transparent"/>
-                                <span className="text-xs font-mono text-gray-500 uppercase font-black">{currentShadow.color}</span>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 ml-1">{t('panes.image.color')}</label>
+                            <div className="flex items-center gap-3 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
+                                <input type="color" value={currentShadow.color} onChange={e => handleShadowChange('color', e.target.value)} className="w-8 h-8 p-0 border-none rounded-lg cursor-pointer bg-transparent"/>
+                                <span className="text-xs font-mono text-gray-500 font-semibold">{currentShadow.color}</span>
                             </div>
                         </div>
                     </div>
@@ -366,11 +365,11 @@ const ImagePane: React.FC<ImagePaneProps> = ({ onApplyImageSettings, editingElem
             </div>
 
             {isEditing && styles.align === 'absolute' && (
-                 <div className="space-y-5 p-5 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md rounded-2xl border border-white/20 dark:border-white/5 shadow-xl">
-                    <h3 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-2">{t('panes.image.arrange')}</h3>
+                 <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">{t('panes.image.arrange')}</h3>
                     <div className="flex items-center gap-3">
-                        <button onClick={() => onChangeZIndex(editingElement!, 'front')} className="px-4 py-3.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-xl flex-1 bg-white/40 dark:bg-gray-800/40 border border-white/20 dark:border-white/5 hover:bg-blue-600 hover:text-white transition-all active:scale-95 shadow-sm backdrop-blur-md">{t('panes.image.bringForward')}</button>
-                        <button onClick={() => onChangeZIndex(editingElement!, 'back')} className="px-4 py-3.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-xl flex-1 bg-white/40 dark:bg-gray-800/40 border border-white/20 dark:border-white/5 hover:bg-blue-600 hover:text-white transition-all active:scale-95 shadow-sm backdrop-blur-md">{t('panes.image.sendBackward')}</button>
+                        <button onClick={() => onChangeZIndex(editingElement!, 'front')} className="px-4 py-2 text-xs font-semibold rounded-lg flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-blue-600 hover:text-white transition-all active:scale-95">{t('panes.image.bringForward')}</button>
+                        <button onClick={() => onChangeZIndex(editingElement!, 'back')} className="px-4 py-2 text-xs font-semibold rounded-lg flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-blue-600 hover:text-white transition-all active:scale-95">{t('panes.image.sendBackward')}</button>
                     </div>
                 </div>
             )}
@@ -381,7 +380,7 @@ const ImagePane: React.FC<ImagePaneProps> = ({ onApplyImageSettings, editingElem
                         onClick={handleApply}
                         disabled={isApplyDisabled}
                         type="button"
-                        className="px-10 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white bg-blue-600 rounded-xl shadow-xl shadow-blue-500/25 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50"
+                        className="px-8 py-3 text-xs font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50"
                     >
                         {t('panes.image.insert')}
                     </button>

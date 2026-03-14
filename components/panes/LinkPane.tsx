@@ -49,19 +49,19 @@ const LinkPane: React.FC<LinkPaneProps> = ({ onApplyLink, onClose, editingElemen
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="bg-white/40 dark:bg-gray-900/40 backdrop-blur-md p-6 rounded-2xl border border-white/20 dark:border-white/5 space-y-6 shadow-xl">
+            <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800 space-y-6">
                 <div className="space-y-2">
-                    <label htmlFor="link-text" className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] ml-1">{t('panes.link.textToDisplay')}</label>
+                    <label htmlFor="link-text" className="block text-[10px] font-medium text-gray-400 dark:text-gray-500 ml-1">{t('panes.link.textToDisplay')}</label>
                     <input
                         type="text"
                         id="link-text"
                         value={text}
                         onChange={e => setText(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/60 dark:bg-gray-800/60 border border-white/20 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-black uppercase tracking-wider shadow-sm backdrop-blur-sm"
+                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-medium"
                     />
                 </div>
                 <div className="space-y-2">
-                    <label htmlFor="link-url" className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] ml-1">{t('panes.link.url')}</label>
+                    <label htmlFor="link-url" className="block text-[10px] font-medium text-gray-400 dark:text-gray-500 ml-1">{t('panes.link.url')}</label>
                     <div className="relative group">
                         <input
                             type="text"
@@ -69,7 +69,7 @@ const LinkPane: React.FC<LinkPaneProps> = ({ onApplyLink, onClose, editingElemen
                             value={url}
                             onChange={e => setUrl(e.target.value)}
                             placeholder="https://example.com"
-                            className="w-full px-4 py-3 bg-white/60 dark:bg-gray-800/60 border border-white/20 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-black uppercase tracking-wider shadow-sm backdrop-blur-sm"
+                            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-medium"
                         />
                     </div>
                 </div>
@@ -79,7 +79,7 @@ const LinkPane: React.FC<LinkPaneProps> = ({ onApplyLink, onClose, editingElemen
                  <button
                     onClick={handleApply}
                     type="button"
-                    className="px-10 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white bg-blue-600 rounded-xl shadow-xl shadow-blue-500/25 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50"
+                    className="px-10 py-4 text-[10px] font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50"
                  >
                     {isEditing ? t('panes.link.update') : t('panes.link.apply')}
                 </button>
@@ -88,7 +88,7 @@ const LinkPane: React.FC<LinkPaneProps> = ({ onApplyLink, onClose, editingElemen
                         onClick={handleRemoveLink}
                         type="button"
                         title={t('panes.link.removeLink')}
-                        className="p-3.5 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 hover:bg-red-600/10 rounded-xl transition-all active:scale-90 border border-white/20 dark:border-white/5 shadow-sm backdrop-blur-md"
+                        className="p-3.5 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 hover:bg-red-600/10 rounded-xl transition-all active:scale-90 border border-gray-100 dark:border-gray-800"
                     >
                         <LinkOffIcon className="w-5 h-5" />
                     </button>

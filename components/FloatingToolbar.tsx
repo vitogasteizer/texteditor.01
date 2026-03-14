@@ -88,7 +88,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({ top, left, onAddComme
     return createPortal(
       <div 
         ref={aiMenuRef}
-        className="fixed w-64 bg-gray-900/90 dark:bg-black/90 backdrop-blur-xl text-white rounded-2xl shadow-2xl py-3 z-[100] border border-white/10 animate-in fade-in zoom-in-95 duration-200"
+        className="fixed w-64 bg-gray-900/95 dark:bg-black/95 backdrop-blur-md text-white rounded-2xl shadow-2xl py-3 z-[100] border border-white/10 animate-in fade-in zoom-in-95 duration-200"
         style={{
           top: `${top + 55}px`,
           left: `${left}px`,
@@ -115,7 +115,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({ top, left, onAddComme
                 {item.subItems && <ChevronRightIcon className={`w-3.5 h-3.5 transition-transform ${openSubmenu === item.key ? 'translate-x-0.5' : 'opacity-50'}`} />}
               </button>
               {item.subItems && openSubmenu === item.key && (
-                <div className="absolute left-full -top-1 ml-2 w-48 bg-gray-900/90 dark:bg-black/90 backdrop-blur-xl rounded-2xl shadow-2xl py-3 border border-white/10 animate-in fade-in slide-in-from-left-2 duration-200">
+                <div className="absolute left-full -top-1 ml-2 w-48 bg-gray-900/95 dark:bg-black/95 backdrop-blur-md rounded-2xl shadow-2xl py-3 border border-white/10 animate-in fade-in slide-in-from-left-2 duration-200">
                   <div className="px-2 space-y-1">
                     {item.subItems.map(subItem => (
                       <button 
@@ -141,7 +141,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({ top, left, onAddComme
   return (
     <>
       <div
-        className="fixed z-20 bg-gray-900/90 dark:bg-black/90 backdrop-blur-xl text-white rounded-2xl shadow-2xl p-2 flex items-center gap-1 border border-white/10 animate-in fade-in zoom-in-95 duration-300"
+        className="fixed z-20 bg-gray-900/95 dark:bg-black/95 backdrop-blur-md text-white rounded-2xl shadow-2xl p-2 flex items-center gap-1 border border-white/10 animate-in fade-in zoom-in-95 duration-300"
         style={{
           top: `${top}px`,
           left: `${left}px`,

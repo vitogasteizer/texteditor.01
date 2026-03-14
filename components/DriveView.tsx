@@ -2,7 +2,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Doc } from '../App';
 import { GridViewIcon, ListViewIcon, MoreVerticalIcon, FileTextIcon, Trash2Icon, EditIcon, ArrowLeftIcon, CopyIcon, EyeIcon, DownloadIcon, UploadCloudIcon, CloudIcon, LocalStorageIcon } from './icons/EditorIcons';
-import { ConfirmDialog, PromptDialog } from './Dialogs';
 
 interface DriveViewProps {
   documents: Doc[];
@@ -56,30 +55,31 @@ const DocumentItemMenu: React.FC<{
         <MoreVerticalIcon className="w-5 h-5" />
       </button>
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-10 border border-gray-200 dark:border-gray-700">
+        <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-900 rounded-xl shadow-lg py-2 z-50 border border-gray-100 dark:border-gray-800 animate-in fade-in zoom-in-95 duration-200">
           <button
             onClick={(e) => { e.stopPropagation(); onPreview(); setIsOpen(false); }}
-            className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+            className="flex items-center w-[calc(100%-16px)] text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all rounded-lg mx-2"
           >
-            <EyeIcon className="w-4 h-4 mr-2" /> {t('drive.preview')}
+            <EyeIcon className="w-4 h-4 mr-3 opacity-50" /> {t('drive.preview')}
           </button>
            <button
             onClick={(e) => { e.stopPropagation(); onRename(); setIsOpen(false); }}
-            className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+            className="flex items-center w-[calc(100%-16px)] text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all rounded-lg mx-2"
           >
-            <EditIcon className="w-4 h-4 mr-2" /> {t('drive.rename')}
+            <EditIcon className="w-4 h-4 mr-3 opacity-50" /> {t('drive.rename')}
           </button>
            <button
             onClick={(e) => { e.stopPropagation(); onDuplicate(); setIsOpen(false); }}
-            className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+            className="flex items-center w-[calc(100%-16px)] text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all rounded-lg mx-2"
           >
-            <CopyIcon className="w-4 h-4 mr-2" /> {t('drive.duplicate')}
+            <CopyIcon className="w-4 h-4 mr-3 opacity-50" /> {t('drive.duplicate')}
           </button>
+          <div className="h-px bg-gray-100 dark:bg-gray-800 my-1 mx-2"></div>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); setIsOpen(false); }}
-            className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600"
+            className="flex items-center w-[calc(100%-16px)] text-left px-4 py-2 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all rounded-lg mx-2"
           >
-            <Trash2Icon className="w-4 h-4 mr-2" /> {t('drive.delete')}
+            <Trash2Icon className="w-4 h-4 mr-3 opacity-50" /> {t('drive.delete')}
           </button>
         </div>
       )}
@@ -97,27 +97,18 @@ const DocumentItem: React.FC<{
   onPreviewDocument: (docId: string) => void;
   t: (key: string, replacements?: { [key: string]: string | number }) => string;
 }> = ({ doc, viewMode, onOpenDocument, onRenameDocument, onDeleteDocument, onDuplicateDocument, onPreviewDocument, t }) => {
-  const [isRenameOpen, setIsRenameOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   
   const handleRename = () => {
-    setIsRenameOpen(true);
-  };
-
-  const handleConfirmRename = (newName: string) => {
+    const newName = prompt(t('drive.renamePrompt'), doc.name);
     if (newName && newName.trim() !== "") {
       onRenameDocument(doc.id, newName.trim());
     }
-    setIsRenameOpen(false);
   };
 
   const handleDelete = () => {
-    setIsDeleteOpen(true);
-  };
-
-  const handleConfirmDelete = () => {
-    onDeleteDocument(doc.id);
-    setIsDeleteOpen(false);
+    if (window.confirm(t('drive.deleteConfirm', { name: doc.name }))) {
+      onDeleteDocument(doc.id);
+    }
   };
   
   const handleDuplicate = () => {
@@ -132,70 +123,57 @@ const DocumentItem: React.FC<{
     year: 'numeric', month: 'short', day: 'numeric',
   });
 
+  if (viewMode === 'grid') {
+    return (
+      <div
+        onClick={() => onOpenDocument(doc.id)}
+        className="group cursor-pointer flex flex-col bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-blue-500/50 transition-all duration-300 relative overflow-hidden animate-in fade-in zoom-in-95"
+      >
+        {doc.googleDriveId && (
+            <div className="absolute top-3 left-3 text-blue-500 bg-blue-50 dark:bg-blue-900/50 rounded-full p-1.5 border border-blue-100 dark:border-blue-800 z-10" title="Synced with Google Drive">
+                <UploadCloudIcon isMenuIcon className="w-3.5 h-3.5"/>
+            </div>
+        )}
+        <div className="flex-grow p-6 flex items-center justify-center h-40 bg-gray-50 dark:bg-gray-800/20 group-hover:bg-blue-50/50 dark:group-hover:bg-blue-900/10 transition-colors">
+          <FileTextIcon className="w-16 h-16 text-gray-200 dark:text-gray-700 group-hover:text-blue-500/50 group-hover:scale-110 transition-all duration-300" />
+        </div>
+        <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+          <div className="flex-grow overflow-hidden">
+            <p className="font-semibold text-xs truncate text-gray-800 dark:text-gray-100">{doc.name}</p>
+            <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 mt-1">{t('drive.updated')}: {formattedDate}</p>
+          </div>
+          <div className="flex-shrink-0 -mr-1">
+            <DocumentItemMenu onRename={handleRename} onDelete={handleDelete} onDuplicate={handleDuplicate} onPreview={handlePreview} t={t} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <>
-      <PromptDialog
-        isOpen={isRenameOpen}
-        title={t('drive.renamePrompt')}
-        defaultValue={doc.name}
-        onConfirm={handleConfirmRename}
-        onCancel={() => setIsRenameOpen(false)}
-        confirmText={t('drive.rename')}
-        cancelText={t('modals.import.cancel')}
-      />
-      <ConfirmDialog
-        isOpen={isDeleteOpen}
-        title={t('drive.deleteConfirmTitle') || 'Delete Document'}
-        message={t('drive.deleteConfirm', { name: doc.name })}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setIsDeleteOpen(false)}
-        confirmText={t('drive.delete')}
-        cancelText={t('modals.import.cancel')}
-      />
-      {viewMode === 'grid' ? (
-        <div
-          onClick={() => onOpenDocument(doc.id)}
-          className="group cursor-pointer flex flex-col bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-200 relative"
-        >
-          {doc.googleDriveId && (
-              <div className="absolute top-2 left-2 text-blue-500 bg-blue-100 dark:bg-blue-900 rounded-full p-1" title="Synced with Google Drive">
-                  <UploadCloudIcon isMenuIcon className="w-3 h-3"/>
-              </div>
-          )}
-          <div className="flex-grow p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-center h-32">
-            <FileTextIcon className="w-12 h-12 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 transition-colors" />
-          </div>
-          <div className="p-3 flex items-center justify-between">
-            <div className="flex-grow overflow-hidden">
-              <p className="font-medium text-sm truncate text-gray-800 dark:text-gray-100">{doc.name}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{t('drive.updated')}: {formattedDate}</p>
-            </div>
-            <div className="flex-shrink-0 -mr-2">
-              <DocumentItemMenu onRename={handleRename} onDelete={handleDelete} onDuplicate={handleDuplicate} onPreview={handlePreview} t={t} />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div
-          onClick={() => onOpenDocument(doc.id)}
-          className="group cursor-pointer flex items-center p-3 bg-white dark:bg-gray-800 rounded-md border border-transparent hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-200 dark:hover:border-gray-700 transition-colors duration-150"
-        >
-          <FileTextIcon className="w-6 h-6 mr-4 text-gray-400 dark:text-gray-500" />
-          <div className="flex-grow">
-            <p className="font-medium text-sm text-gray-800 dark:text-gray-100 flex items-center gap-2">
-                {doc.name}
-                {doc.googleDriveId && <UploadCloudIcon isMenuIcon className="w-3 h-3 text-blue-500" />}
-            </p>
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400 w-40 text-right hidden md:block">
-            {t('drive.updated')}: {formattedDate}
-          </div>
-          <div className="ml-4 flex-shrink-0">
-             <DocumentItemMenu onRename={handleRename} onDelete={handleDelete} onDuplicate={handleDuplicate} onPreview={handlePreview} t={t} />
-          </div>
-        </div>
-      )}
-    </>
+    <div
+      onClick={() => onOpenDocument(doc.id)}
+      className="group cursor-pointer flex items-center p-4 bg-white dark:bg-gray-900 rounded-xl border border-transparent hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-100 dark:hover:border-gray-800 transition-all duration-200 animate-in fade-in slide-in-from-left-2"
+    >
+      <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center mr-4 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30 transition-colors">
+        <FileTextIcon className="w-5 h-5 text-gray-400 dark:text-gray-500 group-hover:text-blue-500 transition-colors" />
+      </div>
+      <div className="flex-grow">
+        <p className="font-semibold text-xs text-gray-800 dark:text-gray-100 flex items-center gap-2">
+            {doc.name}
+            {doc.googleDriveId && <UploadCloudIcon isMenuIcon className="w-3.5 h-3.5 text-blue-500 opacity-50" />}
+        </p>
+        <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 md:hidden mt-0.5">
+          {formattedDate}
+        </p>
+      </div>
+      <div className="text-[10px] font-medium text-gray-400 dark:text-gray-500 w-40 text-right hidden md:block">
+        {formattedDate}
+      </div>
+      <div className="ml-4 flex-shrink-0">
+         <DocumentItemMenu onRename={handleRename} onDelete={handleDelete} onDuplicate={handleDuplicate} onPreview={handlePreview} t={t} />
+      </div>
+    </div>
   );
 };
 
@@ -231,63 +209,77 @@ const DriveView: React.FC<DriveViewProps> = (props) => {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-white dark:bg-gray-950">
         {/* Header */}
-        <header className="sticky top-0 z-10 p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-          <div className="flex items-center justify-between flex-wrap gap-4">
+        <header className="sticky top-0 z-20 px-6 py-6 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950">
+          <div className="flex items-center justify-between flex-wrap gap-6">
               <div className="flex items-center gap-4">
                 {currentDocId && (
-                    <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" aria-label={t('drive.backToEditor')}>
-                        <ArrowLeftIcon />
+                    <button 
+                      onClick={onClose} 
+                      className="p-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all active:scale-95 border border-gray-100 dark:border-gray-800" 
+                      aria-label={t('drive.backToEditor')}
+                    >
+                        <ArrowLeftIcon className="w-5 h-5" />
                     </button>
                 )}
-                <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">{t('drive.title')}</h1>
+                <div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+                    <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                      {t('drive.title')}
+                    </h1>
+                  </div>
+                  <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1">
+                    {t('drive.subtitle') || 'Manage your documents'}
+                  </p>
+                </div>
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex bg-gray-50 dark:bg-gray-900 p-1 rounded-xl border border-gray-100 dark:border-gray-800">
                   <button 
                     onClick={() => setActiveTab('local')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === 'local' ? 'bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
+                    className={`flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-medium transition-all ${activeTab === 'local' ? 'bg-white dark:bg-gray-800 text-blue-600 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'}`}
                   >
-                      <LocalStorageIcon />
-                      Local Storage
+                      <LocalStorageIcon className="w-3.5 h-3.5" />
+                      Local
                   </button>
                   <button 
                     onClick={() => setActiveTab('cloud')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === 'cloud' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
+                    className={`flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-medium transition-all ${activeTab === 'cloud' ? 'bg-white dark:bg-gray-800 text-blue-600 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'}`}
                   >
-                      <CloudIcon />
-                      Google Drive
+                      <CloudIcon className="w-3.5 h-3.5" />
+                      Cloud
                   </button>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <button
                     onClick={onCreateNewDocument}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="px-6 py-2.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all active:scale-95"
                 >
                     {t('drive.newDoc')}
                 </button>
-                <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-md">
-                    <button onClick={onExportAllDocuments} title={t('drive.exportAll')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-l-md"><DownloadIcon /></button>
-                    <div className="w-px h-full bg-gray-300 dark:bg-gray-600"></div>
-                    <button onClick={handleImportClick} title={t('drive.importAll')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-r-md"><UploadCloudIcon /></button>
+                <div className="flex items-center bg-gray-50 dark:bg-gray-900 p-1 rounded-lg border border-gray-100 dark:border-gray-800">
+                    <button onClick={onExportAllDocuments} title={t('drive.exportAll')} className="p-2 text-gray-500 hover:text-blue-600 transition-colors"><DownloadIcon className="w-4 h-4" /></button>
+                    <div className="w-px h-4 bg-gray-200 dark:bg-gray-800 mx-1"></div>
+                    <button onClick={handleImportClick} title={t('drive.importAll')} className="p-2 text-gray-500 hover:text-blue-600 transition-colors"><UploadCloudIcon className="w-4 h-4" /></button>
                     <input type="file" ref={importInputRef} className="hidden" accept=".json,application/json" onChange={handleFileImport} />
                 </div>
-                <div className="hidden md:flex items-center bg-gray-100 dark:bg-gray-900/50 p-1 rounded-md">
+                <div className="hidden md:flex items-center bg-gray-50 dark:bg-gray-900 p-1 rounded-lg border border-gray-100 dark:border-gray-800">
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white dark:bg-gray-700 text-blue-600' : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'}`}
+                    className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-gray-800 text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}
                     aria-label={t('drive.gridView')}
                   >
-                    <GridViewIcon className="w-5 h-5" />
+                    <GridViewIcon className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 text-blue-600' : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'}`}
+                    className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-gray-800 text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}
                     aria-label={t('drive.listView')}
                   >
-                    <ListViewIcon className="w-5 h-5" />
+                    <ListViewIcon className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -295,8 +287,8 @@ const DriveView: React.FC<DriveViewProps> = (props) => {
         </header>
 
         {/* Content */}
-        <main className="flex-grow overflow-y-auto bg-gray-50 dark:bg-gray-900/50">
-           <div className="max-w-5xl mx-auto p-4 md:p-6">
+        <main className="flex-grow overflow-y-auto bg-gray-50/30 dark:bg-gray-950 custom-scrollbar">
+           <div className="max-w-6xl mx-auto p-6 md:p-10">
               
               {/* LOCAL TAB */}
               {activeTab === 'local' && (

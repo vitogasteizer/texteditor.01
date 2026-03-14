@@ -107,22 +107,22 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, t 
       aria-labelledby="import-title"
     >
       <div 
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-2xl flex flex-col max-h-[90vh]" 
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 w-full max-w-2xl flex flex-col max-h-[90vh] border border-gray-100 dark:border-gray-700" 
         onClick={e => e.stopPropagation()}
       >
-        <h3 id="import-title" className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">{t('modals.import.title')}</h3>
+        <h3 id="import-title" className="text-sm font-semibold mb-4 text-gray-900 dark:text-gray-100">{t('modals.import.title')}</h3>
         <div className="flex-grow overflow-y-auto">
           {!imageSrc ? (
-            <div className="text-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-              <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">{t('modals.import.instructions')}</p>
-              <label className="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700">
+            <div className="text-center p-8 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
+              <p className="mb-4 text-xs text-gray-600 dark:text-gray-400">{t('modals.import.instructions')}</p>
+              <label className="cursor-pointer px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
                 <span>{t('modals.import.selectFile')}</span>
                 <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
               </label>
             </div>
           ) : (
             <div>
-                <p className="mb-2 text-sm text-center text-gray-600 dark:text-gray-400">{t('modals.import.cropInstruction')}</p>
+                <p className="mb-4 text-xs text-center text-gray-600 dark:text-gray-400">{t('modals.import.cropInstruction')}</p>
                 <div 
                     className="relative select-none" 
                     onMouseDown={handleMouseDown}

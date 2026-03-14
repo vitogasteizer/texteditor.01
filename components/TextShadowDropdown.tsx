@@ -55,38 +55,16 @@ const TextShadowDropdown: React.FC<TextShadowDropdownProps> = ({ targetRef, init
     useEffect(() => {
         if (targetRef.current) {
             const rect = targetRef.current.getBoundingClientRect();
-            const dropdownHeight = 360; 
-            const dropdownWidth = window.innerWidth < 640 ? Math.min(window.innerWidth - 32, 320) : 288;
-            
-            let top = 0;
-            let left = 0;
+            const dropdownHeight = 360; // Estimated height
+            let top = rect.bottom + 4;
+            let left = rect.left;
 
-            // Positioning logic
-            if (window.innerWidth < 640) {
-                // Center on mobile (both horizontally and vertically)
-                left = (window.innerWidth - dropdownWidth) / 2;
-                top = (window.innerHeight - Math.min(dropdownHeight, window.innerHeight * 0.8)) / 2;
-            } else {
-                // Desktop relative positioning
-                top = rect.bottom + 4;
-                left = rect.left;
+            if (isBottom || (top + dropdownHeight > window.innerHeight)) {
+                top = rect.top - dropdownHeight - 4;
+            }
 
-                // Vertical positioning
-                if (isBottom || (top + dropdownHeight > window.innerHeight)) {
-                    top = rect.top - dropdownHeight - 4;
-                }
-                
-                // Ensure top is not off-screen
-                if (top < 8) top = 8;
-                if (top + dropdownHeight > window.innerHeight) {
-                    top = window.innerHeight - dropdownHeight - 8;
-                }
-
-                // Horizontal positioning
-                if (left + dropdownWidth > window.innerWidth) {
-                    left = window.innerWidth - dropdownWidth - 16;
-                }
-                if (left < 16) left = 16;
+            if (left + 256 > window.innerWidth) {
+                left = window.innerWidth - 256 - 16;
             }
 
             setPosition({ top, left });
@@ -149,10 +127,10 @@ const TextShadowDropdown: React.FC<TextShadowDropdownProps> = ({ targetRef, init
     if (!position) return null;
     
     const renderSlider = (label: string, prop: keyof Omit<ShadowState, 'color'>, min: number, max: number, step = 1) => (
-        <div className="space-y-1.5">
+        <div className="space-y-2">
             <div className="flex justify-between items-center">
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{label}</label>
-                <span className="text-xs font-mono bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-300">{shadow[prop]}</span>
+                <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">{label}</label>
+                <span className="text-[10px] font-black bg-white/20 dark:bg-white/5 px-2 py-0.5 rounded-lg text-gray-600 dark:text-gray-300 backdrop-blur-sm border border-white/10">{shadow[prop]}</span>
             </div>
             <input
                 type="range"
@@ -161,7 +139,7 @@ const TextShadowDropdown: React.FC<TextShadowDropdownProps> = ({ targetRef, init
                 step={step}
                 value={shadow[prop]}
                 onChange={e => setShadow(prev => ({ ...prev, [prop]: parseFloat(e.target.value) }))}
-                className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                className="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-blue-600 transition-all hover:accent-blue-500"
             />
         </div>
     );
@@ -169,49 +147,40 @@ const TextShadowDropdown: React.FC<TextShadowDropdownProps> = ({ targetRef, init
     return createPortal(
         <div 
             ref={dropdownRef} 
-            style={window.innerWidth < 640 ? {
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: `${Math.min(window.innerWidth - 32, 320)}px`
-            } : { 
-                top: `${position.top}px`, 
-                left: `${position.left}px`,
-                width: '288px'
-            }} 
-            className="fixed bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-[110] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] sm:max-h-[80vh]"
+            style={{ top: `${position.top}px`, left: `${position.left}px` }} 
+            className="fixed w-72 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 dark:border-white/5 z-[60] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200 max-h-[80vh]"
             onMouseDown={e => e.stopPropagation()}
         >
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+            <div className="flex items-center justify-between p-4 border-b border-white/20 dark:border-white/5 bg-white/20 dark:bg-gray-900/20">
+                <h3 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
                     {t('toolbar.textShadow')}
                 </h3>
                 <button 
                     onClick={onClose}
-                    className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-500 dark:text-gray-400"
+                    className="p-1.5 hover:bg-white/20 dark:hover:bg-white/10 rounded-xl transition-all text-gray-500 dark:text-gray-400 active:scale-90"
                 >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
 
-            <div className="flex-1 p-5 space-y-6 overflow-y-auto custom-scrollbar">
+            <div className="p-5 space-y-6 overflow-y-auto custom-scrollbar">
                 {renderSlider(t('panes.image.xOffset'), 'offsetX', -20, 20)}
                 {renderSlider(t('panes.image.yOffset'), 'offsetY', -20, 20)}
                 {renderSlider(t('panes.image.blur'), 'blur', 0, 30)}
                 
                 <div className="space-y-3">
-                     <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('panes.image.color')}</label>
-                     <div className="flex items-center gap-4 p-2 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm">
+                     <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">{t('panes.image.color')}</label>
+                     <div className="flex items-center gap-4 p-3 bg-white/20 dark:bg-gray-900/20 rounded-2xl border border-white/20 dark:border-white/5 shadow-sm backdrop-blur-md">
                         <input 
                             type="color" 
                             value={shadow.color} 
                             onChange={e => setShadow(prev => ({ ...prev, color: e.target.value }))}
-                            className="w-10 h-10 p-0.5 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer bg-white dark:bg-gray-800"
+                            className="w-10 h-10 p-0.5 border border-white/20 dark:border-white/10 rounded-xl cursor-pointer bg-white dark:bg-gray-800 shadow-inner"
                         />
                         <div className="flex flex-col">
-                            <span className="text-xs font-mono text-gray-900 dark:text-gray-100 uppercase font-bold">{shadow.color}</span>
-                            <span className="text-[10px] text-gray-400 uppercase tracking-tighter">Shadow Color</span>
+                            <span className="text-xs font-mono text-gray-900 dark:text-gray-100 uppercase font-black tracking-wider">{shadow.color}</span>
+                            <span className="text-[9px] text-gray-400 uppercase font-black tracking-[0.1em]">Shadow Color</span>
                         </div>
                      </div>
                 </div>
@@ -219,16 +188,16 @@ const TextShadowDropdown: React.FC<TextShadowDropdownProps> = ({ targetRef, init
                 {renderSlider(t('panes.image.opacity'), 'opacity', 0, 1, 0.01)}
             </div>
 
-            <div className="p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700 flex gap-3">
+            <div className="p-4 bg-white/20 dark:bg-gray-900/20 border-t border-white/20 dark:border-white/5 flex gap-3 backdrop-blur-md">
                 <button 
                     onClick={handleRemove}
-                    className="flex-1 px-4 py-2.5 text-xs font-bold rounded-xl bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 border border-gray-200 dark:border-gray-700 transition-all shadow-sm active:scale-95"
+                    className="flex-1 px-4 py-2.5 text-[10px] font-black rounded-xl bg-white/40 dark:bg-gray-800/40 text-red-600 dark:text-red-400 hover:bg-red-500/10 dark:hover:bg-red-500/20 border border-white/20 dark:border-white/5 transition-all shadow-sm active:scale-95 uppercase tracking-[0.15em]"
                 >
                     {t('common.remove')}
                 </button>
                 <button 
                     onClick={handleApply}
-                    className="flex-1 px-4 py-2.5 text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20 active:scale-95"
+                    className="flex-1 px-4 py-2.5 text-[10px] font-black rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-95 uppercase tracking-[0.15em]"
                 >
                     {t('common.apply')}
                 </button>

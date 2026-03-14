@@ -54,13 +54,13 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ x, y, onClose, onSelect, t }) => 
   return (
     <div
       ref={menuRef}
-      className="fixed z-50 bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 dark:border-white/5 py-3 w-64 transform transition-all duration-200 ease-out animate-in fade-in zoom-in-95"
+      className="fixed z-50 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-800 py-1 w-64 transform transition-all duration-200 ease-out animate-in fade-in zoom-in-95"
       style={{ top: position.top, left: position.left }}
     >
-      <div className="px-5 py-2 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">
+      <div className="px-4 py-1.5 text-[11px] font-medium text-gray-400 dark:text-gray-500">
         Basic Blocks
       </div>
-      <div className="space-y-1 px-2">
+      <div className="space-y-0.5 px-1">
         {items.map((item) => (
           <button
             key={item.id}
@@ -68,7 +68,7 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ x, y, onClose, onSelect, t }) => 
               onSelect(item.id);
               onClose();
             }}
-            className="w-full text-left px-4 py-2.5 hover:bg-blue-600 hover:text-white flex items-center gap-3 text-gray-700 dark:text-gray-200 transition-all rounded-xl font-black text-[10px] uppercase tracking-[0.15em] group"
+            className="w-full text-left px-3 py-1.5 hover:bg-blue-600 hover:text-white flex items-center gap-3 text-gray-700 dark:text-gray-200 transition-all rounded-lg font-medium text-xs group"
           >
             <span className="opacity-50 group-hover:opacity-100 transition-opacity">{item.icon}</span>
             <span>{item.label}</span>

@@ -300,20 +300,20 @@ const AiSidekick: React.FC<AiSidekickProps> = ({ ai, onClose, onInsertText, setT
     );
 
     return (
-        <aside className="w-full md:w-96 bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl md:border-l border-white/20 dark:border-white/5 flex flex-col h-full animate-in slide-in-from-right duration-500 ease-out">
-            <header className="p-6 border-b border-white/20 dark:border-white/5 flex items-center justify-between flex-shrink-0 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md">
+        <aside className="w-full md:w-96 bg-white dark:bg-gray-900 md:border-l border-gray-100 dark:border-gray-800 flex flex-col h-full animate-in slide-in-from-right duration-500 ease-out">
+            <header className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between flex-shrink-0 bg-white dark:bg-gray-900">
                 <div className="flex items-center gap-3">
-                    <SparklesIcon className="text-yellow-500 w-6 h-6 animate-pulse" />
-                    <h2 className="text-[11px] font-black text-gray-900 dark:text-gray-100 uppercase tracking-[0.2em]">{t('sidekick.title')}</h2>
+                    <SparklesIcon className="text-yellow-500 w-6 h-6" />
+                    <h2 className="text-[11px] font-semibold text-gray-900 dark:text-gray-100">{t('sidekick.title')}</h2>
                 </div>
-                <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-200/50 dark:hover:bg-white/10 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white active:scale-90"><CloseIcon /></button>
+                <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white active:scale-90"><CloseIcon /></button>
             </header>
 
-            <div className="p-3 border-b border-white/20 dark:border-white/5 bg-white/20 dark:bg-gray-900/20 backdrop-blur-sm">
-                <div className="flex justify-around bg-gray-200/50 dark:bg-white/5 rounded-2xl p-1.5">
-                    <button onClick={() => setActiveTab('chat')} className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-xl flex-1 transition-all ${activeTab === 'chat' ? 'bg-white dark:bg-gray-800 shadow-lg text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}>{t('sidekick.chat')}</button>
-                    <button onClick={() => setActiveTab('image')} className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-xl flex-1 transition-all ${activeTab === 'image' ? 'bg-white dark:bg-gray-800 shadow-lg text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}>{t('sidekick.image')}</button>
-                    <button onClick={() => setActiveTab('live')} className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-xl flex-1 transition-all ${activeTab === 'live' ? 'bg-white dark:bg-gray-800 shadow-lg text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}>{t('sidekick.live')}</button>
+            <div className="p-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+                <div className="flex justify-around bg-gray-100 dark:bg-gray-800 rounded-2xl p-1.5">
+                    <button onClick={() => setActiveTab('chat')} className={`px-4 py-2 text-[10px] font-semibold rounded-xl flex-1 transition-all ${activeTab === 'chat' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 border border-gray-100 dark:border-gray-600' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}>{t('sidekick.chat')}</button>
+                    <button onClick={() => setActiveTab('image')} className={`px-4 py-2 text-[10px] font-semibold rounded-xl flex-1 transition-all ${activeTab === 'image' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 border border-gray-100 dark:border-gray-600' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}>{t('sidekick.image')}</button>
+                    <button onClick={() => setActiveTab('live')} className={`px-4 py-2 text-[10px] font-semibold rounded-xl flex-1 transition-all ${activeTab === 'live' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 border border-gray-100 dark:border-gray-600' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}>{t('sidekick.live')}</button>
                 </div>
             </div>
 
@@ -355,17 +355,17 @@ const AiSidekick: React.FC<AiSidekickProps> = ({ ai, onClose, onInsertText, setT
                         )}
                         {chatHistory.map((msg, i) => (
                             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[90%] rounded-2xl px-5 py-4 shadow-sm ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none shadow-blue-500/20' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-bl-none border border-white/20 dark:border-white/5'}`}>
+                                <div className={`max-w-[90%] rounded-2xl px-5 py-4 ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-bl-none border border-gray-100 dark:border-gray-700'}`}>
                                     <div className="text-sm leading-relaxed" dangerouslySetInnerHTML={{__html: msg.text.replace(/\n/g, '<br/>')}}></div>
                                     {msg.isThinking && (
-                                        <div className="flex items-center gap-2 mt-3 text-[10px] font-bold uppercase tracking-widest text-blue-500 animate-pulse">
+                                        <div className="flex items-center gap-2 mt-3 text-[10px] font-semibold text-blue-500 animate-pulse">
                                             <BrainCircuitIcon className="w-3 h-3" />
                                             <span>Thinking...</span>
                                         </div>
                                     )}
                                     {msg.sources && msg.sources.length > 0 && (
-                                        <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700/50">
-                                            <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-2">Sources</p>
+                                        <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+                                            <p className="text-[9px] font-semibold text-gray-400 dark:text-gray-500 mb-2">Sources</p>
                                             <div className="flex flex-col gap-2">
                                                 {msg.sources.map((s, si) => (
                                                     <a key={si} href={s.web?.uri || s.maps?.uri} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[11px] font-medium text-blue-500 hover:text-blue-600 transition-colors truncate">
@@ -380,7 +380,7 @@ const AiSidekick: React.FC<AiSidekickProps> = ({ ai, onClose, onInsertText, setT
                             </div>
                         ))}
                     </div>
-                    <div className="p-4 border-t border-white/20 dark:border-white/5 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md">
+                    <div className="p-4 border-t border-white/20 dark:border-white/5 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md">
                         <div className="relative flex items-center">
                             <input
                                 type="text"
@@ -414,25 +414,25 @@ const AiSidekick: React.FC<AiSidekickProps> = ({ ai, onClose, onInsertText, setT
                             <div className="flex flex-col items-center justify-center h-40 gap-4">
                                 <div className="relative">
                                     <div className="w-12 h-12 rounded-full border-4 border-blue-500/20 border-t-blue-600 animate-spin"></div>
-                                    <SparklesIcon className="absolute inset-0 m-auto w-4 h-4 text-blue-600 animate-pulse" />
+                                    <SparklesIcon className="absolute inset-0 m-auto w-4 h-4 text-blue-600" />
                                 </div>
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{t('sidekick.imageGenerating')}</span>
+                                <span className="text-[10px] font-semibold text-gray-500">{t('sidekick.imageGenerating')}</span>
                             </div>
                         )}
                         {!isGenerating && generatedImages.length === 0 && (
                              <div className="flex flex-col items-center justify-center h-full text-gray-400/50">
                                 <ImageIcon className="w-16 h-16 mb-4 opacity-20" />
-                                <p className="text-[11px] font-bold uppercase tracking-widest">Enter a prompt to generate images</p>
+                                <p className="text-[11px] font-semibold">Enter a prompt to generate images</p>
                             </div>
                         )}
                         <div className="grid grid-cols-2 gap-4">
                             {generatedImages.map((src, i) => (
-                                <div key={i} className="group relative rounded-2xl overflow-hidden shadow-lg aspect-square bg-white dark:bg-gray-800 border border-white/20 dark:border-white/5">
+                                <div key={i} className="group relative rounded-2xl overflow-hidden aspect-square bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-800">
                                     <img src={src} alt="Generated" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                                    <div className="absolute inset-0 bg-gray-900/60 opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-[2px] flex items-center justify-center">
+                                    <div className="absolute inset-0 bg-gray-900/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
                                         <button 
                                             onClick={() => onInsertText(`<img src="${src}" style="max-width:100%" />`)}
-                                            className="px-5 py-2.5 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-xl transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-xl active:scale-95"
+                                            className="px-5 py-2.5 bg-white text-black text-[10px] font-semibold rounded-xl transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 active:scale-95"
                                         >
                                             Insert
                                         </button>
@@ -441,7 +441,7 @@ const AiSidekick: React.FC<AiSidekickProps> = ({ ai, onClose, onInsertText, setT
                             ))}
                         </div>
                     </div>
-                    <div className="p-4 border-t border-white/20 dark:border-white/5 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md">
+                    <div className="p-4 border-t border-white/20 dark:border-white/5 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md">
                         <div className="relative flex items-center">
                             <input
                                 type="text"
@@ -478,22 +478,22 @@ const AiSidekick: React.FC<AiSidekickProps> = ({ ai, onClose, onInsertText, setT
                         )}
                     </div>
                     
-                    <h3 className="text-2xl font-black text-gray-900 dark:text-gray-100 mb-3 tracking-tight">Gemini Live</h3>
-                    <p className="mb-10 text-[11px] font-medium text-gray-500 dark:text-gray-400 max-w-xs leading-relaxed uppercase tracking-widest">{t('sidekick.liveDescription')}</p>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 tracking-tight">Gemini Live</h3>
+                    <p className="mb-10 text-[11px] font-medium text-gray-500 dark:text-gray-400 max-w-xs leading-relaxed">{t('sidekick.liveDescription')}</p>
                     
                     <button 
                         onClick={isLive ? cleanupLive : handleStartLive} 
-                        className={`flex items-center gap-4 px-10 py-5 rounded-2xl text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl hover:scale-105 transition-all duration-500 active:scale-95 ${isLive ? 'bg-red-500 shadow-red-500/25 hover:bg-red-600' : 'bg-blue-600 shadow-blue-500/25 hover:bg-blue-700'}`}
+                        className={`flex items-center gap-4 px-10 py-5 rounded-2xl text-white font-semibold text-[11px] transition-all duration-500 active:scale-95 ${isLive ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700'}`}
                     >
                         {isLive ? <StopCircleIcon className="w-6 h-6" /> : <MicIcon className="w-6 h-6" />}
                         <span>{isLive ? t('sidekick.liveStop') : t('sidekick.liveStart')}</span>
                     </button>
 
                     {isLive && liveTranscript && (
-                        <div className="mt-10 w-full text-left p-6 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-2xl border border-white/20 dark:border-white/5 shadow-2xl h-48 overflow-y-auto custom-scrollbar">
-                           {liveTranscript.user && <p className="text-sm mb-3 leading-relaxed"><strong className="text-[10px] font-black uppercase tracking-widest text-blue-500 block mb-1">You</strong> {liveTranscript.user}</p>}
-                           {liveTranscript.model && <p className="text-sm leading-relaxed"><strong className="text-[10px] font-black uppercase tracking-widest text-emerald-500 block mb-1">Gemini</strong> {liveTranscript.model}</p>}
-                           {!liveTranscript.user && !liveTranscript.model && <p className="text-[10px] font-bold text-center text-gray-400 italic uppercase tracking-widest animate-pulse">Listening...</p>}
+                        <div className="mt-10 w-full text-left p-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 h-48 overflow-y-auto custom-scrollbar">
+                           {liveTranscript.user && <p className="text-sm mb-3 leading-relaxed"><strong className="text-[10px] font-semibold text-blue-500 block mb-1">You</strong> {liveTranscript.user}</p>}
+                           {liveTranscript.model && <p className="text-sm leading-relaxed"><strong className="text-[10px] font-semibold text-emerald-500 block mb-1">Gemini</strong> {liveTranscript.model}</p>}
+                           {!liveTranscript.user && !liveTranscript.model && <p className="text-[10px] font-medium text-center text-gray-400 italic animate-pulse">Listening...</p>}
                         </div>
                     )}
                 </div>

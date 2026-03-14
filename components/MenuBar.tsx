@@ -112,6 +112,8 @@ const MenuDropdown: React.FC<{ label: string; items: MenuItem[] }> = ({ label, i
 
         setSubmenuPosition({ top: rect.top, left });
         setOpenSubmenu(item.label);
+    } else {
+        setOpenSubmenu(null);
     }
   };
 
@@ -122,17 +124,17 @@ const MenuDropdown: React.FC<{ label: string; items: MenuItem[] }> = ({ label, i
         onClick={() => setIsOpen(!isOpen)}
         aria-haspopup="true"
         aria-expanded={isOpen}
-        className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.15em] rounded-xl transition-all duration-200 focus:outline-none ${
+        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 focus:outline-none ${
           isOpen 
-            ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400 shadow-sm' 
-            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100/80 dark:hover:bg-white/10'
+            ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400' 
+            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10'
         }`}
       >
         {label}
       </button>
       {isOpen && (
         <div 
-          className="absolute left-0 mt-2 w-64 bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl rounded-2xl shadow-2xl py-3 z-50 border border-white/20 dark:border-white/5 animate-in fade-in zoom-in-95 duration-200 origin-top-left" 
+          className="absolute left-0 mt-1 w-64 bg-white dark:bg-gray-900 rounded-xl shadow-xl py-1 z-50 border border-gray-200 dark:border-gray-800 animate-in fade-in zoom-in-95 duration-200 origin-top-left" 
           role="menu" 
           onMouseLeave={() => setOpenSubmenu(null)}
         >
@@ -143,10 +145,10 @@ const MenuDropdown: React.FC<{ label: string; items: MenuItem[] }> = ({ label, i
               <div key={item.label} className="px-2" onMouseEnter={(e) => handleSubmenuEnter(e, item)}>
                   <button
                     onClick={() => handleAction(item.action)}
-                    className={`text-left w-full px-4 py-2.5 text-[10px] font-black rounded-xl flex items-center justify-between transition-all duration-150 uppercase tracking-[0.15em] ${
+                    className={`text-left w-full px-3 py-1.5 text-xs font-medium rounded-lg flex items-center justify-between transition-colors duration-150 ${
                       openSubmenu === item.label
-                        ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/20'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-white/10'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10'
                     }`}
                     role="menuitem"
                     disabled={!item.action && !item.items}
@@ -161,16 +163,17 @@ const MenuDropdown: React.FC<{ label: string; items: MenuItem[] }> = ({ label, i
                   </button>
                   {item.items && openSubmenu === item.label && submenuPosition && createPortal(
                     <div 
-                        className="fixed w-56 bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl rounded-2xl shadow-2xl py-3 z-[60] border border-white/20 dark:border-white/5 animate-in fade-in zoom-in-95 slide-in-from-left-2 duration-200"
+                        className="fixed w-56 bg-white dark:bg-gray-900 rounded-xl shadow-xl py-1 z-[60] border border-gray-200 dark:border-gray-800 animate-in fade-in zoom-in-95 slide-in-from-left-1 duration-200"
                         style={{ top: `${submenuPosition.top}px`, left: `${submenuPosition.left}px`}}
                         onMouseEnter={() => setOpenSubmenu(item.label)}
+                        onMouseLeave={() => setOpenSubmenu(null)}
                         role="menu"
                     >
                         {item.items.map(subItem => (
-                             <div key={subItem.label} className="px-2">
+                             <div key={subItem.label} className="px-1">
                                 <button
                                     onClick={() => handleAction(subItem.action)}
-                                    className="text-left w-full px-4 py-2.5 text-[10px] font-black text-gray-700 dark:text-gray-300 hover:bg-blue-600 hover:text-white rounded-xl flex items-center gap-3 transition-all uppercase tracking-[0.15em]"
+                                    className="text-left w-full px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-blue-600 hover:text-white rounded-lg flex items-center gap-3 transition-all"
                                     role="menuitem"
                                 >
                                     <span className="opacity-70">{subItem.icon}</span>

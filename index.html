@@ -13,11 +13,31 @@
     <script>
       tailwind.config = {
         darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Google Sans"', '"Noto Sans Georgian"', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+              georgian: ['"Noto Sans Georgian"', 'serif'],
+            },
+          },
+        },
       }
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Arimo:wght@300;400;500;700;900&family=FiraGO:wght@300;400;500;700;900&family=Lato:wght@300;400;700;900&family=Lobster&family=Merriweather:wght@400;700&family=Montserrat:wght@300;400;500;700;900&family=Noto+Sans+Georgian:wght@300;400;500;700;900&family=Oswald:wght@400;700&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Raleway:wght@400;700&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+      /* Custom font for Google Sans if available, otherwise fallback */
+      @font-face {
+        font-family: 'Google Sans';
+        src: local('Google Sans'), local('Product Sans');
+      }
+      
+      body {
+        font-family: "Google Sans", "Noto Sans Georgian", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <!-- Google API Scripts -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>

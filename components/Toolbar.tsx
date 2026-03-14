@@ -35,7 +35,7 @@ const fontFamilies: FontFamily[] = [
   { value: "'Times New Roman', Times, serif", label: 'Times New Roman' },
   { value: "'Courier New', Courier, monospace", label: 'Courier New' },
   // Georgian fonts from Google Fonts
-  { value: "'Noto Sans Georgian', sans-serif", label: 'Noto Sans Georgian', weights: [{ label: 'Light', value: 300 }, { label: 'Normal', value: 400 }, { label: 'Medium', value: 500 }, { label: 'Bold', value: 700 }, { label: 'Black', value: 900 }] },
+  { value: "'Noto Sans Georgian', sans-serif", label: 'Google Sans Georgia', weights: [{ label: 'Light', value: 300 }, { label: 'Normal', value: 400 }, { label: 'Medium', value: 500 }, { label: 'Bold', value: 700 }, { label: 'Black', value: 900 }] },
   { value: "'FiraGO', sans-serif", label: 'FiraGO', weights: [{ label: 'Light', value: 300 }, { label: 'Normal', value: 400 }, { label: 'Medium', value: 500 }, { label: 'Bold', value: 700 }, { label: 'Black', value: 900 }] },
   { value: "'Arimo', sans-serif", label: 'Arimo', weights: [{ label: 'Light', value: 300 }, { label: 'Normal', value: 400 }, { label: 'Medium', value: 500 }, { label: 'Bold', value: 700 }, { label: 'Black', value: 900 }] },
   // Other Google Fonts
@@ -58,7 +58,7 @@ const ToolbarButton: React.FC<{ onAction: (e: React.MouseEvent<HTMLButtonElement
         ref={buttonRef} 
         onMouseDown={handleMouseDown} 
         aria-label={tooltip} 
-        className={`p-3 md:p-2 rounded-xl transition-all duration-200 active:scale-90 ${
+        className={`p-2 rounded-lg transition-all duration-200 ${
           isActive 
             ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' 
             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
@@ -66,7 +66,7 @@ const ToolbarButton: React.FC<{ onAction: (e: React.MouseEvent<HTMLButtonElement
       >
         {children}
       </button>
-      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-gray-900/90 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap pointer-events-none z-50 shadow-xl border border-white/10 translate-y-1 group-hover:translate-y-0">
+      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[11px] font-medium rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap pointer-events-none z-50 shadow-xl border border-white/10 translate-y-1 group-hover:translate-y-0">
         {tooltip}
       </div>
     </div>
@@ -141,7 +141,7 @@ const FontFamilyMenuItem: React.FC<{
     const SubmenuPortal = (!isMobile && item.weights && isSubmenuOpen && submenuPosition) ? createPortal(
         <div 
             data-menu-part="true"
-            className="fixed w-48 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-[110] border border-white/20 dark:border-white/5 animate-in fade-in zoom-in-95 slide-in-from-left-2 duration-200"
+            className="fixed w-48 bg-white dark:bg-gray-900 rounded-xl shadow-xl py-1 z-[100] border border-gray-200 dark:border-gray-800 animate-in fade-in zoom-in-95 slide-in-from-left-1 duration-200"
             style={{ top: submenuPosition.top, left: submenuPosition.left }}
             onMouseEnter={handleMouseEnter} 
             onMouseLeave={handleMouseLeave}
@@ -150,7 +150,7 @@ const FontFamilyMenuItem: React.FC<{
                 <button 
                     key={weight.value} 
                     onMouseDown={(e) => { e.preventDefault(); onSelect(item.value, weight.value); }} 
-                    className="w-full text-left px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-blue-600 hover:text-white transition-all uppercase tracking-wider"
+                    className="w-full text-left px-4 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-blue-600 hover:text-white transition-all"
                 >
                     <span style={{ fontFamily: item.value, fontWeight: weight.value }}>{weight.label}</span>
                 </button>
@@ -164,7 +164,7 @@ const FontFamilyMenuItem: React.FC<{
             <button
                 ref={itemRef}
                 onMouseDown={handleMouseDown}
-                className="w-full text-left px-3 py-2 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl flex items-center justify-between transition-all uppercase tracking-wider group"
+                className="w-full text-left px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg flex items-center justify-between transition-all group"
             >
                 <span style={{ fontFamily: item.value }} className="group-hover:translate-x-1 transition-transform">{item.label}</span>
                 {item.weights && <ChevronRightIcon className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />}
@@ -218,22 +218,16 @@ const FontFamilyDropdown: React.FC<{
     
             let top = rect.bottom + 4;
             let left = rect.left;
-            const viewportWidth = window.innerWidth;
     
-            if (viewportWidth < 640) {
-                left = (viewportWidth - menuWidth) / 2;
-                top = (window.innerHeight - Math.min(menuMaxHeight, window.innerHeight * 0.8)) / 2;
-            } else {
-                if (left + menuWidth > viewportWidth) {
-                    left = rect.right - menuWidth;
-                }
-                if (left < 4) { left = 4; }
-
-                if (isBottom || (top + menuMaxHeight > window.innerHeight && rect.top > menuMaxHeight)) {
-                    top = rect.top - menuMaxHeight - 4;
-                }
-                if (top < 0) { top = 4; }
+            if (left + menuWidth > window.innerWidth) {
+                left = rect.right - menuWidth;
             }
+            if (left < 0) { left = 4; }
+    
+            if (isBottom || (top + menuMaxHeight > window.innerHeight && rect.top > menuMaxHeight)) {
+                top = rect.top - menuMaxHeight - 4;
+            }
+            if (top < 0) { top = 4; }
     
             setMenuPosition({ top, left });
             setIsOpen(true);
@@ -259,7 +253,7 @@ const FontFamilyDropdown: React.FC<{
         <div data-menu-part="true" ref={menuRef} style={{ 
             top: `${menuPosition.top}px`, 
             left: `${menuPosition.left}px` 
-        }} className="fixed w-64 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-2xl py-3 z-[110] border border-white/20 dark:border-white/5 max-h-80 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 custom-scrollbar" role="menu">
+        }} className="fixed w-64 bg-white dark:bg-gray-900 rounded-xl shadow-xl py-1 z-[100] border border-gray-200 dark:border-gray-800 max-h-80 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 custom-scrollbar" role="menu">
             {items.map(item => (
                 <FontFamilyMenuItem key={item.value} item={item} onSelect={handleSelect} />
             ))}
@@ -268,12 +262,12 @@ const FontFamilyDropdown: React.FC<{
     ) : null;
 
     return (
-        <div ref={containerRef} data-menu-part="true" className="relative flex items-center border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-900 transition-all hover:border-gray-300 dark:hover:border-gray-700 shadow-sm">
-            <div className="flex-grow pl-3 pr-1 py-1.5 text-[11px] font-bold text-left truncate uppercase tracking-widest text-gray-700 dark:text-gray-300" style={{ maxWidth: '140px' }}>
+        <div ref={containerRef} data-menu-part="true" className="relative flex items-center border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 transition-all hover:border-gray-300 dark:hover:border-gray-700 shadow-sm">
+            <div className="flex-grow pl-3 pr-1 py-1 text-[11px] font-medium text-left truncate text-gray-700 dark:text-gray-300" style={{ maxWidth: '140px' }}>
                 {label}
             </div>
             <div className="h-4 w-px bg-gray-200 dark:bg-gray-800"></div>
-            <button onMouseDown={handleToggle} aria-haspopup="true" aria-expanded={isOpen} className="p-1.5 rounded-r-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500">
+            <button onMouseDown={handleToggle} aria-haspopup="true" aria-expanded={isOpen} className="p-1.5 rounded-r-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500">
                 <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
             {isOpen && MenuPortal}
@@ -305,22 +299,16 @@ const ToolbarDropdown: React.FC<{ label: React.ReactNode; items: { value: string
     
             let top = rect.bottom + 4;
             let left = rect.left;
-            const viewportWidth = window.innerWidth;
     
-            if (viewportWidth < 640) {
-                left = (viewportWidth - menuWidth) / 2;
-                top = (window.innerHeight - Math.min(menuHeight, window.innerHeight * 0.8)) / 2;
-            } else {
-                if (left + menuWidth > viewportWidth) {
-                    left = rect.right - menuWidth;
-                }
-                if (left < 4) { left = 4; }
-
-                if (isBottom || (top + menuHeight > window.innerHeight && rect.top > menuHeight)) {
-                    top = rect.top - menuHeight - 4;
-                }
-                if (top < 0) { top = 4; }
+            if (left + menuWidth > window.innerWidth) {
+                left = rect.right - menuWidth;
             }
+            if (left < 0) { left = 4; }
+    
+            if (isBottom || (top + menuHeight > window.innerHeight && rect.top > menuHeight)) {
+                top = rect.top - menuHeight - 4;
+            }
+            if (top < 0) { top = 4; }
     
             setMenuPosition({ top, left });
             setIsOpen(true);
@@ -350,12 +338,12 @@ const ToolbarDropdown: React.FC<{ label: React.ReactNode; items: { value: string
     }, [isOpen]);
 
     const MenuPortal = menuPosition ? createPortal(
-        <div style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }} className={`${widthClass} fixed bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-[110] border border-white/20 dark:border-white/5 flex flex-col animate-in fade-in zoom-in-95 duration-200`} role="menu">
+        <div style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }} className={`${widthClass} fixed bg-white dark:bg-gray-900 rounded-xl shadow-xl py-1 z-[100] border border-gray-200 dark:border-gray-800 flex flex-col animate-in fade-in zoom-in-95 duration-200`} role="menu">
             {items.map(item => (
                 <button 
                     key={item.value} 
                     onMouseDown={(e) => { e.preventDefault(); handleSelect(item.value); }} 
-                    className="text-left w-full px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all uppercase tracking-wider" 
+                    className="text-left w-full px-4 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all" 
                     role="menuitem"
                 >
                     {item.label}
@@ -372,7 +360,7 @@ const ToolbarDropdown: React.FC<{ label: React.ReactNode; items: { value: string
                 onMouseDown={handleToggle} 
                 aria-haspopup="true" 
                 aria-expanded={isOpen} 
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl transition-all duration-200 uppercase tracking-wider ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
                     isOpen 
                         ? 'bg-gray-100 dark:bg-gray-800 text-blue-600' 
                         : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
@@ -484,7 +472,7 @@ const FontSizeCombobox: React.FC<{ value: string; onChange: (size: number) => vo
     }
 
     return (
-        <div ref={containerRef} className="relative flex items-center border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-900 transition-all hover:border-gray-300 dark:hover:border-gray-700 shadow-sm">
+        <div ref={containerRef} className="relative flex items-center border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 transition-all hover:border-gray-300 dark:hover:border-gray-700 shadow-sm">
             <input
                 ref={inputRef}
                 type="number"
@@ -492,10 +480,10 @@ const FontSizeCombobox: React.FC<{ value: string; onChange: (size: number) => vo
                 onChange={(e) => handleValueChange(e.target.value)}
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
-                className="w-10 pl-2 py-1.5 text-center bg-transparent focus:outline-none text-[11px] font-bold text-gray-700 dark:text-gray-300 [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-10 pl-2 py-1 text-center bg-transparent focus:outline-none text-[11px] font-medium text-gray-700 dark:text-gray-300 [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none"
             />
             <div className="h-4 w-px bg-gray-200 dark:bg-gray-800"></div>
-            <button onMouseDown={(e) => { e.preventDefault(); setIsOpen(prev => !prev); }} className="p-1.5 rounded-r-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500">
+            <button onMouseDown={(e) => { e.preventDefault(); setIsOpen(prev => !prev); }} className="p-1.5 rounded-r-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500">
                 <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
             {isOpen && createPortal(
@@ -505,13 +493,13 @@ const FontSizeCombobox: React.FC<{ value: string; onChange: (size: number) => vo
                         left: `${containerRect?.left}px`,
                         width: `${containerRect?.width}px`
                     }}
-                    className="fixed bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-[110] border border-white/20 dark:border-white/5 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 custom-scrollbar"
+                    className="fixed bg-white dark:bg-gray-900 rounded-xl shadow-xl py-1 z-[100] border border-gray-200 dark:border-gray-800 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 custom-scrollbar"
                 >
                     {fontSizes.map(size => (
                         <button 
                             key={size}
                             onMouseDown={(e) => { e.preventDefault(); handleSelect(size); }}
-                            className="w-full text-center px-3 py-2 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+                            className="w-full text-center px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
                         >
                             {size}
                         </button>
@@ -712,14 +700,14 @@ const Toolbar: React.FC<ToolbarProps> = ({ editorRef, onCopyFormatting, isFormat
 
   return (
     <div className="p-3 md:p-2 bg-white dark:bg-gray-900 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 min-h-[72px] md:min-h-0">
-      {onOpenMenu && (
-        <div className="md:hidden flex items-center pr-2 border-r border-gray-300 dark:border-gray-600 mr-2 flex-shrink-0">
-          <ToolbarButton onAction={onOpenMenu} tooltip="Menu">
-            <MenuIcon size={24} />
-          </ToolbarButton>
-        </div>
-      )}
-      <div className="flex-1 min-w-0 flex items-center flex-nowrap gap-1 md:gap-1 overflow-x-auto md:overflow-visible custom-scrollbar">
+      <div className="flex-1 min-w-0 flex items-center flex-nowrap gap-1 md:gap-1 overflow-x-auto md:overflow-visible">
+        {onOpenMenu && (
+          <div className="md:hidden flex items-center pr-2 border-r border-gray-300 dark:border-gray-600 mr-2">
+            <ToolbarButton onAction={onOpenMenu} tooltip="Menu">
+              <MenuIcon size={24} />
+            </ToolbarButton>
+          </div>
+        )}
         <div className="flex items-center gap-0.5 md:gap-1 border-r border-gray-300 dark:border-gray-600 pr-1 md:pr-2 mr-1 md:mr-2">
           <ToolbarButton onAction={() => executeCommand('undo')} tooltip={t('toolbar.undo')}><UndoIcon /></ToolbarButton>
           <ToolbarButton onAction={() => executeCommand('redo')} tooltip={t('toolbar.redo')}><RedoIcon /></ToolbarButton>

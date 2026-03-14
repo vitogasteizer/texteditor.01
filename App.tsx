@@ -1019,10 +1019,10 @@ const App: React.FC = () => {
   const isAnySidebarOpen = isAiSidekickVisible || activePanel || isCommentsSidebarVisible || isShortcutsSidebarVisible;
 
   return (
-    <div className="h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col font-sans overflow-hidden">
+    <div className="h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col overflow-hidden">
       {view === 'editor' ? (
         <>
-            <header className="sticky top-0 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm hidden md:block border-b border-gray-200/50 dark:border-gray-700/50">
+            <header className="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm hidden md:block border-b border-gray-200/50 dark:border-gray-700/50">
                  <MenuBar 
                   onNewDocument={handleNewDocument}
                   onNewFromTemplate={() => setIsTemplatesModalVisible(true)}
@@ -1205,7 +1205,7 @@ const App: React.FC = () => {
                 
                 {isAnySidebarOpen && (
                     <>
-                        <div className="md:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-30" onClick={handleCloseSidebars} />
+                        <div className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-30" onClick={handleCloseSidebars} />
                         <div className="absolute top-0 right-0 h-full w-screen max-w-sm md:w-auto md:max-w-none md:relative z-40 md:flex-shrink-0 border-l border-white/20 dark:border-white/5 bg-transparent">
                             {isAiSidekickVisible ? (
                                 <AiSidekick

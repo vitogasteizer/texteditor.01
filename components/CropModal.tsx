@@ -35,27 +35,24 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, onApply, imageSr
 
   if (!isOpen || !imageSrc) return null;
 
-  const getCoords = (e: React.MouseEvent | React.TouchEvent) => {
+  const getCoords = (e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     return {
-      x: clientX - rect.left,
-      y: clientY - rect.top,
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
     };
   };
 
-  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
-    if (e.cancelable) e.preventDefault();
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
     const { x, y } = getCoords(e);
     setIsCropping(true);
     cropStartCoords.current = { x, y };
     setCrop({ x, y, width: 0, height: 0 });
   };
 
-  const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleMouseMove = (e: React.MouseEvent) => {
     if (!isCropping || !imageRef.current) return;
-    if (e.cancelable) e.preventDefault();
     const { x, y } = getCoords(e);
     const startX = cropStartCoords.current.x;
     const startY = cropStartCoords.current.y;
@@ -120,27 +117,24 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, onApply, imageSr
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="crop-title"
     >
       <div 
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-4xl flex flex-col max-h-[90vh]" 
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 w-full max-w-4xl flex flex-col max-h-[90vh] border border-gray-100 dark:border-gray-700" 
         onClick={e => e.stopPropagation()}
       >
-        <h3 id="crop-title" className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">{t('panes.image.cropImage')}</h3>
-        <div className="flex-grow overflow-auto flex items-center justify-center bg-gray-200 dark:bg-gray-900 rounded-md">
+        <h3 id="crop-title" className="text-sm font-semibold mb-4 text-gray-900 dark:text-gray-100">{t('panes.image.cropImage')}</h3>
+        <div className="flex-grow overflow-auto flex items-center justify-center bg-gray-50 dark:bg-gray-900 rounded-lg">
             <div 
-                className="relative select-none touch-none" 
+                className="relative select-none" 
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
-                onTouchStart={handleMouseDown}
-                onTouchMove={handleMouseMove}
-                onTouchEnd={handleMouseUp}
             >
                 <img 
                     ref={imageRef} 

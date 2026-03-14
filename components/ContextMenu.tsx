@@ -53,24 +53,24 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose, onAction, onAi
   return (
     <div
       ref={menuRef}
-      className="fixed z-50 bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 dark:border-white/5 py-3 w-64 transform transition-all duration-200 ease-out animate-in fade-in zoom-in-95"
+      className="fixed z-50 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-800 py-1 w-64 transform transition-all duration-200 ease-out animate-in fade-in zoom-in-95"
       style={{ top: position.top, left: position.left }}
     >
       {hasSelection && (
         <>
-            <div className="px-5 py-2 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">
+            <div className="px-4 py-1.5 text-[11px] font-medium text-gray-400 dark:text-gray-500">
                 {t('menu.edit')}
             </div>
-            <div className="px-2 space-y-1">
+            <div className="px-1 space-y-0.5">
                 <button
                     onClick={() => handleClick(() => onAction('copy'))}
-                    className="w-full text-left px-4 py-2.5 hover:bg-blue-600 hover:text-white flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-all rounded-xl font-black text-[10px] uppercase tracking-[0.15em] group"
+                    className="w-full text-left px-3 py-1.5 hover:bg-blue-600 hover:text-white flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-all rounded-lg font-medium text-xs group"
                 >
                     <CopyIcon className="w-4 h-4 text-gray-500 group-hover:text-white transition-colors" /> {t('menu.editCopy')}
                 </button>
                 <button
                     onClick={() => handleClick(() => onAction('cut'))}
-                    className="w-full text-left px-4 py-2.5 hover:bg-blue-600 hover:text-white flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-all rounded-xl font-black text-[10px] uppercase tracking-[0.15em] group"
+                    className="w-full text-left px-3 py-1.5 hover:bg-blue-600 hover:text-white flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-all rounded-lg font-medium text-xs group"
                 >
                     <ScissorsIcon className="w-4 h-4 text-gray-500 group-hover:text-white transition-colors" /> {t('menu.editCut')}
                 </button>
@@ -78,16 +78,16 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose, onAction, onAi
         </>
       )}
       
-      <div className="px-2 space-y-1 mt-1">
+      <div className="px-1 space-y-0.5 mt-0.5">
         <button
             onClick={() => handleClick(() => onAction('paste'))}
-            className="w-full text-left px-4 py-2.5 hover:bg-blue-600 hover:text-white flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-all rounded-xl font-black text-[10px] uppercase tracking-[0.15em] group"
+            className="w-full text-left px-3 py-1.5 hover:bg-blue-600 hover:text-white flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-all rounded-lg font-medium text-xs group"
         >
             <ClipboardIcon className="w-4 h-4 text-gray-500 group-hover:text-white transition-colors" /> {t('menu.editPaste')}
         </button>
         <button
             onClick={() => handleClick(() => onAction('paste-plain'))}
-            className="w-full text-left px-4 py-2.5 hover:bg-blue-600 hover:text-white flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-all rounded-xl font-black text-[10px] uppercase tracking-[0.15em] group"
+            className="w-full text-left px-3 py-1.5 hover:bg-blue-600 hover:text-white flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-all rounded-lg font-medium text-xs group"
         >
             <ClipboardIcon className="w-4 h-4 text-gray-500 group-hover:text-white transition-colors" /> {t('menu.editPastePlain') || 'Paste without formatting'}
         </button>
@@ -95,26 +95,26 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose, onAction, onAi
 
       {hasSelection && (
           <>
-            <div className="border-t border-white/20 dark:border-white/5 my-3 mx-2"></div>
-            <div className="px-5 py-2 text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] flex items-center gap-2">
+            <div className="border-t border-gray-100 dark:border-gray-800 my-1 mx-1"></div>
+            <div className="px-4 py-1.5 text-[11px] font-medium text-blue-500 flex items-center gap-2">
                 <SparklesIcon className="w-3.5 h-3.5" /> AI Actions
             </div>
-            <div className="px-2 space-y-1">
+            <div className="px-1 space-y-0.5">
                 <button
                     onClick={() => handleClick(() => onAiAction('fix-grammar'))}
-                    className="w-full text-left px-4 py-2.5 hover:bg-blue-600 hover:text-white flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-all rounded-xl font-black text-[10px] uppercase tracking-[0.15em] group"
+                    className="w-full text-left px-3 py-1.5 hover:bg-blue-600 hover:text-white flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-all rounded-lg font-medium text-xs group"
                 >
                     <PenLineIcon className="w-4 h-4 text-blue-500 group-hover:text-white transition-colors" /> {t('floatingToolbar.fixGrammar')}
                 </button>
                 <button
                     onClick={() => handleClick(() => onAiAction('summarize'))}
-                    className="w-full text-left px-4 py-2.5 hover:bg-blue-600 hover:text-white flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-all rounded-xl font-black text-[10px] uppercase tracking-[0.15em] group"
+                    className="w-full text-left px-3 py-1.5 hover:bg-blue-600 hover:text-white flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-all rounded-lg font-medium text-xs group"
                 >
                     <BookTextIcon className="w-4 h-4 text-blue-500 group-hover:text-white transition-colors" /> {t('floatingToolbar.summarize')}
                 </button>
                 <button
                     onClick={() => handleClick(() => onAiAction('continue-writing'))}
-                    className="w-full text-left px-4 py-2.5 hover:bg-blue-600 hover:text-white flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-all rounded-xl font-black text-[10px] uppercase tracking-[0.15em] group"
+                    className="w-full text-left px-3 py-1.5 hover:bg-blue-600 hover:text-white flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-all rounded-lg font-medium text-xs group"
                 >
                     <Wand2Icon className="w-4 h-4 text-blue-500 group-hover:text-white transition-colors" /> {t('floatingToolbar.continueWriting')}
                 </button>
