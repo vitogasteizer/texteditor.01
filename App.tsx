@@ -346,8 +346,61 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      // Ignore if a modifier key is pressed (except Shift)
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      // Handle shortcuts
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key.toLowerCase()) {
+          case 's':
+            e.preventDefault();
+            handleSaveDocument();
+            break;
+          case 'n':
+            e.preventDefault();
+            handleNewDocument();
+            break;
+          case 'o':
+            e.preventDefault();
+            handleViewSaved();
+            break;
+          case 'p':
+            e.preventDefault();
+            printOrPreview(true);
+            break;
+          case 'i':
+            e.preventDefault();
+            setIsImportModalVisible(true);
+            break;
+          case 'k':
+            e.preventDefault();
+            openPanel('link');
+            break;
+          case 'f':
+            e.preventDefault();
+            openPanel('findReplace');
+            break;
+          case 'enter':
+            // Calculate formulas if inside a table
+            const selection = window.getSelection();
+            if (selection && selection.rangeCount > 0) {
+                const container = selection.getRangeAt(0).commonAncestorContainer;
+                const element = container.nodeType === Node.ELEMENT_NODE ? container as HTMLElement : container.parentElement;
+                if (element?.closest('table')) {
+                    e.preventDefault();
+                    handleCalculateFormulas();
+                }
+            }
+            break;
+        }
+        
+        if (e.shiftKey) {
+            if (e.key.toLowerCase() === 'c') {
+                e.preventDefault();
+                handleCopyFormatting();
+            }
+        }
+        return;
+      }
+
+      if (e.altKey) return;
       
       // Ignore non-printable characters (e.g. Enter, Backspace, Arrow keys)
       if (e.key.length !== 1) return;
@@ -814,6 +867,108 @@ const App: React.FC = () => {
       }
   };
 
+  const handleCalculateFormulas = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    
+    const range = selection.getRangeAt(0);
+    const container = range.commonAncestorContainer;
+    const element = container.nodeType === Node.ELEMENT_NODE ? container as HTMLElement : container.parentElement;
+    const table = element?.closest('table');
+    
+    if (!table) {
+      setToast(t('toasts.tableActionContext'));
+      return;
+    }
+
+    const rows = Array.from(table.rows);
+    const data: string[][] = rows.map(row => Array.from(row.cells).map(cell => cell.innerText.trim()));
+
+    const getCellValue = (r: number, c: number): number => {
+      if (r < 0 || r >= data.length || !data[r] || c < 0 || c >= data[r].length) return 0;
+      const val = parseFloat(data[r][c].replace(/,/g, ''));
+      return isNaN(val) ? 0 : val;
+    };
+
+    const parseCellRef = (ref: string): { r: number, c: number } | null => {
+      const match = ref.match(/^([A-Z]+)([0-9]+)$/i);
+      if (!match) return null;
+      const colStr = match[1].toUpperCase();
+      const rowNum = parseInt(match[2], 10) - 1;
+      
+      let colNum = 0;
+      for (let i = 0; i < colStr.length; i++) {
+        colNum = colNum * 26 + (colStr.charCodeAt(i) - 64);
+      }
+      return { r: rowNum, c: colNum - 1 };
+    };
+
+    rows.forEach((row, r) => {
+      Array.from(row.cells).forEach((cell, c) => {
+        const text = cell.innerText.trim();
+        if (text.startsWith('=')) {
+          const formula = text.substring(1).toUpperCase();
+          let result: number | string = 0;
+
+          try {
+            if (formula.startsWith('SUM(')) {
+              const rangeMatch = formula.match(/SUM\(([A-Z0-9:]+)\)/);
+              if (rangeMatch) {
+                const rangeParts = rangeMatch[1].split(':');
+                if (rangeParts.length === 2) {
+                  const start = parseCellRef(rangeParts[0]);
+                  const end = parseCellRef(rangeParts[1]);
+                  if (start && end) {
+                    let sum = 0;
+                    for (let i = Math.min(start.r, end.r); i <= Math.max(start.r, end.r); i++) {
+                      for (let j = Math.min(start.c, end.c); j <= Math.max(start.c, end.c); j++) {
+                        sum += getCellValue(i, j);
+                      }
+                    }
+                    result = sum;
+                  }
+                } else {
+                    const cellRef = parseCellRef(rangeMatch[1]);
+                    if (cellRef) result = getCellValue(cellRef.r, cellRef.c);
+                }
+              }
+            } else if (formula.startsWith('AVERAGE(')) {
+                const rangeMatch = formula.match(/AVERAGE\(([A-Z0-9:]+)\)/);
+                if (rangeMatch) {
+                  const rangeParts = rangeMatch[1].split(':');
+                  if (rangeParts.length === 2) {
+                    const start = parseCellRef(rangeParts[0]);
+                    const end = parseCellRef(rangeParts[1]);
+                    if (start && end) {
+                      let sum = 0;
+                      let count = 0;
+                      for (let i = Math.min(start.r, end.r); i <= Math.max(start.r, end.r); i++) {
+                        for (let j = Math.min(start.c, end.c); j <= Math.max(start.c, end.c); j++) {
+                          sum += getCellValue(i, j);
+                          count++;
+                        }
+                      }
+                      result = count > 0 ? sum / count : 0;
+                    }
+                  }
+                }
+            } else {
+                const cellRef = parseCellRef(formula);
+                if (cellRef) result = getCellValue(cellRef.r, cellRef.c);
+                else result = 'Error';
+            }
+          } catch (e) {
+            result = 'Error';
+          }
+          
+          cell.innerText = result.toString();
+        }
+      });
+    });
+    
+    setToast(t('toasts.docUpdated'));
+  };
+
   // RESTORED Page Break
   const handleInsertPageBreak = () => {
       restoreSelection();
@@ -1075,6 +1230,7 @@ const App: React.FC = () => {
                   onInsertLink={() => openPanel('link')}
                   onInsertImage={() => openPanel('image')}
                   onInsertTable={() => openPanel('table')}
+                  onCalculateFormulas={handleCalculateFormulas}
                   onInsertShape={handleInsertShape}
                   onInsertHorizontalRule={() => handleEditAction('insertHorizontalRule')}
                   onAddComment={() => { saveSelection(); handleOpenCommentModal(); }}
@@ -1126,6 +1282,7 @@ const App: React.FC = () => {
                   onInsertLink={() => openPanel('link')}
                   onInsertImage={() => openPanel('image')}
                   onInsertTable={() => openPanel('table')}
+                  onCalculateFormulas={handleCalculateFormulas}
                   onInsertShape={handleInsertShape}
                   onInsertHorizontalRule={() => handleEditAction('insertHorizontalRule')}
                   onAddComment={() => { saveSelection(); handleOpenCommentModal(); }}
@@ -1271,6 +1428,7 @@ const App: React.FC = () => {
                                     onAiImageEdit={(prompt) => handleAiImageEdit(prompt, editingElement as HTMLImageElement)}
                                     onOpenCropModal={handleOpenCropModal}
                                     onTableAction={handleTableAction}
+                                    onCalculateFormulas={handleCalculateFormulas}
                                     onTableStyle={handleTableStyle}
                                     t={t}
                                 />

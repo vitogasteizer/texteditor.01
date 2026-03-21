@@ -22,6 +22,7 @@ interface SettingsSidebarProps {
   onAiImageEdit: (prompt: string) => void;
   onOpenCropModal: () => void;
   onTableAction: (action: 'addRowAbove' | 'addRowBelow' | 'deleteRow' | 'addColLeft' | 'addColRight' | 'deleteCol' | 'deleteTable' | 'mergeCells' | 'splitCell') => void;
+  onCalculateFormulas: () => void;
   onTableStyle: (style: React.CSSProperties, applyTo: 'cell' | 'table') => void;
   t: (key: string) => string;
 }
@@ -56,7 +57,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = (props) => {
                 {activePanel === 'link' && <LinkPane onApplyLink={props.onApplyLink} onClose={onClose} editingElement={editingElement as HTMLAnchorElement | null} t={t} />}
                 {activePanel === 'image' && <ImagePane onApplyImageSettings={props.onApplyImageSettings} onClose={onClose} editingElement={editingElement as HTMLImageElement | null} onUpdateElementStyle={props.onUpdateElementStyle} onChangeZIndex={props.onChangeZIndex} onAiImageEdit={props.onAiImageEdit} onOpenCropModal={props.onOpenCropModal} t={t} />}
                 {activePanel === 'table' && !editingElement && <TablePane onInsertTable={props.onInsertTable} t={t} />}
-                {activePanel === 'table' && editingElement && <EditTablePane editingElement={editingElement as HTMLTableElement} onTableAction={props.onTableAction} onTableStyle={props.onTableStyle} onChangeZIndex={props.onChangeZIndex} t={t} />}
+                {activePanel === 'table' && editingElement && <EditTablePane editingElement={editingElement as HTMLTableElement} onTableAction={props.onTableAction} onCalculateFormulas={props.onCalculateFormulas} onTableStyle={props.onTableStyle} onChangeZIndex={props.onChangeZIndex} t={t} />}
                 {activePanel === 'findReplace' && <FindReplacePane onReplaceAll={props.onReplaceAll} t={t} />}
                 {activePanel === 'shape' && editingElement && <ShapePane editingElement={editingElement} onUpdateStyle={props.onUpdateElementStyle} onChangeZIndex={props.onChangeZIndex} t={t} />}
             </div>

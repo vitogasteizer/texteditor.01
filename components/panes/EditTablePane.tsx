@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Trash2Icon, RowInsertTopIcon, RowInsertBottomIcon, ColumnInsertLeftIcon, ColumnInsertRightIcon, MergeCellsIcon, SplitCellIcon, ChevronDownIcon } from '../icons/EditorIcons';
+import { Trash2Icon, RowInsertTopIcon, RowInsertBottomIcon, ColumnInsertLeftIcon, ColumnInsertRightIcon, MergeCellsIcon, SplitCellIcon, ChevronDownIcon, MathIcon } from '../icons/EditorIcons';
 
 interface EditTablePaneProps {
   editingElement: HTMLTableElement;
   onTableAction: (action: 'addRowAbove' | 'addRowBelow' | 'deleteRow' | 'addColLeft' | 'addColRight' | 'deleteCol' | 'deleteTable' | 'mergeCells' | 'splitCell') => void;
+  onCalculateFormulas: () => void;
   onTableStyle: (style: React.CSSProperties, applyTo: 'cell' | 'table') => void;
   onChangeZIndex: (element: HTMLElement, direction: 'front' | 'back') => void;
   t: (key: string) => string;
 }
 
-const EditTablePane: React.FC<EditTablePaneProps> = ({ editingElement, onTableAction, onTableStyle, onChangeZIndex, t }) => {
+const EditTablePane: React.FC<EditTablePaneProps> = ({ editingElement, onTableAction, onCalculateFormulas, onTableStyle, onChangeZIndex, t }) => {
     const [selectionState, setSelectionState] = useState({
         isCursorInTable: false,
         cellCount: 0,
@@ -257,7 +258,11 @@ const EditTablePane: React.FC<EditTablePaneProps> = ({ editingElement, onTableAc
                     </span>
                     <ChevronDownIcon className="w-4 h-4 transform group-open:rotate-180 transition-transform text-gray-400" />
                 </summary>
-                <div className="p-5 pt-0">
+                <div className="p-5 pt-0 space-y-3">
+                    <button onClick={onCalculateFormulas} className="w-full flex items-center justify-center gap-3 px-4 py-4 text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-xl hover:bg-blue-600 hover:text-white border border-blue-100 dark:border-blue-900/30 transition-all active:scale-95">
+                      <MathIcon className="w-4 h-4" />
+                      <span>{t('panes.table.calculateFormulas')}</span>
+                    </button>
                     <button onClick={() => onTableAction('deleteTable')} className="w-full flex items-center justify-center gap-3 px-4 py-4 text-[10px] font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-xl hover:bg-red-600 hover:text-white border border-red-100 dark:border-red-900/30 transition-all active:scale-95">
                       <Trash2Icon className="w-4 h-4" />
                       <span>{t('panes.table.deleteTable')}</span>

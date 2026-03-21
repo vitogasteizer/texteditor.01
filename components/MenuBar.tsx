@@ -11,6 +11,7 @@ type MenuItem =
       label: string;
       action?: () => void;
       icon?: React.ReactNode;
+      shortcut?: string;
       separator?: false;
       items?: MenuItem[];
     }
@@ -18,6 +19,7 @@ type MenuItem =
       label?: string;
       action?: () => void;
       icon?: React.ReactNode;
+      shortcut?: string;
       separator: true;
       items?: never;
     };
@@ -36,6 +38,7 @@ interface MenuBarProps {
   onInsertLink: () => void;
   onInsertImage: () => void;
   onInsertTable: () => void;
+  onCalculateFormulas: () => void;
   onInsertShape: (shapeType: ShapeType) => void;
   onInsertHorizontalRule: () => void;
   onInsertPageBreak: () => void;
@@ -161,7 +164,10 @@ const MenuDropdown: React.FC<{ label: string; items: MenuItem[] }> = ({ label, i
                       </span>
                       <span>{item.label}</span>
                     </div>
-                    {item.items && <ChevronRightIcon className={`w-3.5 h-3.5 transition-transform ${openSubmenu === item.label ? 'translate-x-0.5' : 'opacity-50'}`} />}
+                    <div className="flex items-center gap-2">
+                        {item.shortcut && <span className={`text-[10px] px-1.5 py-0.5 rounded border ${openSubmenu === item.label ? 'border-white/40 text-white' : 'border-gray-200 dark:border-gray-700 text-gray-400'} font-mono`}>{item.shortcut}</span>}
+                        {item.items && <ChevronRightIcon className={`w-3.5 h-3.5 transition-transform ${openSubmenu === item.label ? 'translate-x-0.5' : 'opacity-50'}`} />}
+                    </div>
                   </button>
                   {item.items && openSubmenu === item.label && submenuPosition && createPortal(
                     <div 
@@ -287,41 +293,42 @@ const MenuBar: React.FC<MenuBarProps> = (props) => {
     };
 
     const fileMenuItems: MenuItem[] = [
-        { label: t('menu.fileNew'), action: props.onNewDocument, icon: <FilePlusIcon isMenuIcon /> },
+        { label: t('menu.fileNew'), action: props.onNewDocument, icon: <FilePlusIcon isMenuIcon />, shortcut: 'Ctrl+N' },
         { label: 'New from Template...', action: props.onNewFromTemplate, icon: <FileTextIcon isMenuIcon /> },
-        { label: t('menu.fileSave'), action: props.onSave, icon: <SaveIcon isMenuIcon /> },
-        { label: t('menu.fileViewSaved'), action: props.onViewSaved, icon: <FolderIcon isMenuIcon /> },
+        { label: t('menu.fileSave'), action: props.onSave, icon: <SaveIcon isMenuIcon />, shortcut: 'Ctrl+S' },
+        { label: t('menu.fileViewSaved'), action: props.onViewSaved, icon: <FolderIcon isMenuIcon />, shortcut: 'Ctrl+O' },
         { separator: true },
-        { label: t('menu.fileImport'), action: props.onOpenFileImport, icon: <UploadCloudIcon isMenuIcon /> },
+        { label: t('menu.fileImport'), action: props.onOpenFileImport, icon: <UploadCloudIcon isMenuIcon />, shortcut: 'Ctrl+I' },
         { separator: true },
         { label: t('menu.fileExportWord'), action: props.onExportToWord, icon: <DownloadIcon isMenuIcon /> },
-        { label: t('menu.fileExportPdf'), action: props.onExportToPdf, icon: <PdfIcon isMenuIcon /> },
+        { label: t('menu.fileExportPdf'), action: props.onExportToPdf, icon: <PdfIcon isMenuIcon />, shortcut: 'Ctrl+P' },
         { separator: true },
         { label: t('menu.filePageSetup'), action: props.onOpenPageSetup, icon: <FileTextIcon isMenuIcon /> },
         { separator: true },
-        { label: t('menu.filePrint'), action: props.onPrint, icon: <PrinterIcon isMenuIcon /> },
+        { label: t('menu.filePrint'), action: props.onPrint, icon: <PrinterIcon isMenuIcon />, shortcut: 'Ctrl+P' },
     ];
 
     const editMenuItems: MenuItem[] = [
-        { label: t('menu.editUndo'), action: () => props.onEditAction('undo'), icon: <UndoIcon isMenuIcon /> },
-        { label: t('menu.editRedo'), action: () => props.onEditAction('redo'), icon: <RedoIcon isMenuIcon /> },
+        { label: t('menu.editUndo'), action: () => props.onEditAction('undo'), icon: <UndoIcon isMenuIcon />, shortcut: 'Ctrl+Z' },
+        { label: t('menu.editRedo'), action: () => props.onEditAction('redo'), icon: <RedoIcon isMenuIcon />, shortcut: 'Ctrl+Y' },
         { separator: true },
-        { label: t('menu.editCut'), action: () => props.onEditAction('cut'), icon: <ScissorsIcon isMenuIcon /> },
-        { label: t('menu.editCopy'), action: () => props.onEditAction('copy'), icon: <CopyIcon isMenuIcon /> },
-        { label: t('menu.editPaste'), action: () => props.onEditAction('paste'), icon: <ClipboardIcon isMenuIcon /> },
+        { label: t('menu.editCut'), action: () => props.onEditAction('cut'), icon: <ScissorsIcon isMenuIcon />, shortcut: 'Ctrl+X' },
+        { label: t('menu.editCopy'), action: () => props.onEditAction('copy'), icon: <CopyIcon isMenuIcon />, shortcut: 'Ctrl+C' },
+        { label: t('menu.editPaste'), action: () => props.onEditAction('paste'), icon: <ClipboardIcon isMenuIcon />, shortcut: 'Ctrl+V' },
         { separator: true },
-        { label: t('menu.editFormatPainter'), action: props.onCopyFormatting, icon: <PaintBrushIcon isMenuIcon /> },
+        { label: t('menu.editFormatPainter'), action: props.onCopyFormatting, icon: <PaintBrushIcon isMenuIcon />, shortcut: 'Ctrl+Shift+C' },
         { separator: true },
-        { label: t('menu.editSelectAll'), action: () => props.onEditAction('selectAll'), icon: <SelectAllIcon isMenuIcon /> },
+        { label: t('menu.editSelectAll'), action: () => props.onEditAction('selectAll'), icon: <SelectAllIcon isMenuIcon />, shortcut: 'Ctrl+A' },
         { separator: true },
-        { label: t('menu.editFindReplace'), action: props.onOpenFindReplace, icon: <SearchIcon isMenuIcon /> },
+        { label: t('menu.editFindReplace'), action: props.onOpenFindReplace, icon: <SearchIcon isMenuIcon />, shortcut: 'Ctrl+F' },
     ];
     
     const insertMenuItems: MenuItem[] = [
-        { label: t('menu.insertLink'), action: props.onInsertLink, icon: <LinkIcon isMenuIcon /> },
+        { label: t('menu.insertLink'), action: props.onInsertLink, icon: <LinkIcon isMenuIcon />, shortcut: 'Ctrl+K' },
         { label: t('menu.insertImage'), action: props.onInsertImage, icon: <ImageIcon isMenuIcon /> },
         { label: t('menu.insertDrawing'), action: props.onInsertDrawing, icon: <PencilIcon isMenuIcon /> },
         { label: t('menu.insertTable'), action: props.onInsertTable, icon: <TableIcon isMenuIcon /> },
+        { label: t('menu.calculateFormulas'), action: props.onCalculateFormulas, icon: <MathIcon isMenuIcon />, shortcut: 'Ctrl+Enter' },
         { label: t('menu.insertShapes'), icon: <SquareIcon isMenuIcon />, items: [
             { label: t('menu.shapeTextbox'), action: () => props.onInsertShape('textbox'), icon: <TypeIcon isMenuIcon /> },
             { label: t('menu.shapeRectangle'), action: () => props.onInsertShape('rectangle'), icon: <SquareIcon isMenuIcon /> },
