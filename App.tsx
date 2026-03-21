@@ -301,21 +301,33 @@ const App: React.FC = () => {
 
   const handleCancelChanges = useCallback(() => {
     if (window.confirm(t('prompts.confirmCancel'))) {
-      setContent(originalContent);
-      setComments(originalComments);
-      setIsDirty(false);
-      if (editorRef.current) {
-        editorRef.current.innerHTML = originalContent;
+      if (currentDocId) {
+        setContent(originalContent);
+        setComments(originalComments);
+        if (editorRef.current) {
+          editorRef.current.innerHTML = originalContent;
+        }
+      } else {
+        setContent('<p><br></p>');
+        setComments([]);
+        if (editorRef.current) {
+          editorRef.current.innerHTML = '<p><br></p>';
+        }
       }
+      setIsDirty(false);
     }
-  }, [originalContent, originalComments, t]);
+  }, [originalContent, originalComments, t, currentDocId]);
 
   useEffect(() => {
+    const currentContent = editorRef.current?.innerHTML || content;
+    const isEmpty = !currentContent || currentContent === '<p><br></p>' || currentContent === '<p></p>' || currentContent === '<br>';
+    
     if (currentDocId) {
-        const currentContent = editorRef.current?.innerHTML || content;
         const hasContentChanged = currentContent !== originalContent;
         const hasCommentsChanged = JSON.stringify(comments) !== JSON.stringify(originalComments);
         setIsDirty(hasContentChanged || hasCommentsChanged);
+    } else {
+        setIsDirty(!isEmpty);
     }
   }, [content, comments, currentDocId, originalContent, originalComments]);
 
@@ -403,7 +415,9 @@ const App: React.FC = () => {
     const defaultsString = localStorage.getItem('defaultPageSettings');
     const defaults = defaultsString ? JSON.parse(defaultsString) : {};
     setContent('<p><br></p>');
+    setOriginalContent('<p><br></p>');
     setComments([]);
+    setOriginalComments([]);
     setCurrentDocId(null);
     setLastSaved(null);
     setView('editor');
@@ -421,7 +435,11 @@ const App: React.FC = () => {
   };
 
   const handleSaveDocument = async () => {
-    await saveDocumentChanges();
+    if (!currentDocId) {
+      setIsSavePromptVisible(true);
+    } else {
+      await saveDocumentChanges();
+    }
   };
 
   const handleSaveNewDocument = async (docName: string) => {
