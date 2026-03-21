@@ -50,8 +50,10 @@ interface MenuBarProps {
   onToggleAiSidekick: () => void;
   onOpenSpecialCharacters: () => void;
   isSaving: boolean;
+  isDirty: boolean;
   lastSaved: number | null;
   isDocumentSaved: boolean;
+  onCancel: () => void;
   onOpenPageSetup: () => void;
   onOpenAboutModal: () => void;
   onOpenShortcuts: () => void;
@@ -413,6 +415,28 @@ const MenuBar: React.FC<MenuBarProps> = (props) => {
             </div>
             
             <div className="flex-grow hidden" />
+
+            <div className="flex items-center gap-2 mr-4">
+                {props.isDirty && (
+                    <>
+                        <button
+                            onClick={props.onSave}
+                            disabled={props.isSaving}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+                        >
+                            <SaveIcon className="w-3.5 h-3.5" />
+                            {t('menu.fileSave')}
+                        </button>
+                        <button
+                            onClick={props.onCancel}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg transition-all active:scale-95"
+                        >
+                            <CloseIcon className="w-3.5 h-3.5" />
+                            {t('common.cancel')}
+                        </button>
+                    </>
+                )}
+            </div>
 
             <AutoSaveStatus isSaving={props.isSaving} lastSaved={props.lastSaved} isDocumentSaved={props.isDocumentSaved} t={t} />
             

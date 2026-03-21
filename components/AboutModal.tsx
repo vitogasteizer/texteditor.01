@@ -29,6 +29,20 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose, t }) => {
         <h3 id="about-title" className="text-base font-semibold mb-2 text-gray-900 dark:text-gray-100">{t('modals.about.title')}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">{t('modals.about.description')}</p>
         
+        <div className="mb-6 p-4 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-gray-800">
+          <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+            <span>{t('modals.about.creator')}</span>
+            <a 
+              href="https://avma.vercel.app/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+            >
+              avma.vercel.app
+            </a>
+          </p>
+        </div>
+        
         <div className="flex justify-end">
           <button
             onClick={onClose}

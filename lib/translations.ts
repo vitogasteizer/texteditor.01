@@ -217,6 +217,7 @@ export const translations: Translations = {
         title: 'About This Editor',
         description: 'This is a simple and free online text editor for basic formatting, built with modern web technologies. It works offline and is ready for deployment anywhere.',
         shortcutsTitle: 'Keyboard Shortcuts',
+        creator: 'Created by Avtandil Machitadze',
         shortcuts: {
             save: 'Save: Ctrl+S',
             bold: 'Bold: Ctrl+B',
@@ -427,6 +428,14 @@ export const translations: Translations = {
       docsImportedSuccess: '{{count}} document(s) imported successfully!',
       docsImportedError: 'Failed to import documents. Check file format.',
       docsImportedNothingNew: 'No new documents to import.',
+    },
+    prompts: {
+      unsavedChanges: 'You have unsaved changes. Are you sure you want to leave?',
+      confirmCancel: 'Are you sure you want to discard all unsaved changes?',
+    },
+    common: {
+      cancel: 'Cancel',
+      save: 'Save',
     },
     sidekick: {
       title: 'AI Assistant',
@@ -660,6 +669,7 @@ export const translations: Translations = {
         title: 'რედაქტორის შესახებ',
         description: 'ეს არის მარტივი და უფასო ონლაინ ტექსტური რედაქტორი, შექმნილი თანამედროვე ვებ-ტექნოლოგიებით. მუშაობს ოფლაინ და მზადაა ნებისმიერ პლატფორმაზე განსათავსებლად.',
         shortcutsTitle: 'კლავიატურის კომბინაციები',
+        creator: 'შექმნილია ავთანდილ მაჩიტაძის მიერ',
         shortcuts: {
             save: 'შენახვა: Ctrl+S',
             bold: 'მსხვილი: Ctrl+B',
@@ -869,6 +879,14 @@ export const translations: Translations = {
       docsImportedSuccess: '{{count}} დოკუმენტი წარმატებით დაემატა!',
       docsImportedError: 'დოკუმენტების იმპორტი ვერ მოხერხდა. შეამოწმეთ ფაილის ფორმატი.',
       docsImportedNothingNew: 'ახალი დოკუმენტები იმპორტისთვის არ მოიძებნა.',
+    },
+    prompts: {
+      unsavedChanges: 'თქვენ გაქვთ შეუნახავი ცვლილებები. დარწმუნებული ხართ, რომ გსურთ გასვლა?',
+      confirmCancel: 'დაწმუნებული ხართ, რომ გსურთ ყველა შეუნახავი ცვლილების გაუქმება?',
+    },
+    common: {
+      cancel: 'გაუქმება',
+      save: 'შენახვა',
     },
     sidekick: {
       title: 'AI ასისტენტი',
@@ -1102,6 +1120,7 @@ export const translations: Translations = {
         title: 'Acerca de Este Editor',
         description: 'Este es un editor de texto en línea simple y gratuito para formato básico, construido con tecnologías web modernas. Funciona sin conexión y está listo para ser implementado en cualquier lugar.',
         shortcutsTitle: 'Atajos de Teclado',
+        creator: 'Creado por Avtandil Machitadze',
         shortcuts: {
             save: 'Guardar: Ctrl+S',
             bold: 'Negrita: Ctrl+B',
@@ -1311,6 +1330,14 @@ export const translations: Translations = {
       docsImportedSuccess: '¡{{count}} documento(s) importado(s) con éxito!',
       docsImportedError: 'Error al importar documentos. Compruebe el formato del archivo.',
       docsImportedNothingNew: 'No hay documentos nuevos para importar.',
+    },
+    prompts: {
+      unsavedChanges: 'Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?',
+      confirmCancel: '¿Estás seguro de que quieres descartar todos los cambios sin guardar?',
+    },
+    common: {
+      cancel: 'Cancelar',
+      save: 'Guardar',
     },
     sidekick: {
       title: 'Asistente de IA',

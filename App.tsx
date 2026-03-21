@@ -171,9 +171,12 @@ const App: React.FC = () => {
   const [toast, setToast] = useState<string | null>(null);
   
   const [isSaving, setIsSaving] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isReadingAloud, setIsReadingAloud] = useState(false);
   const [lastSaved, setLastSaved] = useState<number | null>(null);
+  const [originalContent, setOriginalContent] = useState<string>('<p><br></p>');
+  const [originalComments, setOriginalComments] = useState<Comment[]>([]);
   
   const [zoomLevel, setZoomLevel] = useState(100);
   const [wordCountStats, setWordCountStats] = useState<WordCountStats>({ words: 0, characters: 0 });
@@ -245,11 +248,15 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
 
   const updateWordCount = useCallback(() => {
     if (!editorRef.current) return;
@@ -262,8 +269,9 @@ const App: React.FC = () => {
   const saveDocumentChanges = useCallback(async () => {
       if (!currentDocId) return;
       setIsSaving(true);
+      const currentContent = editorRef.current?.innerHTML || content;
       const docToSave: Partial<Doc> = {
-          content: editorRef.current?.innerHTML || content,
+          content: currentContent,
           comments,
           updatedAt: Date.now(),
           pageSize,
@@ -280,21 +288,36 @@ const App: React.FC = () => {
           try {
               await saveDocument(fullDoc);
               setLastSaved(Date.now());
+              setOriginalContent(currentContent);
+              setOriginalComments([...comments]);
+              setIsDirty(false);
               if (isDriveLoggedIn && fullDoc.googleDriveId) {
                   try { await saveToDrive(fullDoc); } catch (err) { console.warn("Background cloud sync failed", err); }
               }
-          } catch(e) { console.error("Failed to auto-save to DB", e); }
+          } catch(e) { console.error("Failed to save to DB", e); }
       }
       setTimeout(() => setIsSaving(false), 500);
   }, [content, comments, currentDocId, pageColor, pageMargins, pageOrientation, pageSize, documents, isDriveLoggedIn]);
 
+  const handleCancelChanges = useCallback(() => {
+    if (window.confirm(t('prompts.confirmCancel'))) {
+      setContent(originalContent);
+      setComments(originalComments);
+      setIsDirty(false);
+      if (editorRef.current) {
+        editorRef.current.innerHTML = originalContent;
+      }
+    }
+  }, [originalContent, originalComments, t]);
+
   useEffect(() => {
     if (currentDocId) {
-        if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current);
-        debouncedSaveRef.current = window.setTimeout(() => { saveDocumentChanges(); }, AUTOSAVE_INTERVAL);
+        const currentContent = editorRef.current?.innerHTML || content;
+        const hasContentChanged = currentContent !== originalContent;
+        const hasCommentsChanged = JSON.stringify(comments) !== JSON.stringify(originalComments);
+        setIsDirty(hasContentChanged || hasCommentsChanged);
     }
-    return () => { if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current); };
-  }, [content, comments, currentDocId, saveDocumentChanges]);
+  }, [content, comments, currentDocId, originalContent, originalComments]);
 
   useEffect(() => {
     document.body.style.cursor = isFormatPainterActive ? 'crosshair' : 'default';
@@ -376,6 +399,7 @@ const App: React.FC = () => {
   };
 
   const handleNewDocument = () => {
+    if (isDirty && !window.confirm(t('prompts.unsavedChanges'))) return;
     const defaultsString = localStorage.getItem('defaultPageSettings');
     const defaults = defaultsString ? JSON.parse(defaultsString) : {};
     setContent('<p><br></p>');
@@ -397,27 +421,7 @@ const App: React.FC = () => {
   };
 
   const handleSaveDocument = async () => {
-    if (currentDocId) {
-      const now = Date.now();
-      const currentContent = editorRef.current?.innerHTML || content;
-      const updatedDocs = documents.map(doc => doc.id === currentDocId ? { ...doc, content: currentContent, comments, updatedAt: now, pageSize, pageOrientation, pageMargins, pageColor } : doc);
-      setDocuments(updatedDocs);
-      const docToSave = updatedDocs.find(d => d.id === currentDocId);
-      if(docToSave) {
-          await saveDocument(docToSave);
-          if (isDriveLoggedIn) {
-              const res = await saveToDrive(docToSave);
-              if (res && res.id) {
-                  docToSave.googleDriveId = res.id;
-                  await saveDocument(docToSave); 
-                  setToast("Saved to Local & Cloud");
-                  return;
-              }
-          }
-      }
-      setLastSaved(now);
-      setToast(t('toasts.docUpdated'));
-    } else { setIsSavePromptVisible(true); }
+    await saveDocumentChanges();
   };
 
   const handleSaveNewDocument = async (docName: string) => {
@@ -426,6 +430,9 @@ const App: React.FC = () => {
     const newDoc: Doc = { id: `doc_${now}`, name: docName.trim(), content, comments, createdAt: now, updatedAt: now, pageSize, pageOrientation, pageMargins, pageColor };
     setDocuments(docs => [...docs, newDoc]);
     setCurrentDocId(newDoc.id);
+    setOriginalContent(content);
+    setOriginalComments([...comments]);
+    setIsDirty(false);
     await saveDocument(newDoc);
     if (isDriveLoggedIn) {
         try {
@@ -440,10 +447,14 @@ const App: React.FC = () => {
   };
 
   const handleOpenDocument = (docId: string) => {
+    if (isDirty && !window.confirm(t('prompts.unsavedChanges'))) return;
     const docToOpen = documents.find(doc => doc.id === docId);
     if (docToOpen) {
       setContent(docToOpen.content);
+      setOriginalContent(docToOpen.content);
       setComments(docToOpen.comments || []);
+      setOriginalComments(docToOpen.comments || []);
+      setIsDirty(false);
       setCurrentDocId(docToOpen.id);
       setLastSaved(docToOpen.updatedAt);
       setIsCommentsSidebarVisible(docToOpen.comments && docToOpen.comments.length > 0);
@@ -555,6 +566,15 @@ const App: React.FC = () => {
       } catch(e) {
           setToast(t('toasts.docsImportedError'));
       }
+  };
+
+  const handleViewSaved = () => {
+    if (isDirty) {
+      if (!window.confirm(t('prompts.unsavedChanges'))) {
+        return;
+      }
+    }
+    setView('drive');
   };
 
   const handleExportToWord = () => { 
@@ -1022,12 +1042,12 @@ const App: React.FC = () => {
     <div className="h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col overflow-hidden">
       {view === 'editor' ? (
         <>
-            <header className="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm hidden md:block border-b border-gray-200/50 dark:border-gray-700/50">
+            <header className="sticky top-0 z-30 bg-white dark:bg-gray-900 hidden md:block border-b border-gray-200 dark:border-gray-800">
                  <MenuBar 
                   onNewDocument={handleNewDocument}
                   onNewFromTemplate={() => setIsTemplatesModalVisible(true)}
                   onSave={handleSaveDocument}
-                  onViewSaved={() => setView('drive')}
+                  onViewSaved={handleViewSaved}
                   onExportToWord={handleExportToWord}
                   onExportToPdf={handleExportToPdf}
                   onPrint={() => printOrPreview(true)}
@@ -1049,8 +1069,10 @@ const App: React.FC = () => {
                   onOpenShortcuts={() => { setIsShortcutsSidebarVisible(prev => !prev); setActivePanel(null); setIsCommentsSidebarVisible(false); setIsAiSidekickVisible(false); }}
                   onOpenSpecialCharacters={() => { saveSelection(); setIsSpecialCharVisible(true); }}
                   isSaving={isSaving}
+                  isDirty={isDirty}
                   lastSaved={lastSaved}
                   isDocumentSaved={!!currentDocId}
+                  onCancel={handleCancelChanges}
                   onOpenPageSetup={() => setIsPageSetupVisible(true)}
                   onOpenAboutModal={() => setIsAboutModalVisible(true)}
                   onInsertPageBreak={handleInsertPageBreak}
@@ -1076,7 +1098,7 @@ const App: React.FC = () => {
                   onNewDocument={handleNewDocument}
                   onNewFromTemplate={() => setIsTemplatesModalVisible(true)}
                   onSave={handleSaveDocument}
-                  onViewSaved={() => setView('drive')}
+                  onViewSaved={handleViewSaved}
                   onExportToWord={handleExportToWord}
                   onExportToPdf={handleExportToPdf}
                   onPrint={() => printOrPreview(true)}
@@ -1098,8 +1120,10 @@ const App: React.FC = () => {
                   onOpenShortcuts={() => { setIsShortcutsSidebarVisible(prev => !prev); setActivePanel(null); setIsCommentsSidebarVisible(false); setIsAiSidekickVisible(false); }}
                   onOpenSpecialCharacters={() => { saveSelection(); setIsSpecialCharVisible(true); }}
                   isSaving={isSaving}
+                  isDirty={isDirty}
                   lastSaved={lastSaved}
                   isDocumentSaved={!!currentDocId}
+                  onCancel={handleCancelChanges}
                   onOpenPageSetup={() => setIsPageSetupVisible(true)}
                   onOpenAboutModal={() => setIsAboutModalVisible(true)}
                   onInsertPageBreak={handleInsertPageBreak}
