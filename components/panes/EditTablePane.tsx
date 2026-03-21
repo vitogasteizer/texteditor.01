@@ -281,6 +281,11 @@ const EditTablePane: React.FC<EditTablePaneProps> = ({ editingElement, onTableAc
                     <ChevronDownIcon className="w-4 h-4 transform group-open:rotate-180 transition-transform text-gray-400" />
                 </summary>
                 <div className="p-5 pt-0 space-y-4">
+                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-900/30">
+                        <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium leading-relaxed">
+                            {t('panes.table.formulaHint')}
+                        </p>
+                    </div>
                     <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
                         <button 
                             onClick={() => setFormulaRangeType('column')}

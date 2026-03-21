@@ -284,11 +284,70 @@ const Editor = forwardRef<HTMLDivElement, EditorProps>(({ content, onChange, onM
       };
   }, [onChange, contentRef]);
   
+  const handleFormulaMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const cell = target.closest('td, th') as HTMLTableCellElement;
+    
+    if (cell) {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const anchorNode = selection.anchorNode;
+        let currentFocusedCell: HTMLTableCellElement | null = null;
+        let node: Node | null = anchorNode;
+        
+        const editor = contentRef && 'current' in contentRef ? contentRef.current : null;
+        while (node && node !== editor) {
+          if (node.nodeName === 'TD' || node.nodeName === 'TH') {
+            currentFocusedCell = node as HTMLTableCellElement;
+            break;
+          }
+          node = node.parentNode;
+        }
+
+        if (currentFocusedCell && currentFocusedCell !== cell) {
+          const text = currentFocusedCell.innerText.trim();
+          if (text.startsWith('=')) {
+            // We are editing a formula in another cell!
+            e.preventDefault(); // Prevent focus change
+            e.stopPropagation();
+            
+            const row = cell.parentElement as HTMLTableRowElement;
+            const rowIndex = row.rowIndex + 1;
+            const colIndex = cell.cellIndex;
+            const colLetter = String.fromCharCode(65 + colIndex);
+            
+            const rect = cell.getBoundingClientRect();
+            const isColumnHeader = e.clientY < rect.top && e.clientY > rect.top - 30;
+            const isRowHeader = e.clientX < rect.left && e.clientX > rect.left - 45;
+
+            let cellAddress = `${colLetter}${rowIndex}`;
+            
+            if (isColumnHeader) {
+                const table = row.closest('table');
+                if (table) {
+                    const lastRow = table.rows.length;
+                    cellAddress = `${colLetter}1:${colLetter}${lastRow}`;
+                }
+            } else if (isRowHeader) {
+                const lastColLetter = String.fromCharCode(65 + row.cells.length - 1);
+                cellAddress = `A${rowIndex}:${lastColLetter}${rowIndex}`;
+            }
+            
+            // Insert the address at the current cursor position
+            document.execCommand('insertText', false, cellAddress);
+            return;
+          }
+        }
+      }
+    }
+  }, [contentRef]);
+
   const isEmpty = !content || content === '<p><br></p>' || content === '<p></p>' || content === '<br>' || content.trim() === '' || content === '<div><br></div>';
 
   return (
     <div
       ref={contentRef}
+      onMouseDown={handleFormulaMouseDown}
       onInput={handleInput}
       onMouseUp={onMouseUp}
       onDoubleClick={onDoubleClick}
