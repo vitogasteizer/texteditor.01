@@ -34,6 +34,7 @@ import { translations, Language } from './lib/translations';
 import { saveDocument, getAllDocuments, deleteDocument, saveAllDocuments } from './lib/db';
 import { initGoogleDrive, handleAuthClick, handleSignOut, listDriveFiles, saveToDrive, loadFromDrive } from './lib/googleDrive';
 import { Template } from './lib/templates';
+import CalculatorModal from './components/CalculatorModal';
 import { useUIStore } from './store/uiStore';
 
 export interface Comment {
@@ -157,6 +158,7 @@ const App: React.FC = () => {
   const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
   const [previewDocContent, setPreviewDocContent] = useState('');
   const [isAboutModalVisible, setIsAboutModalVisible] = useState(false);
+  const [isCalculatorVisible, setIsCalculatorVisible] = useState(false);
   const [isShortcutsSidebarVisible, setIsShortcutsSidebarVisible] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isImportModalVisible, setIsImportModalVisible] = useState(false);
@@ -215,16 +217,29 @@ const App: React.FC = () => {
 
   const t = useMemo(() => {
     return (key: string, replacements?: { [key: string]: string | number }) => {
-        let translation = key.split('.').reduce((obj, k) => obj?.[k], translations[language]);
-        if (typeof translation !== 'string') {
-            translation = key.split('.').reduce((obj, k) => obj?.[k], translations.en);
+        const getNested = (obj: any, path: string) => {
+            return path.split('.').reduce((o, k) => o?.[k], obj);
+        };
+        
+        let translation = getNested(translations[language], key);
+        if (translation === undefined) {
+            translation = getNested(translations.en, key);
         }
-        if (typeof translation !== 'string') return key;
-        if (replacements) {
-            Object.keys(replacements).forEach(rKey => {
-                translation = (translation as string).replace(`{{${rKey}}}`, String(replacements[rKey]));
-            });
+        
+        if (translation === undefined) return key;
+        
+        if (typeof translation === 'string') {
+            if (replacements) {
+                let result = translation;
+                Object.keys(replacements).forEach(rKey => {
+                    result = result.replace(`{{${rKey}}}`, String(replacements[rKey]));
+                });
+                return result;
+            }
+            return translation;
         }
+        
+        // If it's an object (like shortcuts), return it as is
         return translation;
     };
   }, [language]);
@@ -841,40 +856,99 @@ const App: React.FC = () => {
       document.execCommand('insertHTML', false, ul);
   };
 
-  const handleTableAction = (action: any) => { 
-      // This would require complex DOM manipulation of the table editingElement
-      // Simplification for this output:
+  const handleTableAction = (action: string) => { 
       if (!editingElement || editingElement.tagName !== 'TABLE') return;
       const table = editingElement as HTMLTableElement;
       
-      // Basic implementation for delete table
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+      const range = selection.getRangeAt(0);
+      const container = range.commonAncestorContainer;
+      const element = container.nodeType === Node.ELEMENT_NODE ? container as HTMLElement : container.parentElement;
+      const cell = element?.closest('td, th') as HTMLTableCellElement;
+
       if (action === 'deleteTable') {
           table.remove();
           setActivePanel(null);
           setEditingElement(null);
           setSelectedElement(null);
+          handleContentChange(editorRef.current?.innerHTML || '');
+          return;
       }
-      // Full implementation of rows/cols requires tracking cursor position inside table cells
-      // which is done in EditTablePane, but the action logic needs to traverse DOM.
-      // For now, let's assume EditTablePane passes the logic or we handle basic ones.
+
+      if (!cell) return;
+      const row = cell.parentElement as HTMLTableRowElement;
+      const rowIndex = row.rowIndex;
+      const cellIndex = cell.cellIndex;
+
+      switch (action) {
+          case 'addRowAbove':
+              const newRowAbove = table.insertRow(rowIndex);
+              for (let i = 0; i < row.cells.length; i++) {
+                  const newCell = newRowAbove.insertCell(i);
+                  newCell.innerHTML = '&nbsp;';
+                  newCell.style.border = '1px solid #ccc';
+                  newCell.style.padding = '8px';
+              }
+              break;
+          case 'addRowBelow':
+              const newRowBelow = table.insertRow(rowIndex + 1);
+              for (let i = 0; i < row.cells.length; i++) {
+                  const newCell = newRowBelow.insertCell(i);
+                  newCell.innerHTML = '&nbsp;';
+                  newCell.style.border = '1px solid #ccc';
+                  newCell.style.padding = '8px';
+              }
+              break;
+          case 'deleteRow':
+              table.deleteRow(rowIndex);
+              if (table.rows.length === 0) table.remove();
+              break;
+          case 'addColLeft':
+              for (let i = 0; i < table.rows.length; i++) {
+                  const newCell = table.rows[i].insertCell(cellIndex);
+                  newCell.innerHTML = '&nbsp;';
+                  newCell.style.border = '1px solid #ccc';
+                  newCell.style.padding = '8px';
+              }
+              break;
+          case 'addColRight':
+              for (let i = 0; i < table.rows.length; i++) {
+                  const newCell = table.rows[i].insertCell(cellIndex + 1);
+                  newCell.innerHTML = '&nbsp;';
+                  newCell.style.border = '1px solid #ccc';
+                  newCell.style.padding = '8px';
+              }
+              break;
+          case 'deleteCol':
+              for (let i = 0; i < table.rows.length; i++) {
+                  table.rows[i].deleteCell(cellIndex);
+              }
+              if (table.rows[0]?.cells.length === 0) table.remove();
+              break;
+      }
+      handleContentChange(editorRef.current?.innerHTML || '');
   };
 
   const handleTableStyle = (style: any, applyTo: any) => {
       if (!editingElement || editingElement.tagName !== 'TABLE') return;
-      // Apply style to table or cells logic...
       if (applyTo === 'table') {
           Object.assign(editingElement.style, style);
+      } else if (applyTo === 'cell') {
+          const selection = window.getSelection();
+          if (selection && selection.rangeCount > 0) {
+              const range = selection.getRangeAt(0);
+              const container = range.commonAncestorContainer;
+              const element = container.nodeType === Node.ELEMENT_NODE ? container as HTMLElement : container.parentElement;
+              const cell = element?.closest('td, th') as HTMLTableCellElement;
+              if (cell) Object.assign(cell.style, style);
+          }
       }
+      handleContentChange(editorRef.current?.innerHTML || '');
   };
 
   const handleCalculateFormulas = () => {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
-    
-    const range = selection.getRangeAt(0);
-    const container = range.commonAncestorContainer;
-    const element = container.nodeType === Node.ELEMENT_NODE ? container as HTMLElement : container.parentElement;
-    const table = element?.closest('table');
+    const table = editingElement?.tagName === 'TABLE' ? editingElement as HTMLTableElement : null;
     
     if (!table) {
       setToast(t('toasts.tableActionContext'));
@@ -882,11 +956,42 @@ const App: React.FC = () => {
     }
 
     const rows = Array.from(table.rows);
-    const data: string[][] = rows.map(row => Array.from(row.cells).map(cell => cell.innerText.trim()));
+    const data: string[][] = rows.map(row => Array.from(row.cells).map(cell => {
+        // Use data-formula if exists, otherwise innerText
+        return cell.getAttribute('data-formula') || cell.innerText.trim();
+    }));
 
     const getCellValue = (r: number, c: number): number => {
       if (r < 0 || r >= data.length || !data[r] || c < 0 || c >= data[r].length) return 0;
-      const val = parseFloat(data[r][c].replace(/,/g, ''));
+      const rawValue = data[r][c].trim();
+      
+      // If it's a formula, we can't easily get its value if it hasn't been calculated yet
+      // but we'll try to get the current innerText from the actual table if it's not a formula
+      if (rawValue.startsWith('=')) {
+          const actualCell = table.rows[r]?.cells[c];
+          if (actualCell) {
+              const currentText = actualCell.innerText.trim();
+              if (!currentText.startsWith('=')) {
+                  const val = parseFloat(currentText.replace(/[^0-9.-]/g, ''));
+                  return isNaN(val) ? 0 : val;
+              }
+          }
+          return 0;
+      }
+
+      // Strip currency symbols and other non-numeric characters except . and -
+      // Also handle cases where , might be used as decimal separator
+      let cleaned = rawValue.replace(/[^0-9.,-]/g, '');
+      
+      // If there's both , and ., assume , is thousands and . is decimal (US)
+      // If there's only , and it looks like a decimal (e.g. 10,5), replace with .
+      if (cleaned.includes(',') && !cleaned.includes('.')) {
+          cleaned = cleaned.replace(',', '.');
+      } else if (cleaned.includes(',') && cleaned.includes('.')) {
+          cleaned = cleaned.replace(/,/g, '');
+      }
+      
+      const val = parseFloat(cleaned);
       return isNaN(val) ? 0 : val;
     };
 
@@ -905,8 +1010,14 @@ const App: React.FC = () => {
 
     rows.forEach((row, r) => {
       Array.from(row.cells).forEach((cell, c) => {
-        const text = cell.innerText.trim();
+        let text = cell.getAttribute('data-formula') || cell.innerText.trim();
+        
         if (text.startsWith('=')) {
+          // Store the formula if it's not already stored
+          if (!cell.getAttribute('data-formula')) {
+              cell.setAttribute('data-formula', text);
+          }
+          
           const formula = text.substring(1).toUpperCase();
           let result: number | string = 0;
 
@@ -952,6 +1063,18 @@ const App: React.FC = () => {
                     }
                   }
                 }
+            } else if (formula.includes('+') || formula.includes('-') || formula.includes('*') || formula.includes('/')) {
+                // Basic arithmetic: A1+B1
+                let evalFormula = formula;
+                const cellRefs = formula.match(/[A-Z]+[0-9]+/g) || [];
+                cellRefs.forEach(ref => {
+                    const coords = parseCellRef(ref);
+                    if (coords) {
+                        evalFormula = evalFormula.replace(ref, getCellValue(coords.r, coords.c).toString());
+                    }
+                });
+                // eslint-disable-next-line no-eval
+                result = eval(evalFormula);
             } else {
                 const cellRef = parseCellRef(formula);
                 if (cellRef) result = getCellValue(cellRef.r, cellRef.c);
@@ -962,10 +1085,13 @@ const App: React.FC = () => {
           }
           
           cell.innerText = result.toString();
+          // Update data array so subsequent formulas in the same pass can use this value
+          data[r][c] = result.toString();
         }
       });
     });
     
+    handleContentChange(editorRef.current?.innerHTML || '');
     setToast(t('toasts.docUpdated'));
   };
 
@@ -1249,6 +1375,7 @@ const App: React.FC = () => {
                   onCancel={handleCancelChanges}
                   onOpenPageSetup={() => setIsPageSetupVisible(true)}
                   onOpenAboutModal={() => setIsAboutModalVisible(true)}
+                  onOpenCalculator={() => setIsCalculatorVisible(true)}
                   onInsertPageBreak={handleInsertPageBreak}
                   onInsertMath={() => { saveSelection(); setEditingMathElement(null); setIsMathModalVisible(true); }}
                   onSetLanguage={setLanguage}
@@ -1301,6 +1428,7 @@ const App: React.FC = () => {
                   onCancel={handleCancelChanges}
                   onOpenPageSetup={() => setIsPageSetupVisible(true)}
                   onOpenAboutModal={() => setIsAboutModalVisible(true)}
+                  onOpenCalculator={() => setIsCalculatorVisible(true)}
                   onInsertPageBreak={handleInsertPageBreak}
                   onInsertMath={() => { saveSelection(); setEditingMathElement(null); setIsMathModalVisible(true); }}
                   onSetLanguage={setLanguage}
@@ -1330,7 +1458,7 @@ const App: React.FC = () => {
             </div>
             
             <div className="flex-grow flex overflow-hidden relative">
-                <TableOfContents editorRef={editorRef} content={content} />
+                <TableOfContents editorRef={editorRef} content={content} t={t} />
                 <main className="flex-grow flex flex-col bg-gray-200 dark:bg-gray-600 print-view relative overflow-hidden">
                     <div className="flex-grow overflow-auto relative flex flex-col items-center pb-20 md:pb-0">
                         {isRulerVisible && (
@@ -1384,6 +1512,7 @@ const App: React.FC = () => {
                                           onClick={handleClick}
                                           spellCheck={isSpellcheckEnabled}
                                           onSlashCommand={(x, y) => setSlashMenu({ x, y })}
+                                          t={t}
                                         />
                                     </div>
 
@@ -1580,6 +1709,7 @@ const App: React.FC = () => {
       <PageSetupModal isOpen={isPageSetupVisible} onClose={() => setIsPageSetupVisible(false)} onApply={handleApplyPageSetup} pageSettings={{ size: pageSize, orientation: pageOrientation, margins: pageMargins, color: pageColor }} t={t} />
       <DocumentPreviewModal isOpen={isPreviewModalVisible} onClose={() => setIsPreviewModalVisible(false)} content={previewDocContent} t={t} />
       <AboutModal isOpen={isAboutModalVisible} onClose={() => setIsAboutModalVisible(false)} t={t} />
+      <CalculatorModal isVisible={isCalculatorVisible} onClose={() => setIsCalculatorVisible(false)} t={t} />
       <ImportModal isOpen={isImportModalVisible} onClose={() => setIsImportModalVisible(false)} onImport={handleOcrImport} t={t} />
       <DrawingModal isOpen={isDrawingModalVisible} onClose={() => { setIsDrawingModalVisible(false); setEditingDrawingElement(null); }} onSave={handleSaveDrawing} initialDataUrl={editingDrawingElement?.src} t={t} />
       <CropModal isOpen={isCropModalVisible} onClose={() => { setIsCropModalVisible(false); setCroppingImageElement(null); }} onApply={handleApplyCrop} imageSrc={croppingImageElement?.src || null} t={t} />

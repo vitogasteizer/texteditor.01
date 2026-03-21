@@ -11,9 +11,10 @@ interface TOCItem {
 interface TableOfContentsProps {
   editorRef: React.RefObject<HTMLDivElement>;
   content: string; // Used to trigger re-renders
+  t: (key: string) => string;
 }
 
-const TableOfContents: React.FC<TableOfContentsProps> = ({ editorRef, content }) => {
+const TableOfContents: React.FC<TableOfContentsProps> = ({ editorRef, content, t }) => {
   const [items, setItems] = useState<TOCItem[]>([]);
 
   useEffect(() => {
@@ -49,7 +50,7 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({ editorRef, content })
       <div className="flex items-center gap-3 mb-6 text-gray-900 dark:text-gray-100 font-black text-[11px] uppercase tracking-[0.2em]">
         <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.5)]"></div>
         <List className="w-4 h-4 opacity-50" />
-        <span>სარჩევი</span>
+        <span>{t('toc.title')}</span>
       </div>
       <div className="space-y-2">
         {items.map((item) => (

@@ -11,9 +11,10 @@ interface EditorProps {
   onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
   spellCheck: boolean;
   onSlashCommand?: (x: number, y: number) => void;
+  t: (key: string) => string;
 }
 
-const Editor = forwardRef<HTMLDivElement, EditorProps>(({ content, onChange, onMouseUp, onDoubleClick, onClick, spellCheck, onSlashCommand }, ref) => {
+const Editor = forwardRef<HTMLDivElement, EditorProps>(({ content, onChange, onMouseUp, onDoubleClick, onClick, spellCheck, onSlashCommand, t }, ref) => {
   const internalRef = useRef<HTMLDivElement>(null);
   const contentRef = ref || internalRef;
   const resizingRef = useRef<{
@@ -64,6 +65,49 @@ const Editor = forwardRef<HTMLDivElement, EditorProps>(({ content, onChange, onM
         const rect = range.getBoundingClientRect();
         if (onSlashCommand) {
           onSlashCommand(rect.right, rect.bottom);
+        }
+      }
+    }
+
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const container = range.commonAncestorContainer;
+        const element = container.nodeType === Node.ELEMENT_NODE ? container as HTMLElement : container.parentElement;
+        const cell = element?.closest('td, th') as HTMLTableCellElement;
+        
+        if (cell) {
+          const row = cell.parentElement as HTMLTableRowElement;
+          const table = row.closest('table') as HTMLTableElement;
+          if (table) {
+            const rowIndex = row.rowIndex;
+            const cellIndex = cell.cellIndex;
+            
+            if (e.key === 'ArrowUp' && rowIndex > 0) {
+              const targetCell = table.rows[rowIndex - 1].cells[cellIndex];
+              if (targetCell) {
+                e.preventDefault();
+                const newRange = document.createRange();
+                newRange.selectNodeContents(targetCell);
+                newRange.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+                targetCell.focus();
+              }
+            } else if (e.key === 'ArrowDown' && rowIndex < table.rows.length - 1) {
+              const targetCell = table.rows[rowIndex + 1].cells[cellIndex];
+              if (targetCell) {
+                e.preventDefault();
+                const newRange = document.createRange();
+                newRange.selectNodeContents(targetCell);
+                newRange.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+                targetCell.focus();
+              }
+            }
+          }
         }
       }
     }
@@ -240,7 +284,7 @@ const Editor = forwardRef<HTMLDivElement, EditorProps>(({ content, onChange, onM
       };
   }, [onChange, contentRef]);
   
-  const isEmpty = !content || content === '<p><br></p>' || content === '<p></p>' || content === '<br>';
+  const isEmpty = !content || content === '<p><br></p>' || content === '<p></p>' || content === '<br>' || content.trim() === '' || content === '<div><br></div>';
 
   return (
     <div
@@ -254,7 +298,7 @@ const Editor = forwardRef<HTMLDivElement, EditorProps>(({ content, onChange, onM
       contentEditable={true}
       spellCheck={spellCheck}
       suppressContentEditableWarning={true}
-      data-placeholder="დაიწყეთ წერა ან აკრიფეთ '/' ბრძანებებისთვის..."
+      data-placeholder={t('editor.placeholder')}
       data-is-empty={isEmpty ? 'true' : 'false'}
       className="relative min-h-full focus:outline-none prose dark:prose-invert max-w-none prose-a:text-blue-600 dark:prose-a:text-blue-400 data-[is-empty=true]:before:content-[attr(data-placeholder)] data-[is-empty=true]:before:text-gray-400 data-[is-empty=true]:before:pointer-events-none data-[is-empty=true]:before:absolute data-[is-empty=true]:before:bg-transparent"
       // The initial content is set via useEffect to avoid hydration issues.

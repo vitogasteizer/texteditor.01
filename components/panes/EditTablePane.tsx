@@ -20,6 +20,43 @@ const EditTablePane: React.FC<EditTablePaneProps> = ({ editingElement, onTableAc
     const [borderColor, setBorderColor] = useState('#cccccc');
     const [borderWidth, setBorderWidth] = useState(1);
     const [wrapping, setWrapping] = useState<'topBottom' | 'left' | 'right' | 'absolute'>('topBottom');
+    const [currentCellAddress, setCurrentCellAddress] = useState<string | null>(null);
+    const [formulaRangeType, setFormulaRangeType] = useState<'column' | 'row'>('column');
+
+    const refreshTableLabels = useCallback(() => {
+        if (!editingElement) return;
+        const rows = Array.from(editingElement.rows);
+        rows.forEach((row, r) => {
+            const rowEl = row as HTMLTableRowElement;
+            Array.from(rowEl.cells).forEach((cell, c) => {
+                const cellEl = cell as HTMLTableCellElement;
+                cellEl.setAttribute('data-row-label', (r + 1).toString());
+                cellEl.setAttribute('data-col-label', String.fromCharCode(65 + c));
+            });
+        });
+        editingElement.classList.add('show-excel-headers');
+    }, [editingElement]);
+
+    const updateCellAddress = useCallback(() => {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+            setCurrentCellAddress(null);
+            return;
+        }
+        const anchorNode = selection.anchorNode;
+        const nodeToTest: Node | null = anchorNode?.nodeType === Node.TEXT_NODE ? anchorNode.parentElement : anchorNode as Node;
+        const cell = nodeToTest?.parentElement?.closest('td, th') as HTMLTableCellElement;
+        
+        if (cell && editingElement.contains(cell)) {
+            const row = cell.parentElement as HTMLTableRowElement;
+            const rowIndex = row.rowIndex + 1;
+            const colIndex = cell.cellIndex;
+            const colLetter = String.fromCharCode(65 + colIndex);
+            setCurrentCellAddress(`${colLetter}${rowIndex}`);
+        } else {
+            setCurrentCellAddress(null);
+        }
+    }, [editingElement]);
 
     const checkSelectionState = useCallback(() => {
         const selection = window.getSelection();
@@ -64,6 +101,71 @@ const EditTablePane: React.FC<EditTablePaneProps> = ({ editingElement, onTableAc
     useEffect(() => {
         document.addEventListener('selectionchange', checkSelectionState);
         checkSelectionState(); // Initial check
+        updateCellAddress();
+        refreshTableLabels();
+
+        // Inject styles for excel headers if not present
+        if (!document.getElementById('excel-headers-style')) {
+            const style = document.createElement('style');
+            style.id = 'excel-headers-style';
+            style.innerHTML = `
+                .show-excel-headers {
+                    position: relative !important;
+                    margin-top: 30px !important;
+                    margin-left: 40px !important;
+                    border-collapse: collapse !important;
+                }
+                .show-excel-headers tr:first-child td, .show-excel-headers tr:first-child th {
+                    position: relative;
+                }
+                .show-excel-headers tr:first-child td::before, .show-excel-headers tr:first-child th::before {
+                    content: attr(data-col-label);
+                    position: absolute;
+                    top: -26px;
+                    left: -1px;
+                    right: -1px;
+                    height: 25px;
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 10px;
+                    font-weight: bold;
+                    color: #64748b;
+                    z-index: 10;
+                }
+                .show-excel-headers td:first-child, .show-excel-headers th:first-child {
+                    position: relative;
+                }
+                .show-excel-headers td:first-child::after, .show-excel-headers th:first-child::after {
+                    content: attr(data-row-label);
+                    position: absolute;
+                    left: -41px;
+                    top: -1px;
+                    bottom: -1px;
+                    width: 40px;
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 10px;
+                    font-weight: bold;
+                    color: #64748b;
+                    z-index: 10;
+                }
+                .dark .show-excel-headers tr:first-child td::before, 
+                .dark .show-excel-headers tr:first-child th::before,
+                .dark .show-excel-headers td:first-child::after,
+                .dark .show-excel-headers th:first-child::after {
+                    background: #1e293b;
+                    border-color: #334155;
+                    color: #94a3b8;
+                }
+            `;
+            document.head.appendChild(style);
+        }
 
         // Set initial wrapping state
         const computed = window.getComputedStyle(editingElement);
@@ -77,8 +179,14 @@ const EditTablePane: React.FC<EditTablePaneProps> = ({ editingElement, onTableAc
             setWrapping('topBottom');
         }
 
-        return () => document.removeEventListener('selectionchange', checkSelectionState);
-    }, [checkSelectionState, editingElement]);
+        return () => {
+            document.removeEventListener('selectionchange', checkSelectionState);
+            document.removeEventListener('selectionchange', updateCellAddress);
+            if (editingElement) {
+                editingElement.classList.remove('show-excel-headers');
+            }
+        };
+    }, [checkSelectionState, updateCellAddress, refreshTableLabels, editingElement]);
 
     const handleWrappingChange = (mode: 'topBottom' | 'left' | 'right' | 'absolute') => {
         setWrapping(mode);
@@ -135,8 +243,101 @@ const EditTablePane: React.FC<EditTablePaneProps> = ({ editingElement, onTableAc
       </button>
     );
 
+    const insertFormula = (type: 'SUM' | 'AVERAGE') => {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+        
+        const anchorNode = selection.anchorNode;
+        const nodeToTest: Node | null = anchorNode?.nodeType === Node.TEXT_NODE ? anchorNode.parentElement : anchorNode as Node;
+        const cell = nodeToTest?.parentElement?.closest('td, th') as HTMLTableCellElement;
+        
+        if (!cell || !editingElement.contains(cell)) return;
+        
+        const row = cell.parentElement as HTMLTableRowElement;
+        const rowIndex = row.rowIndex + 1;
+        const colIndex = cell.cellIndex;
+        const colLetter = String.fromCharCode(65 + colIndex);
+        
+        let range = '';
+        if (formulaRangeType === 'column') {
+            const lastRow = editingElement.rows.length;
+            range = `${colLetter}1:${colLetter}${lastRow}`;
+        } else {
+            const lastColLetter = String.fromCharCode(65 + row.cells.length - 1);
+            range = `A${rowIndex}:${lastColLetter}${rowIndex}`;
+        }
+        
+        document.execCommand('insertText', false, `=${type}(${range})`);
+    };
+
     return (
         <div className="space-y-6 text-sm animate-in fade-in slide-in-from-right-4 duration-300 custom-scrollbar max-h-[calc(100vh-180px)] overflow-y-auto pr-2 pb-8">
+             <details className="group bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden transition-all" open>
+                <summary className="flex items-center justify-between cursor-pointer p-5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                    <span className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">{t('panes.table.formulas')} {currentCellAddress && `(${currentCellAddress})`}</span>
+                    </span>
+                    <ChevronDownIcon className="w-4 h-4 transform group-open:rotate-180 transition-transform text-gray-400" />
+                </summary>
+                <div className="p-5 pt-0 space-y-4">
+                    <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
+                        <button 
+                            onClick={() => setFormulaRangeType('column')}
+                            className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${formulaRangeType === 'column' ? 'bg-white dark:bg-gray-700 shadow-sm text-blue-600' : 'text-gray-500'}`}
+                        >
+                            {t('panes.table.useColumn')}
+                        </button>
+                        <button 
+                            onClick={() => setFormulaRangeType('row')}
+                            className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${formulaRangeType === 'row' ? 'bg-white dark:bg-gray-700 shadow-sm text-blue-600' : 'text-gray-500'}`}
+                        >
+                            {t('panes.table.useRow')}
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                        <button 
+                            onClick={() => insertFormula('SUM')}
+                            className="px-3 py-2 text-[10px] font-bold bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-blue-600 hover:text-white transition-all"
+                        >
+                            SUM
+                        </button>
+                        <button 
+                            onClick={() => insertFormula('AVERAGE')}
+                            className="px-3 py-2 text-[10px] font-bold bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-blue-600 hover:text-white transition-all"
+                        >
+                            AVERAGE
+                        </button>
+                        <button 
+                            onClick={() => document.execCommand('insertText', false, '=A1-B1')}
+                            className="px-3 py-2 text-[10px] font-bold bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-blue-600 hover:text-white transition-all"
+                        >
+                            {t('panes.table.subtract')} (-)
+                        </button>
+                        <button 
+                            onClick={() => document.execCommand('insertText', false, '=A1*B1')}
+                            className="px-3 py-2 text-[10px] font-bold bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-blue-600 hover:text-white transition-all"
+                        >
+                            {t('panes.table.multiply')} (*)
+                        </button>
+                        <button 
+                            onClick={() => document.execCommand('insertText', false, '=A1/B1')}
+                            className="px-3 py-2 text-[10px] font-bold bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-blue-600 hover:text-white transition-all"
+                        >
+                            {t('panes.table.divide')} (/)
+                        </button>
+                    </div>
+                    <button 
+                        onClick={onCalculateFormulas}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-[10px] font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-sm"
+                    >
+                        <MathIcon className="w-4 h-4" />
+                        {t('panes.table.calculate')} (Ctrl+Enter)
+                    </button>
+                </div>
+            </details>
+
              <details className="group bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden transition-all" open>
                 <summary className="flex items-center justify-between cursor-pointer p-5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                     <span className="flex items-center gap-3">

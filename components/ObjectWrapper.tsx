@@ -178,10 +178,13 @@ const ObjectWrapper: React.FC<ObjectWrapperProps> = ({ targetElement, onUpdate, 
   return (
     <div
       ref={wrapperRef}
-      className="absolute border-2 border-blue-500 pointer-events-none z-20"
-      onMouseDown={(e) => handleMouseDown(e)}
+      className="absolute border-2 border-blue-500 z-20"
+      onMouseDown={(e) => isAbsolute && handleMouseDown(e)}
       onDoubleClick={onDoubleClick}
-      style={{ pointerEvents: 'auto', cursor: isAbsolute ? 'move' : 'default' }}
+      style={{ 
+        pointerEvents: isAbsolute ? 'auto' : 'none', 
+        cursor: isAbsolute ? 'move' : 'default' 
+      }}
     >
       {handles.map(handle => (
         <div

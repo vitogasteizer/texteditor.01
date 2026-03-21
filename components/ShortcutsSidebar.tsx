@@ -3,7 +3,7 @@ import { CloseIcon } from './icons/EditorIcons';
 
 interface ShortcutsSidebarProps {
   onClose: () => void;
-  t: (key: string, replacements?: { [key: string]: string | number }) => string;
+  t: (key: string, replacements?: { [key: string]: string | number }) => any;
 }
 
 const ShortcutsSidebar: React.FC<ShortcutsSidebarProps> = ({ onClose, t }) => {

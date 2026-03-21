@@ -59,6 +59,7 @@ interface MenuBarProps {
   onCancel: () => void;
   onOpenPageSetup: () => void;
   onOpenAboutModal: () => void;
+  onOpenCalculator: () => void;
   onOpenShortcuts: () => void;
   onSetLanguage: (lang: Language) => void;
   onReadAloud: () => void;
@@ -328,7 +329,6 @@ const MenuBar: React.FC<MenuBarProps> = (props) => {
         { label: t('menu.insertImage'), action: props.onInsertImage, icon: <ImageIcon isMenuIcon /> },
         { label: t('menu.insertDrawing'), action: props.onInsertDrawing, icon: <PencilIcon isMenuIcon /> },
         { label: t('menu.insertTable'), action: props.onInsertTable, icon: <TableIcon isMenuIcon /> },
-        { label: t('menu.calculateFormulas'), action: props.onCalculateFormulas, icon: <MathIcon isMenuIcon />, shortcut: 'Ctrl+Enter' },
         { label: t('menu.insertShapes'), icon: <SquareIcon isMenuIcon />, items: [
             { label: t('menu.shapeTextbox'), action: () => props.onInsertShape('textbox'), icon: <TypeIcon isMenuIcon /> },
             { label: t('menu.shapeRectangle'), action: () => props.onInsertShape('rectangle'), icon: <SquareIcon isMenuIcon /> },
@@ -388,6 +388,7 @@ const MenuBar: React.FC<MenuBarProps> = (props) => {
 
     const helpMenuItems: MenuItem[] = [
         { label: t('menu.helpShortcuts'), action: props.onOpenShortcuts, icon: <KeyboardIcon isMenuIcon /> },
+        { label: t('calculator.title'), action: props.onOpenCalculator, icon: <MathIcon isMenuIcon /> },
         { label: t('menu.helpAbout'), action: props.onOpenAboutModal, icon: <InfoIcon isMenuIcon /> }
     ];
 
