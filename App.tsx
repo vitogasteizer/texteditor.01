@@ -215,6 +215,97 @@ const App: React.FC = () => {
     }
   }, [theme]);
 
+  useEffect(() => {
+    // Inject Excel-style table header styles
+    const styleId = 'excel-table-headers-style';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.innerHTML = `
+        .show-excel-headers {
+          margin-top: 30px !important;
+          margin-left: 45px !important;
+          position: relative !important;
+        }
+        .show-excel-headers td, .show-excel-headers th {
+          position: relative;
+        }
+        /* Column Headers (A, B, C...) */
+        .show-excel-headers tr:first-child td::before, 
+        .show-excel-headers tr:first-child th::before {
+          content: attr(data-col-label);
+          position: absolute;
+          top: -25px;
+          left: -1px;
+          right: -1px;
+          height: 25px;
+          background: #f8f9fa;
+          border: 1px solid #ccc;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 11px;
+          font-weight: bold;
+          color: #666;
+          z-index: 1;
+          pointer-events: auto;
+          cursor: pointer;
+        }
+        .dark .show-excel-headers tr:first-child td::before,
+        .dark .show-excel-headers tr:first-child th::before {
+          background: #2d2d2d;
+          border-color: #444;
+          color: #aaa;
+        }
+        /* Row Headers (1, 2, 3...) */
+        .show-excel-headers td:first-child::after,
+        .show-excel-headers th:first-child::after {
+          content: attr(data-row-label);
+          position: absolute;
+          left: -45px;
+          top: -1px;
+          bottom: -1px;
+          width: 45px;
+          background: #f8f9fa;
+          border: 1px solid #ccc;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 11px;
+          font-weight: bold;
+          color: #666;
+          z-index: 1;
+          pointer-events: auto;
+          cursor: pointer;
+        }
+        .dark .show-excel-headers td:first-child::after,
+        .dark .show-excel-headers th:first-child::after {
+          background: #2d2d2d;
+          border-color: #444;
+          color: #aaa;
+        }
+        /* Corner Piece */
+        .show-excel-headers tr:first-child td:first-child::before {
+          border-left: 1px solid #ccc;
+        }
+        .show-excel-headers tr:first-child td:first-child::after {
+          border-top: 1px solid #ccc;
+        }
+        .dark .show-excel-headers tr:first-child td:first-child::before,
+        .dark .show-excel-headers tr:first-child td:first-child::after {
+          border-color: #444;
+        }
+        /* Selection highlight */
+        .show-excel-headers td.selected-cell {
+          background-color: rgba(59, 130, 246, 0.2) !important;
+          outline: 2px solid #3b82f6;
+          z-index: 2;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }, []);
+
   const t = useMemo(() => {
     return (key: string, replacements?: { [key: string]: string | number }) => {
         const getNested = (obj: any, path: string) => {
@@ -387,6 +478,14 @@ const App: React.FC = () => {
           case 'k':
             e.preventDefault();
             openPanel('link');
+            break;
+          case 'a':
+            e.preventDefault();
+            if (editorRef.current) {
+              editorRef.current.focus();
+              // Use execCommand for better contenteditable support
+              document.execCommand('selectAll', false, undefined);
+            }
             break;
           case 'f':
             e.preventDefault();
@@ -835,12 +934,33 @@ const App: React.FC = () => {
       element.style.zIndex = direction === 'front' ? `${currentZ + 1}` : `${Math.max(0, currentZ - 1)}`;
   };
 
+  const getColLabel = (index: number) => {
+      let label = '';
+      let tempIndex = index;
+      while (tempIndex >= 0) {
+          label = String.fromCharCode((tempIndex % 26) + 65) + label;
+          tempIndex = Math.floor(tempIndex / 26) - 1;
+      }
+      return label;
+  };
+
+  const refreshTableLabels = (table: HTMLTableElement) => {
+      const rows = Array.from(table.rows);
+      rows.forEach((row, r) => {
+          Array.from(row.cells).forEach((cell, c) => {
+              cell.setAttribute('data-row-label', (r + 1).toString());
+              cell.setAttribute('data-col-label', getColLabel(c));
+          });
+      });
+      table.classList.add('show-excel-headers');
+  };
+
   const handleInsertTable = (rows: number, cols: number) => {
-      let tableHtml = '<table style="width: 100%; border-collapse: collapse; border: 1px solid #ccc;"><tbody>';
+      let tableHtml = '<table class="show-excel-headers" style="width: 100%; border-collapse: collapse; border: 1px solid #ccc;"><tbody>';
       for (let i = 0; i < rows; i++) {
           tableHtml += '<tr>';
           for (let j = 0; j < cols; j++) {
-              tableHtml += '<td style="border: 1px solid #ccc; padding: 8px;">&nbsp;</td>';
+              tableHtml += `<td data-row-label="${i + 1}" data-col-label="${getColLabel(j)}" style="border: 1px solid #ccc; padding: 8px;">&nbsp;</td>`;
           }
           tableHtml += '</tr>';
       }
@@ -890,6 +1010,7 @@ const App: React.FC = () => {
                   newCell.style.border = '1px solid #ccc';
                   newCell.style.padding = '8px';
               }
+              refreshTableLabels(table);
               break;
           case 'addRowBelow':
               const newRowBelow = table.insertRow(rowIndex + 1);
@@ -899,10 +1020,12 @@ const App: React.FC = () => {
                   newCell.style.border = '1px solid #ccc';
                   newCell.style.padding = '8px';
               }
+              refreshTableLabels(table);
               break;
           case 'deleteRow':
               table.deleteRow(rowIndex);
               if (table.rows.length === 0) table.remove();
+              else refreshTableLabels(table);
               break;
           case 'addColLeft':
               for (let i = 0; i < table.rows.length; i++) {
@@ -911,6 +1034,7 @@ const App: React.FC = () => {
                   newCell.style.border = '1px solid #ccc';
                   newCell.style.padding = '8px';
               }
+              refreshTableLabels(table);
               break;
           case 'addColRight':
               for (let i = 0; i < table.rows.length; i++) {
@@ -919,29 +1043,103 @@ const App: React.FC = () => {
                   newCell.style.border = '1px solid #ccc';
                   newCell.style.padding = '8px';
               }
+              refreshTableLabels(table);
               break;
           case 'deleteCol':
               for (let i = 0; i < table.rows.length; i++) {
                   table.rows[i].deleteCell(cellIndex);
               }
               if (table.rows[0]?.cells.length === 0) table.remove();
+              else refreshTableLabels(table);
+              break;
+          case 'selectRow':
+              // Clear previous selection highlights
+              table.querySelectorAll('.selected-cell').forEach(el => el.classList.remove('selected-cell'));
+              Array.from(row.cells).forEach(c => c.classList.add('selected-cell'));
+              
+              const rowRange = document.createRange();
+              rowRange.selectNodeContents(row);
+              const rowSel = window.getSelection();
+              if (rowSel) {
+                  rowSel.removeAllRanges();
+                  rowSel.addRange(rowRange);
+              }
+              break;
+          case 'selectCol':
+              // Clear previous selection highlights
+              table.querySelectorAll('.selected-cell').forEach(el => el.classList.remove('selected-cell'));
+              
+              const colSelection = window.getSelection();
+              if (colSelection) {
+                  colSelection.removeAllRanges();
+                  for (let i = 0; i < table.rows.length; i++) {
+                      const c = table.rows[i].cells[cellIndex];
+                      if (c) {
+                          c.classList.add('selected-cell');
+                          const r = document.createRange();
+                          r.selectNodeContents(c);
+                          colSelection.addRange(r);
+                      }
+                  }
+              }
+              break;
+          case 'selectTable':
+              // Clear previous selection highlights
+              table.querySelectorAll('.selected-cell').forEach(el => el.classList.remove('selected-cell'));
+              table.querySelectorAll('td, th').forEach(c => c.classList.add('selected-cell'));
+
+              const range = document.createRange();
+              range.selectNode(table);
+              const selection = window.getSelection();
+              if (selection) {
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+              }
+              break;
+          case 'copyTable':
+              const copyRange = document.createRange();
+              copyRange.selectNode(table);
+              const copySelection = window.getSelection();
+              if (copySelection) {
+                  copySelection.removeAllRanges();
+                  copySelection.addRange(copyRange);
+                  try {
+                    document.execCommand('copy');
+                    setToast(t('toasts.docCopied'));
+                  } catch (err) {
+                    console.error('Failed to copy table', err);
+                  }
+                  // Don't remove ranges immediately, let the user see what was copied
+              }
               break;
       }
       handleContentChange(editorRef.current?.innerHTML || '');
   };
 
-  const handleTableStyle = (style: any, applyTo: any) => {
+  const handleTableStyle = (style: React.CSSProperties, applyTo: 'cell' | 'table') => {
       if (!editingElement || editingElement.tagName !== 'TABLE') return;
+      const table = editingElement as HTMLTableElement;
+
       if (applyTo === 'table') {
-          Object.assign(editingElement.style, style);
-      } else if (applyTo === 'cell') {
-          const selection = window.getSelection();
-          if (selection && selection.rangeCount > 0) {
-              const range = selection.getRangeAt(0);
-              const container = range.commonAncestorContainer;
-              const element = container.nodeType === Node.ELEMENT_NODE ? container as HTMLElement : container.parentElement;
-              const cell = element?.closest('td, th') as HTMLTableCellElement;
-              if (cell) Object.assign(cell.style, style);
+          Object.assign(table.style, style);
+      } else {
+          // Apply to selected cells or current cell
+          const selectedCells = table.querySelectorAll('.selected-cell');
+          if (selectedCells.length > 0) {
+              selectedCells.forEach(cell => {
+                  Object.assign((cell as HTMLElement).style, style);
+              });
+          } else {
+              const selection = window.getSelection();
+              if (selection && selection.rangeCount > 0) {
+                  const range = selection.getRangeAt(0);
+                  const container = range.commonAncestorContainer;
+                  const element = container.nodeType === Node.ELEMENT_NODE ? container as HTMLElement : container.parentElement;
+                  const cell = element?.closest('td, th') as HTMLTableCellElement;
+                  if (cell && table.contains(cell)) {
+                      Object.assign(cell.style, style);
+                  }
+              }
           }
       }
       handleContentChange(editorRef.current?.innerHTML || '');
@@ -963,32 +1161,46 @@ const App: React.FC = () => {
 
     const getCellValue = (r: number, c: number): number => {
       if (r < 0 || r >= data.length || !data[r] || c < 0 || c >= data[r].length) return 0;
-      const rawValue = data[r][c].trim();
+      let rawValue = data[r][c].trim();
       
-      // If it's a formula, we can't easily get its value if it hasn't been calculated yet
-      // but we'll try to get the current innerText from the actual table if it's not a formula
       if (rawValue.startsWith('=')) {
           const actualCell = table.rows[r]?.cells[c];
           if (actualCell) {
               const currentText = actualCell.innerText.trim();
               if (!currentText.startsWith('=')) {
-                  const val = parseFloat(currentText.replace(/[^0-9.-]/g, ''));
+                  // Try to parse the displayed text as a number
+                  let cleaned = currentText.replace(/[^0-9.,-]/g, '');
+                  if (cleaned.includes(',') && cleaned.includes('.')) {
+                      // Likely 1,234.56 or 1.234,56
+                      if (cleaned.lastIndexOf('.') > cleaned.lastIndexOf(',')) {
+                          cleaned = cleaned.replace(/,/g, ''); // 1,234.56 -> 1234.56
+                      } else {
+                          cleaned = cleaned.replace(/\./g, '').replace(',', '.'); // 1.234,56 -> 1234.56
+                      }
+                  } else if (cleaned.includes(',')) {
+                      cleaned = cleaned.replace(',', '.');
+                  }
+                  const val = parseFloat(cleaned);
                   return isNaN(val) ? 0 : val;
               }
           }
           return 0;
       }
 
-      // Strip currency symbols and other non-numeric characters except . and -
-      // Also handle cases where , might be used as decimal separator
+      if (rawValue.endsWith('%')) {
+          const val = parseFloat(rawValue.replace('%', ''));
+          return isNaN(val) ? 0 : val / 100;
+      }
+
       let cleaned = rawValue.replace(/[^0-9.,-]/g, '');
-      
-      // If there's both , and ., assume , is thousands and . is decimal (US)
-      // If there's only , and it looks like a decimal (e.g. 10,5), replace with .
-      if (cleaned.includes(',') && !cleaned.includes('.')) {
+      if (cleaned.includes(',') && cleaned.includes('.')) {
+          if (cleaned.lastIndexOf('.') > cleaned.lastIndexOf(',')) {
+              cleaned = cleaned.replace(/,/g, '');
+          } else {
+              cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+          }
+      } else if (cleaned.includes(',')) {
           cleaned = cleaned.replace(',', '.');
-      } else if (cleaned.includes(',') && cleaned.includes('.')) {
-          cleaned = cleaned.replace(/,/g, '');
       }
       
       const val = parseFloat(cleaned);
@@ -1008,43 +1220,22 @@ const App: React.FC = () => {
       return { r: rowNum, c: colNum - 1 };
     };
 
-    rows.forEach((row, r) => {
-      Array.from(row.cells).forEach((cell, c) => {
-        let text = cell.getAttribute('data-formula') || cell.innerText.trim();
-        
-        if (text.startsWith('=')) {
-          // Store the formula if it's not already stored
-          if (!cell.getAttribute('data-formula')) {
-              cell.setAttribute('data-formula', text);
-          }
+    // Run calculation twice to handle simple dependencies (e.g., C1 depends on B1 which depends on A1)
+    for (let pass = 0; pass < 2; pass++) {
+      rows.forEach((row, r) => {
+        Array.from(row.cells).forEach((cell, c) => {
+          let text = cell.getAttribute('data-formula') || cell.innerText.trim();
           
-          const formula = text.substring(1).toUpperCase();
-          let result: number | string = 0;
+          if (text.startsWith('=')) {
+            // Always update data-formula when text starts with =
+            cell.setAttribute('data-formula', text);
+            
+            const formula = text.substring(1).toUpperCase();
+            let result: number | string = 0;
 
-          try {
-            if (formula.startsWith('SUM(')) {
-              const rangeMatch = formula.match(/SUM\(([A-Z0-9:]+)\)/);
-              if (rangeMatch) {
-                const rangeParts = rangeMatch[1].split(':');
-                if (rangeParts.length === 2) {
-                  const start = parseCellRef(rangeParts[0]);
-                  const end = parseCellRef(rangeParts[1]);
-                  if (start && end) {
-                    let sum = 0;
-                    for (let i = Math.min(start.r, end.r); i <= Math.max(start.r, end.r); i++) {
-                      for (let j = Math.min(start.c, end.c); j <= Math.max(start.c, end.c); j++) {
-                        sum += getCellValue(i, j);
-                      }
-                    }
-                    result = sum;
-                  }
-                } else {
-                    const cellRef = parseCellRef(rangeMatch[1]);
-                    if (cellRef) result = getCellValue(cellRef.r, cellRef.c);
-                }
-              }
-            } else if (formula.startsWith('AVERAGE(')) {
-                const rangeMatch = formula.match(/AVERAGE\(([A-Z0-9:]+)\)/);
+            try {
+              if (formula.startsWith('SUM(')) {
+                const rangeMatch = formula.match(/SUM\(([A-Z0-9:]+)\)/);
                 if (rangeMatch) {
                   const rangeParts = rangeMatch[1].split(':');
                   if (rangeParts.length === 2) {
@@ -1052,44 +1243,86 @@ const App: React.FC = () => {
                     const end = parseCellRef(rangeParts[1]);
                     if (start && end) {
                       let sum = 0;
-                      let count = 0;
                       for (let i = Math.min(start.r, end.r); i <= Math.max(start.r, end.r); i++) {
                         for (let j = Math.min(start.c, end.c); j <= Math.max(start.c, end.c); j++) {
                           sum += getCellValue(i, j);
-                          count++;
                         }
                       }
-                      result = count > 0 ? sum / count : 0;
+                      result = sum;
                     }
+                  } else {
+                      const cellRef = parseCellRef(rangeMatch[1]);
+                      if (cellRef) result = getCellValue(cellRef.r, cellRef.c);
                   }
                 }
-            } else if (formula.includes('+') || formula.includes('-') || formula.includes('*') || formula.includes('/')) {
-                // Basic arithmetic: A1+B1
-                let evalFormula = formula;
-                const cellRefs = formula.match(/[A-Z]+[0-9]+/g) || [];
-                cellRefs.forEach(ref => {
-                    const coords = parseCellRef(ref);
-                    if (coords) {
-                        evalFormula = evalFormula.replace(ref, getCellValue(coords.r, coords.c).toString());
+              } else if (formula.startsWith('AVERAGE(')) {
+                  const rangeMatch = formula.match(/AVERAGE\(([A-Z0-9:]+)\)/);
+                  if (rangeMatch) {
+                    const rangeParts = rangeMatch[1].split(':');
+                    if (rangeParts.length === 2) {
+                      const start = parseCellRef(rangeParts[0]);
+                      const end = parseCellRef(rangeParts[1]);
+                      if (start && end) {
+                        let sum = 0;
+                        let count = 0;
+                        for (let i = Math.min(start.r, end.r); i <= Math.max(start.r, end.r); i++) {
+                          for (let j = Math.min(start.c, end.c); j <= Math.max(start.c, end.c); j++) {
+                            sum += getCellValue(i, j);
+                            count++;
+                          }
+                        }
+                        result = count > 0 ? sum / count : 0;
+                      }
                     }
-                });
-                // eslint-disable-next-line no-eval
-                result = eval(evalFormula);
-            } else {
-                const cellRef = parseCellRef(formula);
-                if (cellRef) result = getCellValue(cellRef.r, cellRef.c);
-                else result = 'Error';
+                  }
+              } else if (formula.startsWith('ROUND(')) {
+                  const match = formula.match(/ROUND\(([^,]+),?\s*([0-9]*)\)/);
+                  if (match) {
+                      const inner = match[1];
+                      const decimals = parseInt(match[2] || '0', 10);
+                      let val = 0;
+                      const cellRef = parseCellRef(inner);
+                      if (cellRef) {
+                          val = getCellValue(cellRef.r, cellRef.c);
+                      } else {
+                          val = parseFloat(inner);
+                      }
+                      result = isNaN(val) ? 0 : Number(val.toFixed(decimals));
+                  }
+              } else if (formula.includes('+') || formula.includes('-') || formula.includes('*') || formula.includes('/')) {
+                  let evalFormula = formula;
+                  const cellRefs = formula.match(/[A-Z]+[0-9]+/g) || [];
+                  cellRefs.sort((a, b) => b.length - a.length);
+                  
+                  cellRefs.forEach(ref => {
+                      const coords = parseCellRef(ref);
+                      if (coords) {
+                          const val = getCellValue(coords.r, coords.c);
+                          evalFormula = evalFormula.split(ref).join(val.toString());
+                      }
+                  });
+                  
+                  try {
+                    // eslint-disable-next-line no-eval
+                    result = eval(evalFormula);
+                  } catch (e) {
+                    result = '#ERROR!';
+                  }
+              } else {
+                  const cellRef = parseCellRef(formula);
+                  if (cellRef) result = getCellValue(cellRef.r, cellRef.c);
+                  else result = '#VALUE!';
+              }
+            } catch (e) {
+              result = 'Error';
             }
-          } catch (e) {
-            result = 'Error';
+            
+            cell.innerText = result.toString();
+            data[r][c] = result.toString();
           }
-          
-          cell.innerText = result.toString();
-          // Update data array so subsequent formulas in the same pass can use this value
-          data[r][c] = result.toString();
-        }
+        });
       });
-    });
+    }
     
     handleContentChange(editorRef.current?.innerHTML || '');
     setToast(t('toasts.docUpdated'));
@@ -1171,6 +1404,22 @@ const App: React.FC = () => {
 
   const handleCopyFormatting = () => { setIsFormatPainterActive(true); };
   const handlePasteFormatting = () => { setIsFormatPainterActive(false); }; // Placeholder
+
+  const handleCopyDocument = () => {
+    const editor = document.getElementById('editor-page');
+    if (editor) {
+      const range = document.createRange();
+      range.selectNodeContents(editor);
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+        document.execCommand('copy');
+        selection.removeAllRanges();
+        setToast(t('toasts.docCopied'));
+      }
+    }
+  };
   
   const handleEditorMouseUp = () => {
       // Check for selection changes or object clicks
@@ -1202,6 +1451,12 @@ const App: React.FC = () => {
       const target = e.target as HTMLElement;
       const table = target.closest('table');
       
+      // Clear manual selection highlights
+      const editor = editorRef.current;
+      if (editor) {
+          editor.querySelectorAll('.selected-cell').forEach(el => el.classList.remove('selected-cell'));
+      }
+
       if (target.dataset.shapeType || target.tagName === 'IMG') {
           setSelectedElement(target);
       } else if (table) {
@@ -1341,7 +1596,7 @@ const App: React.FC = () => {
     <div className="h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col overflow-hidden">
       {view === 'editor' ? (
         <>
-            <header className="sticky top-0 z-30 bg-white dark:bg-gray-900 hidden md:block border-b border-gray-200 dark:border-gray-800">
+            <header className="sticky top-0 z-30 bg-white dark:bg-gray-900 hidden md:block border-b border-gray-200 dark:border-gray-800 select-none">
                  <MenuBar 
                   onNewDocument={handleNewDocument}
                   onNewFromTemplate={() => setIsTemplatesModalVisible(true)}
@@ -1351,6 +1606,7 @@ const App: React.FC = () => {
                   onExportToPdf={handleExportToPdf}
                   onPrint={() => printOrPreview(true)}
                   onEditAction={handleEditAction}
+                  onCopyDocument={handleCopyDocument}
                   onOpenFindReplace={() => openPanel('findReplace')}
                   onCopyFormatting={handleCopyFormatting}
                   onInsertLink={() => openPanel('link')}
@@ -1404,6 +1660,7 @@ const App: React.FC = () => {
                   onExportToPdf={handleExportToPdf}
                   onPrint={() => printOrPreview(true)}
                   onEditAction={handleEditAction}
+                  onCopyDocument={handleCopyDocument}
                   onOpenFindReplace={() => openPanel('findReplace')}
                   onCopyFormatting={handleCopyFormatting}
                   onInsertLink={() => openPanel('link')}
@@ -1446,7 +1703,7 @@ const App: React.FC = () => {
                 />
             </div>
             
-            <div className="hidden md:block w-full bg-white dark:bg-gray-900">
+            <div className="hidden md:block w-full bg-white dark:bg-gray-900 select-none">
                 <Toolbar 
                   editorRef={editorRef} 
                   onCopyFormatting={handleCopyFormatting} 
@@ -1510,6 +1767,7 @@ const App: React.FC = () => {
                                           onMouseUp={handleEditorMouseUp}
                                           onDoubleClick={handleDoubleClick}
                                           onClick={handleClick}
+                                          onTableAction={handleTableAction}
                                           spellCheck={isSpellcheckEnabled}
                                           onSlashCommand={(x, y) => setSlashMenu({ x, y })}
                                           t={t}
@@ -1534,7 +1792,7 @@ const App: React.FC = () => {
                 {isAnySidebarOpen && (
                     <>
                         <div className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-30" onClick={handleCloseSidebars} />
-                        <div className="absolute top-0 right-0 h-full w-screen max-w-sm md:w-auto md:max-w-none md:relative z-40 md:flex-shrink-0 border-l border-white/20 dark:border-white/5 bg-transparent">
+                        <div className="absolute top-0 right-0 h-full w-screen max-w-sm md:w-auto md:max-w-none md:relative z-40 md:flex-shrink-0 border-l border-white/20 dark:border-white/5 bg-transparent select-none">
                             {isAiSidekickVisible ? (
                                 <AiSidekick
                                     ai={aiRef.current}

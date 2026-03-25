@@ -33,6 +33,7 @@ interface MenuBarProps {
   onExportToPdf: () => void;
   onPrint: () => void;
   onEditAction: (command: string) => void;
+  onCopyDocument: () => void;
   onOpenFindReplace: () => void;
   onCopyFormatting: () => void;
   onInsertLink: () => void;
@@ -316,6 +317,7 @@ const MenuBar: React.FC<MenuBarProps> = (props) => {
         { label: t('menu.editCut'), action: () => props.onEditAction('cut'), icon: <ScissorsIcon isMenuIcon />, shortcut: 'Ctrl+X' },
         { label: t('menu.editCopy'), action: () => props.onEditAction('copy'), icon: <CopyIcon isMenuIcon />, shortcut: 'Ctrl+C' },
         { label: t('menu.editPaste'), action: () => props.onEditAction('paste'), icon: <ClipboardIcon isMenuIcon />, shortcut: 'Ctrl+V' },
+        { label: t('menu.editCopyDoc'), action: props.onCopyDocument, icon: <CopyIcon isMenuIcon /> },
         { separator: true },
         { label: t('menu.editFormatPainter'), action: props.onCopyFormatting, icon: <PaintBrushIcon isMenuIcon />, shortcut: 'Ctrl+Shift+C' },
         { separator: true },

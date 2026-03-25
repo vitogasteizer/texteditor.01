@@ -4,13 +4,13 @@
   "description": "მარტივი და უფასო ონლაინ ტექსტური რედაქტორი ძირითადი ფორმატირებისთვის. დამოკიდებულებების გარეშე, მზად არის GitHub Pages-ზე განსათავსებლად.",
   "icons": [
     {
-      "src": "https://i.postimg.cc/MH7btH7f/avma-text.png",
+      "src": "https://i.postimg.cc/CxQ0CWJ6/App-icon-avmatexts.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any maskable"
     },
     {
-      "src": "https://i.postimg.cc/MH7btH7f/avma-text.png",
+      "src": "https://i.postimg.cc/CxQ0CWJ6/App-icon-avmatexts.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"

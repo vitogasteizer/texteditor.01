@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Trash2Icon, RowInsertTopIcon, RowInsertBottomIcon, ColumnInsertLeftIcon, ColumnInsertRightIcon, MergeCellsIcon, SplitCellIcon, ChevronDownIcon, MathIcon } from '../icons/EditorIcons';
+import { Trash2Icon, RowInsertTopIcon, RowInsertBottomIcon, ColumnInsertLeftIcon, ColumnInsertRightIcon, MergeCellsIcon, SplitCellIcon, ChevronDownIcon, MathIcon, SelectAllIcon, CopyIcon } from '../icons/EditorIcons';
 
 interface EditTablePaneProps {
   editingElement: HTMLTableElement;
-  onTableAction: (action: 'addRowAbove' | 'addRowBelow' | 'deleteRow' | 'addColLeft' | 'addColRight' | 'deleteCol' | 'deleteTable' | 'mergeCells' | 'splitCell') => void;
+  onTableAction: (action: 'addRowAbove' | 'addRowBelow' | 'deleteRow' | 'addColLeft' | 'addColRight' | 'deleteCol' | 'deleteTable' | 'mergeCells' | 'splitCell' | 'selectRow' | 'selectCol' | 'selectTable' | 'copyTable') => void;
   onCalculateFormulas: () => void;
   onTableStyle: (style: React.CSSProperties, applyTo: 'cell' | 'table') => void;
   onChangeZIndex: (element: HTMLElement, direction: 'front' | 'back') => void;
@@ -26,12 +26,23 @@ const EditTablePane: React.FC<EditTablePaneProps> = ({ editingElement, onTableAc
     const refreshTableLabels = useCallback(() => {
         if (!editingElement) return;
         const rows = Array.from(editingElement.rows);
+        
+        const getColLabel = (index: number) => {
+            let label = '';
+            let tempIndex = index;
+            while (tempIndex >= 0) {
+                label = String.fromCharCode((tempIndex % 26) + 65) + label;
+                tempIndex = Math.floor(tempIndex / 26) - 1;
+            }
+            return label;
+        };
+
         rows.forEach((row, r) => {
             const rowEl = row as HTMLTableRowElement;
             Array.from(rowEl.cells).forEach((cell, c) => {
                 const cellEl = cell as HTMLTableCellElement;
                 cellEl.setAttribute('data-row-label', (r + 1).toString());
-                cellEl.setAttribute('data-col-label', String.fromCharCode(65 + c));
+                cellEl.setAttribute('data-col-label', getColLabel(c));
             });
         });
         editingElement.classList.add('show-excel-headers');
@@ -104,69 +115,6 @@ const EditTablePane: React.FC<EditTablePaneProps> = ({ editingElement, onTableAc
         updateCellAddress();
         refreshTableLabels();
 
-        // Inject styles for excel headers if not present
-        if (!document.getElementById('excel-headers-style')) {
-            const style = document.createElement('style');
-            style.id = 'excel-headers-style';
-            style.innerHTML = `
-                .show-excel-headers {
-                    position: relative !important;
-                    margin-top: 30px !important;
-                    margin-left: 40px !important;
-                    border-collapse: collapse !important;
-                }
-                .show-excel-headers tr:first-child td, .show-excel-headers tr:first-child th {
-                    position: relative;
-                }
-                .show-excel-headers tr:first-child td::before, .show-excel-headers tr:first-child th::before {
-                    content: attr(data-col-label);
-                    position: absolute;
-                    top: -26px;
-                    left: -1px;
-                    right: -1px;
-                    height: 25px;
-                    background: #f8fafc;
-                    border: 1px solid #e2e8f0;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 10px;
-                    font-weight: bold;
-                    color: #64748b;
-                    z-index: 10;
-                }
-                .show-excel-headers td:first-child, .show-excel-headers th:first-child {
-                    position: relative;
-                }
-                .show-excel-headers td:first-child::after, .show-excel-headers th:first-child::after {
-                    content: attr(data-row-label);
-                    position: absolute;
-                    left: -41px;
-                    top: -1px;
-                    bottom: -1px;
-                    width: 40px;
-                    background: #f8fafc;
-                    border: 1px solid #e2e8f0;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 10px;
-                    font-weight: bold;
-                    color: #64748b;
-                    z-index: 10;
-                }
-                .dark .show-excel-headers tr:first-child td::before, 
-                .dark .show-excel-headers tr:first-child th::before,
-                .dark .show-excel-headers td:first-child::after,
-                .dark .show-excel-headers th:first-child::after {
-                    background: #1e293b;
-                    border-color: #334155;
-                    color: #94a3b8;
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
         // Set initial wrapping state
         const computed = window.getComputedStyle(editingElement);
         if (computed.position === 'absolute') {
@@ -182,9 +130,6 @@ const EditTablePane: React.FC<EditTablePaneProps> = ({ editingElement, onTableAc
         return () => {
             document.removeEventListener('selectionchange', checkSelectionState);
             document.removeEventListener('selectionchange', updateCellAddress);
-            if (editingElement) {
-                editingElement.classList.remove('show-excel-headers');
-            }
         };
     }, [checkSelectionState, updateCellAddress, refreshTableLabels, editingElement]);
 
@@ -465,6 +410,24 @@ const EditTablePane: React.FC<EditTablePaneProps> = ({ editingElement, onTableAc
                     <ChevronDownIcon className="w-4 h-4 transform group-open:rotate-180 transition-transform text-gray-400" />
                 </summary>
                 <div className="p-5 pt-0 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                        <button onClick={() => onTableAction('selectRow')} className="w-full flex items-center justify-center gap-3 px-4 py-4 text-[10px] font-semibold text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-xl hover:bg-gray-600 hover:text-white border border-gray-100 dark:border-gray-800 transition-all active:scale-95">
+                          <SelectAllIcon className="w-4 h-4" />
+                          <span>{t('panes.table.selectRow')}</span>
+                        </button>
+                        <button onClick={() => onTableAction('selectCol')} className="w-full flex items-center justify-center gap-3 px-4 py-4 text-[10px] font-semibold text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-xl hover:bg-gray-600 hover:text-white border border-gray-100 dark:border-gray-800 transition-all active:scale-95">
+                          <SelectAllIcon className="w-4 h-4" />
+                          <span>{t('panes.table.selectCol')}</span>
+                        </button>
+                    </div>
+                    <button onClick={() => onTableAction('selectTable')} className="w-full flex items-center justify-center gap-3 px-4 py-4 text-[10px] font-semibold text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-xl hover:bg-gray-600 hover:text-white border border-gray-100 dark:border-gray-800 transition-all active:scale-95">
+                      <SelectAllIcon className="w-4 h-4" />
+                      <span>{t('panes.table.selectTable')}</span>
+                    </button>
+                    <button onClick={() => onTableAction('copyTable')} className="w-full flex items-center justify-center gap-3 px-4 py-4 text-[10px] font-semibold text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-xl hover:bg-gray-600 hover:text-white border border-gray-100 dark:border-gray-800 transition-all active:scale-95">
+                      <CopyIcon className="w-4 h-4" />
+                      <span>{t('panes.table.copyTable')}</span>
+                    </button>
                     <button onClick={onCalculateFormulas} className="w-full flex items-center justify-center gap-3 px-4 py-4 text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-xl hover:bg-blue-600 hover:text-white border border-blue-100 dark:border-blue-900/30 transition-all active:scale-95">
                       <MathIcon className="w-4 h-4" />
                       <span>{t('panes.table.calculateFormulas')}</span>

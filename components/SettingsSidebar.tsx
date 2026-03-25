@@ -21,7 +21,7 @@ interface SettingsSidebarProps {
   onChangeZIndex: (element: HTMLElement, direction: 'front' | 'back') => void;
   onAiImageEdit: (prompt: string) => void;
   onOpenCropModal: () => void;
-  onTableAction: (action: 'addRowAbove' | 'addRowBelow' | 'deleteRow' | 'addColLeft' | 'addColRight' | 'deleteCol' | 'deleteTable' | 'mergeCells' | 'splitCell') => void;
+  onTableAction: (action: 'addRowAbove' | 'addRowBelow' | 'deleteRow' | 'addColLeft' | 'addColRight' | 'deleteCol' | 'deleteTable' | 'mergeCells' | 'splitCell' | 'selectRow' | 'selectCol' | 'selectTable' | 'copyTable') => void;
   onCalculateFormulas: () => void;
   onTableStyle: (style: React.CSSProperties, applyTo: 'cell' | 'table') => void;
   t: (key: string) => string;
