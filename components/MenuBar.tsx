@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useUIStore } from '../store/uiStore';
-import { MenuIcon, CloseIcon, FilePlusIcon, SaveIcon, FolderIcon, DownloadIcon, PrinterIcon, UndoIcon, RedoIcon, ScissorsIcon, CopyIcon, ClipboardIcon, SelectAllIcon, SearchIcon, LinkIcon, ImageIcon, TableIcon, MinusIcon, MessageSquareIcon, CodeIcon, BarChartIcon, EyeIcon, MaximizeIcon, InfoIcon, OmegaIcon, PaintBrushIcon, PdfIcon, SquareIcon, CircleIcon, TriangleIcon, TypeIcon, ChevronRightIcon, FileTextIcon, SplitSquareVerticalIcon, RectangleVerticalIcon, RectangleHorizontalIcon, LanguageIcon, SparklesIcon, Volume2Icon, KeyboardIcon, ChecklistIcon, UploadCloudIcon, PencilIcon, SlashIcon, MathIcon, SunIcon, MoonIcon } from './icons/EditorIcons';
+import { MenuIcon, CloseIcon, FilePlusIcon, SaveIcon, FolderIcon, DownloadIcon, PrinterIcon, UndoIcon, RedoIcon, ScissorsIcon, CopyIcon, ClipboardIcon, SelectAllIcon, SearchIcon, LinkIcon, ImageIcon, TableIcon, MinusIcon, MessageSquareIcon, CodeIcon, BarChartIcon, EyeIcon, MaximizeIcon, InfoIcon, OmegaIcon, PaintBrushIcon, PdfIcon, SquareIcon, CircleIcon, TriangleIcon, TypeIcon, ChevronRightIcon, FileTextIcon, SplitSquareVerticalIcon, RectangleVerticalIcon, RectangleHorizontalIcon, LanguageIcon, SparklesIcon, Volume2Icon, KeyboardIcon, ChecklistIcon, UploadCloudIcon, PencilIcon, SlashIcon, MathIcon, SunIcon, MoonIcon, ListOrderedIcon } from './icons/EditorIcons';
 import type { ShapeType } from '../App';
 import type { Language } from '../lib/translations';
 
@@ -47,6 +47,8 @@ interface MenuBarProps {
   onInsertMath: () => void;
   onAddComment: () => void;
   onOpenSourceCode: () => void;
+  onToggleCodeEditor: () => void;
+  appMode: 'standard' | 'code';
   onOpenWordCount: () => void;
   onToggleFullscreen: () => void;
   onPreview: () => void;
@@ -69,6 +71,8 @@ interface MenuBarProps {
   isSpellcheckEnabled: boolean;
   onToggleRuler: () => void;
   isRulerVisible: boolean;
+  onToggleLineNumbers: () => void;
+  showLineNumbers: boolean;
   onOpenFileImport: () => void;
   isMobileMenuOpen?: boolean;
   setIsMobileMenuOpen?: (open: boolean) => void;
@@ -343,6 +347,8 @@ const MenuBar: React.FC<MenuBarProps> = (props) => {
         { label: 'Equation (KaTeX)', action: props.onInsertMath, icon: <MathIcon isMenuIcon /> },
         { label: t('menu.insertSpecialChar'), action: props.onOpenSpecialCharacters, icon: <OmegaIcon isMenuIcon /> },
         { separator: true },
+        { label: t('menu.toolsSourceCode'), action: props.onOpenSourceCode, icon: <CodeIcon isMenuIcon /> },
+        { separator: true },
         { label: t('menu.insertComment'), action: props.onAddComment, icon: <MessageSquareIcon isMenuIcon /> },
     ];
     
@@ -359,7 +365,11 @@ const MenuBar: React.FC<MenuBarProps> = (props) => {
     
     const toolsMenuItems: MenuItem[] = [
         { label: t('menu.toolsAiAssistant'), action: props.onToggleAiSidekick, icon: <SparklesIcon isMenuIcon /> },
-        { label: t('menu.toolsSourceCode'), action: props.onOpenSourceCode, icon: <CodeIcon isMenuIcon /> },
+        { 
+            label: props.appMode === 'code' ? 'Standard Editor' : 'Code Editor', 
+            action: props.onToggleCodeEditor, 
+            icon: <CodeIcon isMenuIcon /> 
+        },
         { label: t('menu.toolsWordCount'), action: props.onOpenWordCount, icon: <BarChartIcon isMenuIcon /> },
         { 
             label: props.isReadingAloud ? t('menu.aiStopReading') : t('menu.aiReadAloud'), 

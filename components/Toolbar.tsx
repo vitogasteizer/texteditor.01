@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon, ListOrderedIcon, ListUnorderedIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon, AlignJustifyIcon, UndoIcon, RedoIcon, ClearFormattingIcon, ChevronDownIcon, TextColorIcon, BgColorIcon, LineHeightIcon, PaintBrushIcon, TextShadowIcon, SparklesIcon, ChecklistIcon, ChevronRightIcon, SunIcon, MoonIcon, MenuIcon } from './icons/EditorIcons';
+import { BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon, ListOrderedIcon, ListUnorderedIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon, AlignJustifyIcon, UndoIcon, RedoIcon, ClearFormattingIcon, ChevronDownIcon, TextColorIcon, BgColorIcon, LineHeightIcon, PaintBrushIcon, TextShadowIcon, SparklesIcon, ChecklistIcon, ChevronRightIcon, SunIcon, MoonIcon, MenuIcon, ImageIcon, LinkIcon, TableIcon } from './icons/EditorIcons';
 import TextShadowDropdown from './TextShadowDropdown';
 import { useUIStore } from '../store/uiStore';
 
@@ -16,8 +16,12 @@ interface ToolbarProps {
   onRedo?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
+  onToggleLineNumbers?: () => void;
+  showLineNumbers?: boolean;
   onOpenMenu?: () => void;
   isBottom?: boolean;
+  appMode?: 'standard' | 'code';
+  onInsertCode?: (snippet: string) => void;
   t: (key: string, replacements?: { [key: string]: string | number }) => string;
 }
 
@@ -525,7 +529,24 @@ const FontSizeCombobox: React.FC<{ value: string; onChange: (size: number) => vo
 };
 
 
-const Toolbar: React.FC<ToolbarProps> = ({ editorRef, onCopyFormatting, isFormatPainterActive, onToggleAiSidekick, onInsertChecklist, onUndo, onRedo, canUndo, canRedo, onOpenMenu, isBottom, t }) => {
+const Toolbar: React.FC<ToolbarProps> = ({ 
+    editorRef, 
+    onCopyFormatting, 
+    isFormatPainterActive, 
+    onToggleAiSidekick, 
+    onInsertChecklist, 
+    onUndo, 
+    onRedo, 
+    canUndo, 
+    canRedo, 
+    onToggleLineNumbers,
+    showLineNumbers,
+    onOpenMenu, 
+    isBottom, 
+    appMode = 'standard',
+    onInsertCode,
+    t 
+}) => {
     const { theme, toggleTheme } = useUIStore();
     const [toolbarState, setToolbarState] = useState({
         fontName: 'Arial',
@@ -718,6 +739,74 @@ const Toolbar: React.FC<ToolbarProps> = ({ editorRef, onCopyFormatting, isFormat
   const alignmentIcons = { left: <AlignLeftIcon />, center: <AlignCenterIcon />, right: <AlignRightIcon />, justify: <AlignJustifyIcon />, };
   const lineHeights = [ { value: '1', label: t('toolbar.lineHeights.single') }, { value: '1.5', label: '1.5' }, { value: '2', label: t('toolbar.lineHeights.double') }, { value: '2.5', label: '2.5' }, ];
 
+  const insertCodeSnippet = (snippet: string) => {
+    if (onInsertCode) {
+      onInsertCode(snippet);
+    }
+  };
+
+  if (appMode === 'code') {
+    return (
+      <div className="p-3 md:p-2 bg-white dark:bg-gray-900 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 min-h-[72px] md:min-h-0">
+        <div className="flex-1 min-w-0 flex items-center flex-nowrap gap-1 md:gap-1 overflow-x-auto md:overflow-visible">
+          <div className="flex items-center gap-0.5 md:gap-1 border-r border-gray-300 dark:border-gray-600 pr-1 md:pr-2 mr-1 md:mr-2">
+            <ToolbarButton onAction={() => executeCommand('undo')} tooltip={t('toolbar.undo')} isDisabled={!canUndo}><UndoIcon /></ToolbarButton>
+            <ToolbarButton onAction={() => executeCommand('redo')} tooltip={t('toolbar.redo')} isDisabled={!canRedo}><RedoIcon /></ToolbarButton>
+          </div>
+          <div className="flex items-center gap-0.5 md:gap-1 border-r border-gray-300 dark:border-gray-600 pr-1 md:pr-2 mr-1 md:mr-2">
+            <ToolbarButton onAction={() => insertCodeSnippet('<div>\n  \n</div>')} tooltip="Insert <div>">
+              <div className="text-[10px] font-bold border border-current px-1 rounded">DIV</div>
+            </ToolbarButton>
+            <ToolbarButton onAction={() => insertCodeSnippet('<span></span>')} tooltip="Insert <span>">
+              <div className="text-[10px] font-bold border border-current px-1 rounded">SPAN</div>
+            </ToolbarButton>
+            <ToolbarButton onAction={() => insertCodeSnippet('<p>\n  \n</p>')} tooltip="Insert <p>">
+              <div className="text-[10px] font-bold border border-current px-1 rounded">P</div>
+            </ToolbarButton>
+            <ToolbarButton onAction={() => insertCodeSnippet('<h1></h1>')} tooltip="Insert <h1>">
+              <div className="text-[10px] font-bold border border-current px-1 rounded">H1</div>
+            </ToolbarButton>
+            <ToolbarButton onAction={() => insertCodeSnippet('<h2></h2>')} tooltip="Insert <h2>">
+              <div className="text-[10px] font-bold border border-current px-1 rounded">H2</div>
+            </ToolbarButton>
+            <ToolbarButton onAction={() => insertCodeSnippet('<h3></h3>')} tooltip="Insert <h3>">
+              <div className="text-[10px] font-bold border border-current px-1 rounded">H3</div>
+            </ToolbarButton>
+          </div>
+          <div className="flex items-center gap-0.5 md:gap-1 border-r border-gray-300 dark:border-gray-600 pr-1 md:pr-2 mr-1 md:mr-2">
+            <ToolbarButton onAction={() => insertCodeSnippet('<style>\n  \n</style>')} tooltip="Insert <style>">
+              <div className="text-[10px] font-bold border border-current px-1 rounded">CSS</div>
+            </ToolbarButton>
+            <ToolbarButton onAction={() => insertCodeSnippet('<script>\n  \n</script>')} tooltip="Insert <script>">
+              <div className="text-[10px] font-bold border border-current px-1 rounded">JS</div>
+            </ToolbarButton>
+            <ToolbarButton onAction={() => insertCodeSnippet('<img src="" alt="" />')} tooltip="Insert <img>">
+              <ImageIcon size={18} />
+            </ToolbarButton>
+            <ToolbarButton onAction={() => insertCodeSnippet('<a href=""></a>')} tooltip="Insert <a>">
+              <LinkIcon size={18} />
+            </ToolbarButton>
+            <ToolbarButton onAction={() => insertCodeSnippet('<table>\n  <tr>\n    <td></td>\n  </tr>\n</table>')} tooltip="Insert <table>">
+              <TableIcon size={18} />
+            </ToolbarButton>
+          </div>
+          <div className="flex items-center gap-0.5 md:gap-1">
+             <ToolbarButton onAction={() => insertCodeSnippet('<ul>\n  <li></li>\n</ul>')} tooltip="Insert <ul>">
+              <ListUnorderedIcon size={18} />
+            </ToolbarButton>
+            <ToolbarButton onAction={() => insertCodeSnippet('<ol>\n  <li></li>\n</ol>')} tooltip="Insert <ol>">
+              <ListOrderedIcon size={18} />
+            </ToolbarButton>
+          </div>
+        </div>
+        <div className="hidden md:flex items-center pl-2 gap-1">
+          <ToolbarButton onAction={toggleTheme} tooltip={theme === 'light' ? t('toolbar.darkMode') : t('toolbar.lightMode')}>
+              {theme === 'light' ? <MoonIcon /> : <SunIcon />}
+          </ToolbarButton>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-3 md:p-2 bg-white dark:bg-gray-900 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 min-h-[72px] md:min-h-0">
@@ -750,6 +839,9 @@ const Toolbar: React.FC<ToolbarProps> = ({ editorRef, onCopyFormatting, isFormat
         <div className="flex items-center gap-1 border-r border-gray-300 dark:border-gray-600 pr-2 mr-2">
           <ToolbarButton onAction={() => executeCommand('insertUnorderedList')} tooltip={t('toolbar.bulletedList')} isActive={toolbarState.ul}><ListUnorderedIcon /></ToolbarButton>
           <ToolbarButton onAction={() => executeCommand('insertOrderedList')} tooltip={t('toolbar.numberedList')} isActive={toolbarState.ol}><ListOrderedIcon /></ToolbarButton>
+          {onToggleLineNumbers && (
+            <ToolbarButton onAction={onToggleLineNumbers} tooltip={showLineNumbers ? t('toolbar.hideLineNumbers') : t('toolbar.showLineNumbers')} isActive={showLineNumbers}><ListOrderedIcon /></ToolbarButton>
+          )}
           <ToolbarButton onAction={onInsertChecklist} tooltip={t('toolbar.checklist')}><ChecklistIcon /></ToolbarButton>
           <ToolbarButton onAction={() => executeCommand('removeFormat')} tooltip={t('toolbar.clearFormatting')}><ClearFormattingIcon /></ToolbarButton>
         </div>

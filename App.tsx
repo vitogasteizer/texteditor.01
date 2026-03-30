@@ -29,6 +29,8 @@ import TemplatesModal from './components/TemplatesModal';
 import InsertMathModal from './components/InsertMathModal';
 import Ruler from './components/Ruler';
 import TableOfContents from './components/TableOfContents';
+import CodeEditorView from './components/CodeEditorView';
+import FindReplaceModal from './components/FindReplaceModal';
 import { FilePlusIcon, FolderIcon, SaveIcon, KeyboardIcon } from './components/icons/EditorIcons';
 import { translations, Language } from './lib/translations';
 import { saveDocument, getAllDocuments, deleteDocument, saveAllDocuments } from './lib/db';
@@ -86,6 +88,7 @@ interface CopiedFormatting {
 
 export type ShapeType = 'textbox' | 'rectangle' | 'circle' | 'triangle' | 'line';
 export type ActivePanel = 'link' | 'image' | 'table' | 'findReplace' | 'shape' | null;
+export type AppMode = 'standard' | 'code';
 
 export interface ImageOptions {
     src: string;
@@ -160,6 +163,20 @@ const App: React.FC = () => {
   const [isAboutModalVisible, setIsAboutModalVisible] = useState(false);
   const [isCalculatorVisible, setIsCalculatorVisible] = useState(false);
   const [isShortcutsSidebarVisible, setIsShortcutsSidebarVisible] = useState(false);
+  const [appMode, setAppMode] = useState<AppMode>('standard');
+  const [codeContent, setCodeContent] = useState<string>(`<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    h1 { color: #2563eb; }
+  </style>
+</head>
+<body>
+  <h1>გამარჯობა!</h1>
+  <p>ეს არის კოდის ედიტორი.</p>
+</body>
+</html>`);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isImportModalVisible, setIsImportModalVisible] = useState(false);
   const [isDrawingModalVisible, setIsDrawingModalVisible] = useState(false);
@@ -255,6 +272,7 @@ const App: React.FC = () => {
   const [copiedFormatting, setCopiedFormatting] = useState<CopiedFormatting | null>(null);
   const [isSpellcheckEnabled, setIsSpellcheckEnabled] = useState(false);
   const [isRulerVisible, setIsRulerVisible] = useState(true);
+  const [showLineNumbers, setShowLineNumbers] = useState(false);
 
   const [pageSize, setPageSize] = useState<PageSize>('Letter');
   const [pageOrientation, setPageOrientation] = useState<PageOrientation>('portrait');
@@ -615,6 +633,102 @@ const App: React.FC = () => {
         }, 50);
     }
   }, [history, historyIndex, setCaretPosition]);
+
+  const handleFind = (text: string, matchCase: boolean, wholeWord: boolean) => {
+    if (appMode === 'standard') {
+      // @ts-ignore
+      const found = window.find(text, matchCase, false, true, wholeWord, false, false);
+      if (!found) {
+        setToast(t('findReplace.notFound'));
+      }
+    } else {
+      const regexFlags = matchCase ? 'g' : 'gi';
+      const searchPattern = wholeWord ? `\\b${text}\\b` : text;
+      try {
+        const regex = new RegExp(searchPattern, regexFlags);
+        if (regex.test(codeContent)) {
+          setToast(t('findReplace.foundInCode'));
+        } else {
+          setToast(t('findReplace.notFound'));
+        }
+      } catch (e) {
+        setToast(t('findReplace.notFound'));
+      }
+    }
+  };
+
+  const handleReplace = (findText: string, replaceText: string, matchCase: boolean, wholeWord: boolean, replaceAll: boolean) => {
+    if (appMode === 'standard') {
+      if (!editorRef.current) return;
+      
+      const regexFlags = matchCase ? 'g' : 'gi';
+      const searchPattern = wholeWord ? `\\b${findText}\\b` : findText;
+      
+      try {
+        const regex = new RegExp(searchPattern, regexFlags);
+        const currentHTML = editorRef.current.innerHTML;
+        
+        if (replaceAll) {
+          const newHTML = currentHTML.replace(regex, replaceText);
+          if (newHTML !== currentHTML) {
+            handleContentChange(newHTML);
+            if (editorRef.current) editorRef.current.innerHTML = newHTML;
+            setToast(t('findReplace.replacedAll'));
+          } else {
+            setToast(t('findReplace.notFound'));
+          }
+        } else {
+          const selection = window.getSelection();
+          if (selection && selection.rangeCount > 0) {
+            const selectedText = selection.toString();
+            const isMatch = matchCase ? selectedText === findText : selectedText.toLowerCase() === findText.toLowerCase();
+            
+            if (isMatch) {
+              document.execCommand('insertHTML', false, replaceText);
+              // @ts-ignore
+              window.find(findText, matchCase, false, true, wholeWord, false, false);
+            } else {
+              // @ts-ignore
+              const found = window.find(findText, matchCase, false, true, wholeWord, false, false);
+              if (!found) setToast(t('findReplace.notFound'));
+            }
+          } else {
+            // @ts-ignore
+            const found = window.find(findText, matchCase, false, true, wholeWord, false, false);
+            if (!found) setToast(t('findReplace.notFound'));
+          }
+        }
+      } catch (e) {
+        setToast(t('findReplace.notFound'));
+      }
+    } else {
+      const regexFlags = matchCase ? 'g' : 'gi';
+      const searchPattern = wholeWord ? `\\b${findText}\\b` : findText;
+      
+      try {
+        const regex = new RegExp(searchPattern, regexFlags);
+        if (replaceAll) {
+          const newCode = codeContent.replace(regex, replaceText);
+          if (newCode !== codeContent) {
+            setCodeContent(newCode);
+            setToast(t('findReplace.replacedAll'));
+          } else {
+            setToast(t('findReplace.notFound'));
+          }
+        } else {
+          const newCode = codeContent.replace(regex, replaceText);
+          if (newCode !== codeContent) {
+            setCodeContent(newCode);
+            setToast(t('findReplace.replaced'));
+          } else {
+            setToast(t('findReplace.notFound'));
+          }
+        }
+      } catch (e) {
+        setToast(t('findReplace.notFound'));
+      }
+    }
+  };
 
   useEffect(() => { updateWordCount(); }, [content, updateWordCount]);
 
@@ -1013,6 +1127,14 @@ const App: React.FC = () => {
   };
 
   const handleUpdateSourceCode = (newCode: string) => { handleContentChange(newCode); setIsSourceCodeVisible(false); focusEditor(); };
+
+  const handleToggleCodeEditor = () => {
+    setAppMode(prev => prev === 'standard' ? 'code' : 'standard');
+  };
+
+  const handleInsertCode = (snippet: string) => {
+    setCodeContent(prev => prev + '\n' + snippet);
+  };
   
   const handleToggleFullscreen = () => { 
       if (!document.fullscreenElement) {
@@ -1826,6 +1948,8 @@ const App: React.FC = () => {
                   onInsertHorizontalRule={() => handleEditAction('insertHorizontalRule')}
                   onAddComment={() => { saveSelection(); handleOpenCommentModal(); }}
                   onOpenSourceCode={() => setIsSourceCodeVisible(true)}
+                  onToggleCodeEditor={handleToggleCodeEditor}
+                  appMode={appMode}
                   onOpenWordCount={() => setIsWordCountVisible(true)}
                   onToggleFullscreen={handleToggleFullscreen}
                   onPreview={() => printOrPreview(false)}
@@ -1850,6 +1974,8 @@ const App: React.FC = () => {
                   isSpellcheckEnabled={isSpellcheckEnabled}
                   onToggleRuler={() => setIsRulerVisible(prev => !prev)}
                   isRulerVisible={isRulerVisible}
+                  onToggleLineNumbers={() => setShowLineNumbers(prev => !prev)}
+                  showLineNumbers={showLineNumbers}
                   onOpenFileImport={() => { saveSelection(); setIsImportModalVisible(true); }}
                   onInsertDrawing={() => { saveSelection(); setIsDrawingModalVisible(true); setEditingDrawingElement(null); }}
                   isMobileMenuOpen={isMobileMenuOpen}
@@ -1880,6 +2006,8 @@ const App: React.FC = () => {
                   onInsertHorizontalRule={() => handleEditAction('insertHorizontalRule')}
                   onAddComment={() => { saveSelection(); handleOpenCommentModal(); }}
                   onOpenSourceCode={() => setIsSourceCodeVisible(true)}
+                  onToggleCodeEditor={handleToggleCodeEditor}
+                  appMode={appMode}
                   onOpenWordCount={() => setIsWordCountVisible(true)}
                   onToggleFullscreen={handleToggleFullscreen}
                   onPreview={() => printOrPreview(false)}
@@ -1904,6 +2032,8 @@ const App: React.FC = () => {
                   isSpellcheckEnabled={isSpellcheckEnabled}
                   onToggleRuler={() => setIsRulerVisible(prev => !prev)}
                   isRulerVisible={isRulerVisible}
+                  onToggleLineNumbers={() => setShowLineNumbers(prev => !prev)}
+                  showLineNumbers={showLineNumbers}
                   onOpenFileImport={() => { saveSelection(); setIsImportModalVisible(true); }}
                   onInsertDrawing={() => { saveSelection(); setIsDrawingModalVisible(true); setEditingDrawingElement(null); }}
                   isMobileMenuOpen={isMobileMenuOpen}
@@ -1923,6 +2053,10 @@ const App: React.FC = () => {
                   onRedo={handleRedo}
                   canUndo={historyIndex > 0}
                   canRedo={historyIndex < history.length - 1}
+                  onToggleLineNumbers={() => setShowLineNumbers(prev => !prev)}
+                  showLineNumbers={showLineNumbers}
+                  appMode={appMode}
+                  onInsertCode={handleInsertCode}
                   t={t}
                 />
             </div>
@@ -1930,76 +2064,102 @@ const App: React.FC = () => {
             <div className="flex-grow flex overflow-hidden relative">
                 <TableOfContents editorRef={editorRef} content={content} t={t} />
                 <main className="flex-grow flex flex-col bg-gray-200 dark:bg-gray-600 print-view relative overflow-hidden">
-                    <div className="flex-grow overflow-auto relative flex flex-col items-center pb-20 md:pb-0">
-                        {isRulerVisible && (
-                            <div className="sticky top-0 z-20 hidden md:flex flex-col items-center bg-gray-200 dark:bg-gray-600 w-full md:min-w-max">
-                                 <div className="bg-white dark:bg-gray-800 border-b border-gray-300 dark:border-gray-600 h-6 flex shadow-sm">
-                                     <div className="w-6 flex-none bg-gray-100 dark:bg-gray-900 border-r border-gray-300 dark:border-gray-600 z-30"></div>
-                                     <div className="flex-none" style={{ width: pageW * (zoomLevel / 100) }}>
-                                         <Ruler orientation="horizontal" length={pageW} zoom={zoomLevel} margins={pageMargins} pageWidth={pageW} pageHeight={pageH} />
-                                     </div>
-                                     <div className="flex-grow bg-gray-200 dark:bg-gray-600"></div>
-                                 </div>
-                            </div>
-                        )}
-
-                        <div className="flex w-full md:w-auto md:min-w-max justify-center md:justify-start">
+                    {appMode === 'code' ? (
+                        <CodeEditorView 
+                            initialCode={codeContent} 
+                            onChange={setCodeContent} 
+                            showLineNumbers={showLineNumbers}
+                            onToggleLineNumbers={() => setShowLineNumbers(prev => !prev)}
+                            onOpenFindReplace={() => setActivePanel('findReplace')}
+                            t={t} 
+                        />
+                    ) : (
+                        <div className="flex-grow overflow-auto relative flex flex-col items-center pb-20 md:pb-0">
                             {isRulerVisible && (
-                                <div className="sticky left-0 z-10 w-6 flex-none hidden md:flex flex-col items-end bg-white dark:bg-gray-800 border-r border-gray-300 dark:border-gray-600">
-                                     <Ruler orientation="vertical" length={pageH} zoom={zoomLevel} margins={pageMargins} pageWidth={pageW} pageHeight={pageH} />
+                                <div className="sticky top-0 z-20 hidden md:flex flex-col items-center bg-gray-200 dark:bg-gray-600 w-full md:min-w-max">
+                                    <div className="bg-white dark:bg-gray-800 border-b border-gray-300 dark:border-gray-600 h-6 flex shadow-sm">
+                                        <div className="w-6 flex-none bg-gray-100 dark:bg-gray-900 border-r border-gray-300 dark:border-gray-600 z-30"></div>
+                                        <div className="flex-none" style={{ width: pageW * (zoomLevel / 100) }}>
+                                            <Ruler orientation="horizontal" length={pageW} zoom={zoomLevel} margins={pageMargins} pageWidth={pageW} pageHeight={pageH} />
+                                        </div>
+                                        <div className="flex-grow bg-gray-200 dark:bg-gray-600"></div>
+                                    </div>
                                 </div>
                             )}
 
-                            <div className="editor-zoom-container w-full md:w-auto p-0 md:p-12 transition-transform duration-200 md:origin-top-left flex justify-center md:block" style={{ transform: window.innerWidth < 768 ? 'none' : `scale(${zoomLevel / 100})`, transformOrigin: 'top left' }} onContextMenu={handleContextMenu}>
-                                <div 
-                                    id="editor-page" 
-                                    className="relative bg-white dark:bg-gray-900 shadow-2xl box-border"
-                                    style={pageContainerStyle}
-                                    onClick={(e) => {
-                                      if (e.target === e.currentTarget) {
-                                        const editor = editorRef.current;
-                                        if (editor) {
-                                          editor.focus();
-                                          const range = document.createRange();
-                                          range.selectNodeContents(editor);
-                                          range.collapse(false);
-                                          const sel = window.getSelection();
-                                          if (sel) {
-                                            sel.removeAllRanges();
-                                            sel.addRange(range);
-                                          }
-                                        }
-                                      }
-                                    }}
-                                >
-                                    <div className="editor-content-wrapper" style={editorContentStyle}>
-                                        <Editor 
-                                          ref={editorRef} 
-                                          content={content} 
-                                          onChange={handleContentChange}
-                                          onMouseUp={handleEditorMouseUp}
-                                          onDoubleClick={handleDoubleClick}
-                                          onClick={handleClick}
-                                          onTableAction={handleTableAction}
-                                          spellCheck={isSpellcheckEnabled}
-                                          onSlashCommand={(x, y) => setSlashMenu({ x, y })}
-                                          t={t}
-                                        />
+                            <div className="flex w-full md:w-auto md:min-w-max justify-center md:justify-start">
+                                {isRulerVisible && (
+                                    <div className="sticky left-0 z-10 w-6 flex-none hidden md:flex flex-col items-end bg-white dark:bg-gray-800 border-r border-gray-300 dark:border-gray-600">
+                                        <Ruler orientation="vertical" length={pageH} zoom={zoomLevel} margins={pageMargins} pageWidth={pageW} pageHeight={pageH} />
                                     </div>
+                                )}
 
-                                    {selectedElement && (
-                                        <ObjectWrapper 
-                                            targetElement={selectedElement}
-                                            onUpdate={handleUpdateElementStyle}
-                                            onDeselect={() => setSelectedElement(null)}
-                                            onDoubleClick={(e) => { e.preventDefault(); e.stopPropagation(); openPanelForElement(selectedElement); }}
-                                            zoomLevel={zoomLevel}
-                                        />
-                                    )}
+                                <div className="editor-zoom-container w-full md:w-auto p-0 md:p-12 transition-transform duration-200 md:origin-top-left flex justify-center md:block" style={{ transform: window.innerWidth < 768 ? 'none' : `scale(${zoomLevel / 100})`, transformOrigin: 'top left' }} onContextMenu={handleContextMenu}>
+                                    <div 
+                                        id="editor-page" 
+                                        className="relative bg-white dark:bg-gray-900 shadow-2xl box-border flex"
+                                        style={pageContainerStyle}
+                                        onClick={(e) => {
+                                        if (e.target === e.currentTarget) {
+                                            const editor = editorRef.current;
+                                            if (editor) {
+                                            editor.focus();
+                                            const range = document.createRange();
+                                            range.selectNodeContents(editor);
+                                            range.collapse(false);
+                                            const sel = window.getSelection();
+                                            if (sel) {
+                                                sel.removeAllRanges();
+                                                sel.addRange(range);
+                                            }
+                                            }
+                                        }
+                                        }}
+                                    >
+                                        {showLineNumbers && (
+                                            <div 
+                                                className="absolute left-0 top-0 bottom-0 w-8 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col items-end pr-1.5 select-none pointer-events-none z-10 overflow-hidden" 
+                                                style={{ 
+                                                    paddingTop: `${pageMargins.top}in`,
+                                                    paddingBottom: `${pageMargins.bottom}in`
+                                                }}
+                                            >
+                                                {Array.from({ length: Math.max(1, (editorRef.current?.innerText?.replace(/\n$/, '')?.split('\n')?.length || 1)) }).map((_, i) => (
+                                                    <div key={i} className="text-[10px] leading-[1.6] text-gray-400 dark:text-gray-500 h-[1.6em]">
+                                                        {i + 1}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <div className={`editor-content-wrapper flex-grow ${showLineNumbers ? 'pl-8' : ''}`} style={editorContentStyle}>
+                                            <Editor 
+                                            ref={editorRef} 
+                                            content={content} 
+                                            onChange={handleContentChange}
+                                            onMouseUp={handleEditorMouseUp}
+                                            onDoubleClick={handleDoubleClick}
+                                            onClick={handleClick}
+                                            onTableAction={handleTableAction}
+                                            spellCheck={isSpellcheckEnabled}
+                                            onSlashCommand={(x, y) => setSlashMenu({ x, y })}
+                                            t={t}
+                                            />
+                                        </div>
+
+                                        {selectedElement && (
+                                            <ObjectWrapper 
+                                                targetElement={selectedElement}
+                                                onUpdate={handleUpdateElementStyle}
+                                                onDeselect={() => setSelectedElement(null)}
+                                                onDoubleClick={(e) => { e.preventDefault(); e.stopPropagation(); openPanelForElement(selectedElement); }}
+                                                zoomLevel={zoomLevel}
+                                            />
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </main>
                 
                 {isAnySidebarOpen && (
@@ -2063,6 +2223,8 @@ const App: React.FC = () => {
                             onRedo={handleRedo}
                             canUndo={historyIndex > 0}
                             canRedo={historyIndex < history.length - 1}
+                            onToggleLineNumbers={() => setShowLineNumbers(prev => !prev)}
+                            showLineNumbers={showLineNumbers}
                             onOpenMenu={() => setIsMobileMenuOpen(true)}
                             isBottom={true}
                             t={t}
@@ -2175,6 +2337,14 @@ const App: React.FC = () => {
           t={t}
         />
       )}
+
+      <FindReplaceModal 
+        isOpen={activePanel === 'findReplace'} 
+        onClose={() => setActivePanel(null)}
+        onFind={handleFind}
+        onReplace={handleReplace}
+        t={t}
+      />
 
       <SourceCodeModal isOpen={isSourceCodeVisible} onClose={() => setIsSourceCodeVisible(false)} content={content} onSave={handleUpdateSourceCode} t={t} />
       <WordCountModal isOpen={isWordCountVisible} onClose={() => setIsWordCountVisible(false)} stats={wordCountStats} t={t} />
