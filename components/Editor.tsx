@@ -190,23 +190,28 @@ const Editor = forwardRef<HTMLDivElement, EditorProps>(({ content, onChange, onM
   useEffect(() => {
     const editor = contentRef && 'current' in contentRef ? contentRef.current : null;
     if (editor && editor.innerHTML !== content) {
-      // This helps in preserving the cursor position on external updates (like loading a doc).
-      const selection = window.getSelection();
-      const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0).cloneRange() : null;
+      // Only update if the content is significantly different or if it's an external update.
+      // We use a temporary div to normalize the content for comparison.
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = content;
       
-      editor.innerHTML = content;
-      renderMath();
-      
-      if(range && selection) {
-        try {
-            // Check if the container is still in the DOM before restoring
-            if (document.body.contains(range.startContainer)) {
-                selection.removeAllRanges();
-                selection.addRange(range);
+      if (editor.innerHTML !== tempDiv.innerHTML) {
+          const selection = window.getSelection();
+          const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0).cloneRange() : null;
+          
+          editor.innerHTML = content;
+          renderMath();
+          
+          if(range && selection) {
+            try {
+                if (document.body.contains(range.startContainer)) {
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
+            } catch(e){
+                console.error("Failed to restore cursor position.", e);
             }
-        } catch(e){
-            console.error("Failed to restore cursor position.", e);
-        }
+          }
       }
     }
   }, [content, contentRef]);

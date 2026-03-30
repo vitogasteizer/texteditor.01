@@ -12,6 +12,10 @@ interface ToolbarProps {
   isFormatPainterActive: boolean;
   onToggleAiSidekick: () => void;
   onInsertChecklist: () => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
   onOpenMenu?: () => void;
   isBottom?: boolean;
   t: (key: string, replacements?: { [key: string]: string | number }) => string;
@@ -50,25 +54,34 @@ const fontFamilies: FontFamily[] = [
   { value: "'Lobster', cursive", label: 'Lobster' },
 ];
 
-const ToolbarButton: React.FC<{ onAction: (e: React.MouseEvent<HTMLButtonElement>) => void; children: React.ReactNode; tooltip: string; isActive?: boolean; buttonRef?: React.RefObject<HTMLButtonElement> }> = ({ onAction, children, tooltip, isActive = false, buttonRef }) => {
-  const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => { e.preventDefault(); onAction(e); };
+const ToolbarButton: React.FC<{ onAction: (e: React.MouseEvent<HTMLButtonElement>) => void; children: React.ReactNode; tooltip: string; isActive?: boolean; isDisabled?: boolean; buttonRef?: React.RefObject<HTMLButtonElement> }> = ({ onAction, children, tooltip, isActive = false, isDisabled = false, buttonRef }) => {
+  const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => { 
+    if (isDisabled) return;
+    e.preventDefault(); 
+    onAction(e); 
+  };
   return (
     <div className="relative group">
       <button 
         ref={buttonRef} 
         onMouseDown={handleMouseDown} 
         aria-label={tooltip} 
+        disabled={isDisabled}
         className={`p-2 rounded-lg transition-all duration-200 ${
-          isActive 
-            ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' 
-            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
+          isDisabled
+            ? 'opacity-30 cursor-not-allowed text-gray-400'
+            : isActive 
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' 
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
         } focus:outline-none`}
       >
         {children}
       </button>
-      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[11px] font-medium rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap pointer-events-none z-50 shadow-xl border border-white/10 translate-y-1 group-hover:translate-y-0">
-        {tooltip}
-      </div>
+      {!isDisabled && (
+        <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[11px] font-medium rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap pointer-events-none z-50 shadow-xl border border-white/10 translate-y-1 group-hover:translate-y-0">
+          {tooltip}
+        </div>
+      )}
     </div>
   );
 };
@@ -512,7 +525,7 @@ const FontSizeCombobox: React.FC<{ value: string; onChange: (size: number) => vo
 };
 
 
-const Toolbar: React.FC<ToolbarProps> = ({ editorRef, onCopyFormatting, isFormatPainterActive, onToggleAiSidekick, onInsertChecklist, onOpenMenu, isBottom, t }) => {
+const Toolbar: React.FC<ToolbarProps> = ({ editorRef, onCopyFormatting, isFormatPainterActive, onToggleAiSidekick, onInsertChecklist, onUndo, onRedo, canUndo, canRedo, onOpenMenu, isBottom, t }) => {
     const { theme, toggleTheme } = useUIStore();
     const [toolbarState, setToolbarState] = useState({
         fontName: 'Arial',
@@ -582,6 +595,14 @@ const Toolbar: React.FC<ToolbarProps> = ({ editorRef, onCopyFormatting, isFormat
     }, [editorRef, updateToolbarState]);
 
   const executeCommand = (command: string, value?: string) => {
+    if (command === 'undo' && onUndo) {
+        onUndo();
+        return;
+    }
+    if (command === 'redo' && onRedo) {
+        onRedo();
+        return;
+    }
     if (editorRef.current && document.activeElement !== editorRef.current) {
       editorRef.current.focus();
     }
@@ -709,8 +730,8 @@ const Toolbar: React.FC<ToolbarProps> = ({ editorRef, onCopyFormatting, isFormat
           </div>
         )}
         <div className="flex items-center gap-0.5 md:gap-1 border-r border-gray-300 dark:border-gray-600 pr-1 md:pr-2 mr-1 md:mr-2">
-          <ToolbarButton onAction={() => executeCommand('undo')} tooltip={t('toolbar.undo')}><UndoIcon /></ToolbarButton>
-          <ToolbarButton onAction={() => executeCommand('redo')} tooltip={t('toolbar.redo')}><RedoIcon /></ToolbarButton>
+          <ToolbarButton onAction={() => executeCommand('undo')} tooltip={t('toolbar.undo')} isDisabled={!canUndo}><UndoIcon /></ToolbarButton>
+          <ToolbarButton onAction={() => executeCommand('redo')} tooltip={t('toolbar.redo')} isDisabled={!canRedo}><RedoIcon /></ToolbarButton>
           <ToolbarButton onAction={onCopyFormatting} tooltip={t('toolbar.formatPainter')} isActive={isFormatPainterActive}><PaintBrushIcon /></ToolbarButton>
         </div>
         

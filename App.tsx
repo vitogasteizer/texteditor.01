@@ -183,6 +183,74 @@ const App: React.FC = () => {
   const [zoomLevel, setZoomLevel] = useState(100);
   const [wordCountStats, setWordCountStats] = useState<WordCountStats>({ words: 0, characters: 0 });
 
+  // History State for Undo/Redo
+  interface HistoryEntry {
+    content: string;
+    selection: number;
+  }
+  const [history, setHistory] = useState<HistoryEntry[]>([{ content: '<p><br></p>', selection: 0 }]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  const lastHistoryUpdate = useRef<number>(Date.now());
+  const isUndoRedoAction = useRef(false);
+
+  const getCaretPosition = useCallback(() => {
+    if (!editorRef.current) return 0;
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return 0;
+    const range = selection.getRangeAt(0);
+    const preCaretRange = range.cloneRange();
+    preCaretRange.selectNodeContents(editorRef.current);
+    preCaretRange.setEnd(range.endContainer, range.endOffset);
+    return preCaretRange.toString().length;
+  }, []);
+
+  const setCaretPosition = useCallback((pos: number) => {
+    if (!editorRef.current) return;
+    const selection = window.getSelection();
+    if (!selection) return;
+    const range = document.createRange();
+    
+    if (pos <= 0) {
+      range.setStart(editorRef.current, 0);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      return;
+    }
+
+    let currentPos = 0;
+    const nodeStack: Node[] = [editorRef.current];
+    let found = false;
+
+    while (nodeStack.length > 0 && !found) {
+      const node = nodeStack.pop()!;
+      if (node.nodeType === Node.TEXT_NODE) {
+        const nextPos = currentPos + (node.textContent?.length || 0);
+        if (pos <= nextPos) {
+          range.setStart(node, pos - currentPos);
+          range.collapse(true);
+          found = true;
+        }
+        currentPos = nextPos;
+      } else {
+        for (let i = node.childNodes.length - 1; i >= 0; i--) {
+          nodeStack.push(node.childNodes[i]);
+        }
+      }
+    }
+
+    if (found) {
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } else {
+      // If not found (pos beyond text length), set to end of last text node or end of editor
+      range.setStart(editorRef.current, editorRef.current.childNodes.length);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  }, []);
+
   const [isFormatPainterActive, setIsFormatPainterActive] = useState(false);
   const [copiedFormatting, setCopiedFormatting] = useState<CopiedFormatting | null>(null);
   const [isSpellcheckEnabled, setIsSpellcheckEnabled] = useState(false);
@@ -446,7 +514,107 @@ const App: React.FC = () => {
   const handleContentChange = useCallback((newContent: string) => {
     setContent(newContent);
     updateWordCount();
-  }, [updateWordCount]);
+
+    // Custom History Logic
+    if (!isUndoRedoAction.current) {
+        const now = Date.now();
+        const timeDiff = now - lastHistoryUpdate.current;
+        const lastEntry = history[historyIndex];
+        const caretPos = getCaretPosition();
+        
+        // Use textContent to check for boundaries reliably
+        const textContent = editorRef.current?.textContent || '';
+        const lastChar = textContent.substring(0, caretPos).slice(-1);
+        
+        const lengthDiff = Math.abs(newContent.length - (lastEntry?.content.length || 0));
+        
+        // Push to history if:
+        // 1. It's the first change in the document
+        // 2. Boundary character reached (space, punctuation, newline)
+        // 3. Significant time passed (1 second)
+        // 4. Significant length change (5 chars)
+        const isSignificant = 
+            (historyIndex === 0 && lengthDiff > 0) ||
+            (lengthDiff > 0 && (lastChar === ' ' || lastChar === '.' || lastChar === ',' || lastChar === '!' || lastChar === '?' || lastChar === '\n' || lastChar === '\t')) ||
+            lengthDiff > 5 ||
+            timeDiff > 1000;
+
+        if (isSignificant) {
+            const newHistory = history.slice(0, historyIndex + 1);
+            newHistory.push({ content: newContent, selection: caretPos });
+            if (newHistory.length > 300) newHistory.shift(); // Increased limit to 300
+            setHistory(newHistory);
+            setHistoryIndex(newHistory.length - 1);
+            lastHistoryUpdate.current = now;
+        }
+    }
+  }, [updateWordCount, history, historyIndex, getCaretPosition]);
+
+  const handleUndo = useCallback(() => {
+    const currentContent = editorRef.current?.innerHTML || content;
+    const lastEntry = history[historyIndex];
+    const caretPos = getCaretPosition();
+
+    // If current content is different from what's in history at current index,
+    // it means there are unsaved changes. Save them so we can Redo back to them.
+    if (currentContent !== lastEntry?.content) {
+        const newHistory = history.slice(0, historyIndex + 1);
+        newHistory.push({ content: currentContent, selection: caretPos });
+        setHistory(newHistory);
+        
+        // Now we are at the new entry (newHistory.length - 1).
+        // We want to undo to the one before it (newHistory.length - 2).
+        const targetIndex = newHistory.length - 2;
+        const targetEntry = newHistory[targetIndex];
+        
+        isUndoRedoAction.current = true;
+        setHistoryIndex(targetIndex);
+        setContent(targetEntry.content);
+        
+        setTimeout(() => {
+            if (editorRef.current) {
+                editorRef.current.focus();
+                setCaretPosition(targetEntry.selection);
+            }
+            isUndoRedoAction.current = false;
+        }, 50);
+        return;
+    }
+
+    if (historyIndex > 0) {
+        const prevIndex = historyIndex - 1;
+        const prevEntry = history[prevIndex];
+        isUndoRedoAction.current = true;
+        setHistoryIndex(prevIndex);
+        setContent(prevEntry.content);
+        
+        setTimeout(() => {
+            if (editorRef.current) {
+                editorRef.current.focus();
+                setCaretPosition(prevEntry.selection);
+            }
+            isUndoRedoAction.current = false;
+        }, 50); 
+    }
+  }, [history, historyIndex, content, setCaretPosition, getCaretPosition]);
+
+  const handleRedo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+        const nextIndex = historyIndex + 1;
+        const nextEntry = history[nextIndex];
+        isUndoRedoAction.current = true;
+        setHistoryIndex(nextIndex);
+        setContent(nextEntry.content);
+        
+        setTimeout(() => {
+            if (editorRef.current) {
+                editorRef.current.focus();
+                setCaretPosition(nextEntry.selection);
+            }
+            isUndoRedoAction.current = false;
+        }, 50);
+    }
+  }, [history, historyIndex, setCaretPosition]);
 
   useEffect(() => { updateWordCount(); }, [content, updateWordCount]);
 
@@ -490,6 +658,18 @@ const App: React.FC = () => {
           case 'f':
             e.preventDefault();
             openPanel('findReplace');
+            break;
+          case 'z':
+            e.preventDefault();
+            if (e.shiftKey) {
+                handleRedo();
+            } else {
+                handleUndo();
+            }
+            break;
+          case 'y':
+            e.preventDefault();
+            handleRedo();
             break;
           case 'enter':
             // Calculate formulas if inside a table
@@ -574,7 +754,32 @@ const App: React.FC = () => {
   
   const handleEditAction = (command: string, value?: string) => {
     focusEditor();
-    document.execCommand(command, false, value);
+    if (command === 'undo') {
+        handleUndo();
+    } else if (command === 'redo') {
+        handleRedo();
+    } else {
+        // For other commands, push current state to history before executing
+        const currentContent = editorRef.current?.innerHTML || content;
+        const caretPos = getCaretPosition();
+        if (history[historyIndex]?.content !== currentContent) {
+            const newHistory = history.slice(0, historyIndex + 1);
+            newHistory.push({ content: currentContent, selection: caretPos });
+            setHistory(newHistory);
+            setHistoryIndex(newHistory.length - 1);
+        }
+        document.execCommand(command, false, value);
+        // And push after executing
+        setTimeout(() => {
+            const afterContent = editorRef.current?.innerHTML || '';
+            const afterCaretPos = getCaretPosition();
+            const newHistory = history.slice(0, historyIndex + 1);
+            newHistory.push({ content: afterContent, selection: afterCaretPos });
+            setHistory(newHistory);
+            setHistoryIndex(newHistory.length - 1);
+            lastHistoryUpdate.current = Date.now();
+        }, 0);
+    }
   };
 
   const handleNewDocument = () => {
@@ -583,6 +788,8 @@ const App: React.FC = () => {
     const defaults = defaultsString ? JSON.parse(defaultsString) : {};
     setContent('<p><br></p>');
     setOriginalContent('<p><br></p>');
+    setHistory([{ content: '<p><br></p>', selection: 0 }]);
+    setHistoryIndex(0);
     setComments([]);
     setOriginalComments([]);
     setCurrentDocId(null);
@@ -637,6 +844,8 @@ const App: React.FC = () => {
     if (docToOpen) {
       setContent(docToOpen.content);
       setOriginalContent(docToOpen.content);
+      setHistory([{ content: docToOpen.content, selection: 0 }]);
+      setHistoryIndex(0);
       setComments(docToOpen.comments || []);
       setOriginalComments(docToOpen.comments || []);
       setIsDirty(false);
@@ -1710,6 +1919,10 @@ const App: React.FC = () => {
                   isFormatPainterActive={isFormatPainterActive}
                   onToggleAiSidekick={() => { if (!checkAiAvailability()) return; setIsAiSidekickVisible(prev => !prev); setActivePanel(null); setIsCommentsSidebarVisible(false); setIsShortcutsSidebarVisible(false); }}
                   onInsertChecklist={handleInsertChecklist}
+                  onUndo={handleUndo}
+                  onRedo={handleRedo}
+                  canUndo={historyIndex > 0}
+                  canRedo={historyIndex < history.length - 1}
                   t={t}
                 />
             </div>
@@ -1840,16 +2053,20 @@ const App: React.FC = () => {
             {/* Mobile/Tablet Bottom Navigation */}
             <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] pb-[env(safe-area-inset-bottom)]">
                 <div className="flex flex-col">
-                    <Toolbar 
-                      editorRef={editorRef} 
-                      onCopyFormatting={handleCopyFormatting} 
-                      isFormatPainterActive={isFormatPainterActive}
-                      onToggleAiSidekick={() => { if (!checkAiAvailability()) return; setIsAiSidekickVisible(prev => !prev); setActivePanel(null); setIsCommentsSidebarVisible(false); setIsShortcutsSidebarVisible(false); }}
-                      onInsertChecklist={handleInsertChecklist}
-                      onOpenMenu={() => setIsMobileMenuOpen(true)}
-                      isBottom={true}
-                      t={t}
-                    />
+                        <Toolbar 
+                            editorRef={editorRef} 
+                            onCopyFormatting={handleCopyFormatting} 
+                            isFormatPainterActive={isFormatPainterActive}
+                            onToggleAiSidekick={() => { if (!checkAiAvailability()) return; setIsAiSidekickVisible(prev => !prev); setActivePanel(null); setIsCommentsSidebarVisible(false); setIsShortcutsSidebarVisible(false); }}
+                            onInsertChecklist={handleInsertChecklist}
+                            onUndo={handleUndo}
+                            onRedo={handleRedo}
+                            canUndo={historyIndex > 0}
+                            canRedo={historyIndex < history.length - 1}
+                            onOpenMenu={() => setIsMobileMenuOpen(true)}
+                            isBottom={true}
+                            t={t}
+                        />
                 </div>
             </div>
         </>
