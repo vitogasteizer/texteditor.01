@@ -1,16 +1,16 @@
 {
-  "short_name": "Avma Text",
-  "name": "Avma Text",
-  "description": "მარტივი და უფასო ონლაინ ტექსტური რედაქტორი ძირითადი ფორმატირებისთვის. დამოკიდებულებების გარეშე, მზად არის GitHub Pages-ზე განსათავსებლად.",
+  "short_name": "OTE",
+  "name": "OTE By AVMA",
+  "description": "უფასო ონლაინ ტექსტური რედაქტორი სადაც შეგიძლია შექმენა, დაარედაქტირო და შეინახო ლოკალურად შენი მონაცემები ბრაუზერის საცავში",
   "icons": [
     {
-      "src": "https://i.postimg.cc/CxQ0CWJ6/App-icon-avmatexts.png",
+      "src": "https://i.postimg.cc/zvH3QjV1/App-icon-OTE.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any maskable"
     },
     {
-      "src": "https://i.postimg.cc/CxQ0CWJ6/App-icon-avmatexts.png",
+      "src": "https://i.postimg.cc/zvH3QjV1/App-icon-OTE.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"

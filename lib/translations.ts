@@ -224,6 +224,7 @@ export const translations: Translations = {
         description: 'This is a simple and free online text editor for basic formatting, built with modern web technologies. It works offline and is ready for deployment anywhere.',
         shortcutsTitle: 'Keyboard Shortcuts',
         creator: 'Created by Avtandil Machitadze',
+        openSource: 'This is an open-source application available on GitHub.',
         shortcuts: {
             save: 'Save: Ctrl+S',
             bold: 'Bold: Ctrl+B',
@@ -723,6 +724,7 @@ export const translations: Translations = {
         description: 'ეს არის მარტივი და უფასო ონლაინ ტექსტური რედაქტორი, შექმნილი თანამედროვე ვებ-ტექნოლოგიებით. მუშაობს ოფლაინ და მზადაა ნებისმიერ პლატფორმაზე განსათავსებლად.',
         shortcutsTitle: 'კლავიატურის კომბინაციები',
         creator: 'შექმნილია ავთანდილ მაჩიტაძის მიერ',
+        openSource: 'ეს არის ღია კოდის აპლიკაცია, რომელიც ხელმისაწვდომია GitHub-ზე.',
         shortcuts: {
             save: 'შენახვა: Ctrl+S',
             bold: 'მსხვილი: Ctrl+B',
@@ -1219,6 +1221,7 @@ export const translations: Translations = {
         description: 'Este es un editor de texto en línea simple y gratuito para formato básico, construido con tecnologías web modernas. Funciona sin conexión y está listo para ser implementado en cualquier lugar.',
         shortcutsTitle: 'Atajos de Teclado',
         creator: 'Creado por Avtandil Machitadze',
+        openSource: 'Esta es una aplicación de código abierto disponible en GitHub.',
         shortcuts: {
             save: 'Guardar: Ctrl+S',
             bold: 'Negrita: Ctrl+B',

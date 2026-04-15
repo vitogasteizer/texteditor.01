@@ -358,7 +358,7 @@ const DriveView: React.FC<DriveViewProps> = (props) => {
                                 </div>
                             ) : (
                                 <div className="text-center py-10 text-gray-500">
-                                    No documents found in Google Drive matching Avma Text format.
+                                    No documents found in Google Drive matching OTE format.
                                     <br/>
                                     Create a new document locally and save it to sync.
                                 </div>
