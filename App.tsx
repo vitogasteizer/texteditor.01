@@ -2080,6 +2080,9 @@ const App: React.FC = () => {
                             showLineNumbers={showLineNumbers}
                             onToggleLineNumbers={() => setShowLineNumbers(prev => !prev)}
                             onOpenFindReplace={() => setActivePanel('findReplace')}
+                            onClose={() => setAppMode('standard')}
+                            ai={aiRef.current}
+                            setToast={setToast}
                             t={t} 
                         />
                     ) : (
