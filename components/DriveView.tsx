@@ -327,8 +327,9 @@ const DriveView: React.FC<DriveViewProps> = (props) => {
                                     Sign in with Google
                                 </button>
                               ) : (
-                                <div className="text-sm text-red-500 bg-red-50 p-3 rounded border border-red-200">
-                                    Google Drive API not configured in code. Please check lib/googleDrive.ts.
+                                <div className="max-w-md mx-auto p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300 text-xs text-center space-y-1">
+                                    <p className="font-semibold">Cloud სინქრონიზაცია არ არის კონფიგურირებული</p>
+                                    <p className="text-amber-700 dark:text-amber-400">თქვენი დოკუმენტები სრულად დაცულია და ინახება ლოკალურად ბრაუზერში (Local Storage/IndexedDB). Google Drive სინქრონიზაციის გასააქტიურებლად საჭიროა Google Cloud Client ID და API Key.</p>
                                 </div>
                               )}
                           </div>

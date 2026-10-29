@@ -1,20 +1,71 @@
+# OTE By AVMA - თანამედროვე ტექსტური და კოდის რედაქტორი
+
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+  <img src="https://i.postimg.cc/zvH3QjV1/App-icon-OTE.png" alt="OTE Logo" width="120" height="120" />
+  <p><strong>მძლავრი, მსუბუქი და ინტელექტუალური ღია კოდის რედაქტორი</strong></p>
+  <p>GitHub რეპოზიტორია: <a href="https://github.com/vitogasteizer/texteditor.01.git">github.com/vitogasteizer/texteditor.01.git</a></p>
 </div>
 
-# Run and deploy your AI Studio app
+---
 
-This contains everything you need to run your app locally.
+## 📌 პროექტის მიმოხილვა
+**OTE By AVMA** არის თანამედროვე, სრულფასოვანი ტექსტური და კოდის რედაქტორი, შექმნილი React, TypeScript და Tailwind CSS ტექნოლოგიებით. აპლიკაცია აერთიანებს დოკუმენტების მდიდარ რედაქტირებას (Rich Text Editor), პროგრამირების კოდის რედაქტორს (სინტაქსის ხაზგასმით, ხაზების ნუმერაციით, მოდალური ძიებითა და Undo/Redo მხარდაჭერით), მათემატიკური ფორმულების (KaTeX) ჩასმას, ცხრილებს, ლოკალურ და Cloud საცავს, ასევე Gemini AI ინტელექტუალურ ასისტენტს.
 
-View your app in AI Studio: https://ai.studio/apps/642651a0-3a9f-4000-af8d-e3458303aa2d
+---
 
-## Run Locally
+## 🚀 ძირითადი ფუნქციები
+- **დოკუმენტის რედაქტორი:** მდიდარი ტექსტის ფორმატირება, სტილები, ფერების პალიტრა, მათემატიკური ფორმულები, ჩექლისტები, სურათები და ცხრილები.
+- **კოდის რედაქტორი:** მრავალენოვანი სინტაქსის მხარდაჭერა, Undo/Redo ფუნქციონალი, ხაზების ნუმერაცია და კოდში ფერების კოდების პირდაპირი გამოყენება.
+- **AI ასისტენტი (Gemini):** ინტელექტუალური ჩათი, ტექსტის გაუმჯობესება და ანალიზი (Gemini 2.5 Flash / Pro).
+- **ლოკალური დაცვა (Local-First):** მონაცემები ინახება ბრაუზერის IndexedDB/LocalStorage-ში, ინტერნეტის გარეშეც მუშაობის სრული გარანტიით.
+- **PWA მხარდაჭერა:** აპლიკაცია სრულად მზადაა ოფლაინ გამოყენებისა და დესკტოპ/მობილურ მოწყობილობებზე ინსტალაციისთვის.
+- **მრავალენოვანი ინტერფეისი:** სრული ლოკალიზაცია ქართულ, ინგლისურ და ესპანურ ენებზე.
 
-**Prerequisites:**  Node.js
+---
 
+## 🛠️ პროექტის არქიტექტურა და სტრუქტურა
+```text
+├── components/          # UI კომპონენტები (Editor, Toolbar, CodeEditorView, MenuBar, Modals...)
+│   └── icons/          # ცენტრალიზებული SVG ხატულები
+├── lib/                 # დამხმარე ბიბლიოთეკები (googleDrive, translations, templates, db)
+├── store/               # მდგომარეობის მართვა (uiStore - Zustand)
+├── types/               # TypeScript ტიპები და ინტერფეისები
+├── App.tsx              # მთავარი აპლიკაციის კონტეინერი
+├── index.html           # HTML5 სტრუქტურა და გარე ბიბლიოთეკები
+├── vite.config.ts       # Vite-ის კონფიგურაცია და გარემოს ცვლადების მხარდაჭერა
+└── service-worker.js    # ოფლაინ PWA სერვის-ვორკერი
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+---
+
+## ⚙️ ლოკალური გაშვება
+
+### წინაპირობა:
+- [Node.js](https://nodejs.org/) (ვერსია 18+)
+
+### ნაბიჯები:
+1. დააინსტალირეთ დამოკიდებულებები:
+   ```bash
+   npm install
+   ```
+
+2. შექმენით `.env.local` ფაილი პროექტის მთავარ დირექტორიაში:
+   ```env
+   GEMINI_API_KEY=თქვენი_gemini_api_გასაღები
+   ```
+
+3. გაუშვით დეველოპმენტ სერვერი:
+   ```bash
+   npm run dev
+   ```
+
+---
+
+## 🌐 Vercel-ზე დეპლოიმენტის ინსტრუქცია
+
+1. ატვირთეთ პროექტი თქვენს GitHub რეპოზიტორიაში.
+2. შედით [Vercel](https://vercel.com)-ზე და დააიმპორტეთ რეპოზიტორია `texteditor.01`.
+3. **Environment Variables** სექციაში დაამატეთ:
+   - **Key:** `GEMINI_API_KEY` (ან `VITE_GEMINI_API_KEY`)
+   - **Value:** თქვენი Google Gemini API გასაღები (Google AI Studio-დან, უფასო 15 მოთხოვნა/წუთში ტარიფით).
+4. დააჭირეთ **Deploy** ღილაკს. სისტემა ავტომატურად ააწყობს და გაუშვებს აპლიკაციას უმაღლესი წარმადობით.
