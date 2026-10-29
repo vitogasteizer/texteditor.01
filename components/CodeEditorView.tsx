@@ -379,20 +379,6 @@ const CodeEditorView: React.FC<CodeEditorViewProps> = ({
             {t('codeEditor.run')}
           </button>
 
-          {/* კოდის რედაქტორის დახურვის (X) ღილაკი */}
-          {onClose && (
-            <>
-              <div className="w-px h-4 bg-gray-300 dark:bg-gray-700 mx-1" />
-              <button 
-                onClick={onClose}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/60 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 text-xs font-bold rounded-md transition-all border border-red-200 dark:border-red-800 active:scale-95 group"
-                title={t('codeEditor.close')}
-              >
-                <CloseIcon size={14} className="transition-transform group-hover:rotate-90" />
-                <span className="hidden sm:inline">{t('codeEditor.close')}</span>
-              </button>
-            </>
-          )}
         </div>
       </div>
       
