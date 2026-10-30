@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useUIStore } from '../store/uiStore';
-import { MenuIcon, CloseIcon, FilePlusIcon, SaveIcon, FolderIcon, DownloadIcon, PrinterIcon, UndoIcon, RedoIcon, ScissorsIcon, CopyIcon, ClipboardIcon, SelectAllIcon, SearchIcon, LinkIcon, ImageIcon, TableIcon, MinusIcon, MessageSquareIcon, CodeIcon, BarChartIcon, EyeIcon, MaximizeIcon, InfoIcon, OmegaIcon, PaintBrushIcon, PdfIcon, SquareIcon, CircleIcon, TriangleIcon, TypeIcon, ChevronRightIcon, FileTextIcon, SplitSquareVerticalIcon, RectangleVerticalIcon, RectangleHorizontalIcon, LanguageIcon, SparklesIcon, Volume2Icon, KeyboardIcon, ChecklistIcon, UploadCloudIcon, PencilIcon, SlashIcon, MathIcon, SunIcon, MoonIcon, ListOrderedIcon } from './icons/EditorIcons';
+import { MenuIcon, CloseIcon, FilePlusIcon, SaveIcon, FolderIcon, DownloadIcon, PrinterIcon, UndoIcon, RedoIcon, ScissorsIcon, CopyIcon, ClipboardIcon, SelectAllIcon, SearchIcon, LinkIcon, ImageIcon, TableIcon, MinusIcon, MessageSquareIcon, CodeIcon, BarChartIcon, EyeIcon, MaximizeIcon, InfoIcon, OmegaIcon, PaintBrushIcon, PdfIcon, SquareIcon, CircleIcon, TriangleIcon, TypeIcon, ChevronRightIcon, FileTextIcon, SplitSquareVerticalIcon, RectangleVerticalIcon, RectangleHorizontalIcon, LanguageIcon, SparklesIcon, Volume2Icon, KeyboardIcon, ChecklistIcon, UploadCloudIcon, PencilIcon, SlashIcon, MathIcon, SunIcon, MoonIcon, ListOrderedIcon, PresentationIcon } from './icons/EditorIcons';
 import type { ShapeType } from '../App';
 import type { Language } from '../lib/translations';
 
@@ -74,10 +74,12 @@ interface MenuBarProps {
   onToggleLineNumbers: () => void;
   showLineNumbers: boolean;
   onOpenFileImport: () => void;
+  onOpenTeleprompter?: () => void;
   isMobileMenuOpen?: boolean;
   setIsMobileMenuOpen?: (open: boolean) => void;
   t: (key: string, replacements?: { [key: string]: string | number }) => string;
 }
+
 
 const MenuDropdown: React.FC<{ label: string; items: MenuItem[] }> = ({ label, items }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -369,6 +371,11 @@ const MenuBar: React.FC<MenuBarProps> = (props) => {
             label: props.appMode === 'code' ? 'Standard Editor' : 'Code Editor', 
             action: props.onToggleCodeEditor, 
             icon: <CodeIcon isMenuIcon /> 
+        },
+        { 
+            label: t('menu.toolsTeleprompter'), 
+            action: props.onOpenTeleprompter, 
+            icon: <PresentationIcon isMenuIcon /> 
         },
         { label: t('menu.toolsWordCount'), action: props.onOpenWordCount, icon: <BarChartIcon isMenuIcon /> },
         { 

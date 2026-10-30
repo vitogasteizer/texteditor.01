@@ -37,6 +37,9 @@ import { saveDocument, getAllDocuments, deleteDocument, saveAllDocuments } from 
 import { initGoogleDrive, handleAuthClick, handleSignOut, listDriveFiles, saveToDrive, loadFromDrive } from './lib/googleDrive';
 import { Template } from './lib/templates';
 import CalculatorModal from './components/CalculatorModal';
+import TeleprompterModal from './components/TeleprompterModal';
+import TeleprompterViewer from './components/TeleprompterViewer';
+import { TeleprompterSettings, DEFAULT_TELEPROMPTER_SETTINGS, TELEPROMPTER_STORAGE_KEY } from './types/teleprompter';
 import { useUIStore } from './store/uiStore';
 
 export interface Comment {
@@ -186,6 +189,34 @@ const App: React.FC = () => {
   const [isTemplatesModalVisible, setIsTemplatesModalVisible] = useState(false);
   const [isMathModalVisible, setIsMathModalVisible] = useState(false);
   const [editingMathElement, setEditingMathElement] = useState<HTMLElement | null>(null);
+
+  const [isTeleprompterModalVisible, setIsTeleprompterModalVisible] = useState(false);
+  const [isTeleprompterViewerActive, setIsTeleprompterViewerActive] = useState(false);
+  const [editorSelectedText, setEditorSelectedText] = useState<string>('');
+  const [teleprompterSettings, setTeleprompterSettings] = useState<TeleprompterSettings>(() => {
+    try {
+      const saved = localStorage.getItem(TELEPROMPTER_STORAGE_KEY);
+      if (saved) {
+        return { ...DEFAULT_TELEPROMPTER_SETTINGS, ...JSON.parse(saved) };
+      }
+    } catch (e) {
+      console.error('Failed to parse teleprompter settings', e);
+    }
+    return DEFAULT_TELEPROMPTER_SETTINGS;
+  });
+
+  const handleOpenTeleprompter = useCallback(() => {
+    const sel = window.getSelection();
+    const text = sel ? sel.toString().trim() : '';
+    setEditorSelectedText(text);
+    setIsTeleprompterModalVisible(true);
+  }, []);
+
+  const handleLaunchTeleprompter = useCallback((settings: TeleprompterSettings) => {
+    setTeleprompterSettings(settings);
+    setIsTeleprompterModalVisible(false);
+    setIsTeleprompterViewerActive(true);
+  }, []);
 
   const [toast, setToast] = useState<string | null>(null);
   
@@ -1987,6 +2018,7 @@ const App: React.FC = () => {
                   showLineNumbers={showLineNumbers}
                   onOpenFileImport={() => { saveSelection(); setIsImportModalVisible(true); }}
                   onInsertDrawing={() => { saveSelection(); setIsDrawingModalVisible(true); setEditingDrawingElement(null); }}
+                  onOpenTeleprompter={handleOpenTeleprompter}
                   isMobileMenuOpen={isMobileMenuOpen}
                   setIsMobileMenuOpen={setIsMobileMenuOpen}
                   t={t}
@@ -2045,6 +2077,7 @@ const App: React.FC = () => {
                   showLineNumbers={showLineNumbers}
                   onOpenFileImport={() => { saveSelection(); setIsImportModalVisible(true); }}
                   onInsertDrawing={() => { saveSelection(); setIsDrawingModalVisible(true); setEditingDrawingElement(null); }}
+                  onOpenTeleprompter={handleOpenTeleprompter}
                   isMobileMenuOpen={isMobileMenuOpen}
                   setIsMobileMenuOpen={setIsMobileMenuOpen}
                   t={t}
@@ -2066,8 +2099,10 @@ const App: React.FC = () => {
                   showLineNumbers={showLineNumbers}
                   appMode={appMode}
                   onInsertCode={handleInsertCode}
+                  onOpenTeleprompter={handleOpenTeleprompter}
                   t={t}
                 />
+
             </div>
             
             <div className="flex-grow flex overflow-hidden relative">
@@ -2220,7 +2255,14 @@ const App: React.FC = () => {
                 )}
             </div>
 
-            <StatusBar stats={wordCountStats} zoomLevel={zoomLevel} onZoomIn={() => handleZoom('in')} onZoomOut={() => handleZoom('out')} t={t} />
+            <StatusBar 
+              stats={wordCountStats} 
+              zoomLevel={zoomLevel} 
+              onZoomIn={() => handleZoom('in')} 
+              onZoomOut={() => handleZoom('out')} 
+              onOpenTeleprompter={handleOpenTeleprompter}
+              t={t} 
+            />
             
             {/* Mobile/Tablet Bottom Navigation */}
             <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] pb-[env(safe-area-inset-bottom)]">
@@ -2238,9 +2280,11 @@ const App: React.FC = () => {
                             onToggleLineNumbers={() => setShowLineNumbers(prev => !prev)}
                             showLineNumbers={showLineNumbers}
                             onOpenMenu={() => setIsMobileMenuOpen(true)}
+                            onOpenTeleprompter={handleOpenTeleprompter}
                             isBottom={true}
                             t={t}
                         />
+
                 </div>
             </div>
         </>
@@ -2372,8 +2416,28 @@ const App: React.FC = () => {
       <CropModal isOpen={isCropModalVisible} onClose={() => { setIsCropModalVisible(false); setCroppingImageElement(null); }} onApply={handleApplyCrop} imageSrc={croppingImageElement?.src || null} t={t} />
       <TemplatesModal isOpen={isTemplatesModalVisible} onClose={() => setIsTemplatesModalVisible(false)} onSelect={(content, template) => handleInsertTemplate(content, template)} t={t} />
       <InsertMathModal isOpen={isMathModalVisible} onClose={() => setIsMathModalVisible(false)} onInsert={handleInsertMath} initialLatex={editingMathElement?.dataset.latex} t={t} />
+      
+      <TeleprompterModal 
+        isOpen={isTeleprompterModalVisible} 
+        htmlContent={content}
+        editorSelectedText={editorSelectedText}
+        onClose={() => setIsTeleprompterModalVisible(false)} 
+        onLaunch={handleLaunchTeleprompter} 
+        t={t} 
+      />
+
+      <TeleprompterViewer 
+        isOpen={isTeleprompterViewerActive} 
+        htmlContent={content} 
+        editorSelectedText={editorSelectedText}
+        settings={teleprompterSettings} 
+        onClose={() => setIsTeleprompterViewerActive(false)} 
+        onUpdateSettings={(newSettings) => setTeleprompterSettings(newSettings)} 
+        t={t} 
+      />
     </div>
   );
+
 };
 
 export default App;

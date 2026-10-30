@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon, ListOrderedIcon, ListUnorderedIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon, AlignJustifyIcon, UndoIcon, RedoIcon, ClearFormattingIcon, ChevronDownIcon, TextColorIcon, BgColorIcon, LineHeightIcon, PaintBrushIcon, TextShadowIcon, SparklesIcon, ChecklistIcon, ChevronRightIcon, SunIcon, MoonIcon, MenuIcon, ImageIcon, LinkIcon, TableIcon } from './icons/EditorIcons';
+import { BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon, ListOrderedIcon, ListUnorderedIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon, AlignJustifyIcon, UndoIcon, RedoIcon, ClearFormattingIcon, ChevronDownIcon, TextColorIcon, BgColorIcon, LineHeightIcon, PaintBrushIcon, TextShadowIcon, SparklesIcon, ChecklistIcon, ChevronRightIcon, SunIcon, MoonIcon, MenuIcon, ImageIcon, LinkIcon, TableIcon, PresentationIcon } from './icons/EditorIcons';
 import TextShadowDropdown from './TextShadowDropdown';
 import { useUIStore } from '../store/uiStore';
 
@@ -22,8 +22,10 @@ interface ToolbarProps {
   isBottom?: boolean;
   appMode?: 'standard' | 'code';
   onInsertCode?: (snippet: string) => void;
+  onOpenTeleprompter?: () => void;
   t: (key: string, replacements?: { [key: string]: string | number }) => string;
 }
+
 
 interface FontWeight {
   label: string;
@@ -545,6 +547,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
     isBottom, 
     appMode = 'standard',
     onInsertCode,
+    onOpenTeleprompter,
     t 
 }) => {
     const { theme, toggleTheme } = useUIStore();
@@ -799,7 +802,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
             </ToolbarButton>
           </div>
         </div>
-        <div className="hidden md:flex items-center pl-2 gap-1">
+        <div className="flex items-center pl-2 gap-1">
+          {onOpenTeleprompter && (
+            <ToolbarButton onAction={onOpenTeleprompter} tooltip={t('toolbar.teleprompter')}>
+              <PresentationIcon />
+            </ToolbarButton>
+          )}
           <ToolbarButton onAction={toggleTheme} tooltip={theme === 'light' ? t('toolbar.darkMode') : t('toolbar.lightMode')}>
               {theme === 'light' ? <MoonIcon /> : <SunIcon />}
           </ToolbarButton>
@@ -863,7 +871,16 @@ const Toolbar: React.FC<ToolbarProps> = ({
             <ColorPicker onAction={(color) => executeCommand('hiliteColor', color)} tooltip={t('toolbar.bgColor')}><BgColorIcon /></ColorPicker>
             <ToolbarButton buttonRef={textShadowButtonRef} onAction={() => setIsTextShadowDropdownOpen(true)} tooltip={t('toolbar.textShadow')} isActive={toolbarState.textShadow !== 'none'}><TextShadowIcon /></ToolbarButton>
         </div>
+
+        {onOpenTeleprompter && (
+          <div className="flex items-center pl-1 border-l border-gray-300 dark:border-gray-600 ml-1">
+            <ToolbarButton onAction={onOpenTeleprompter} tooltip={t('toolbar.teleprompter')}>
+              <PresentationIcon />
+            </ToolbarButton>
+          </div>
+        )}
       </div>
+
       <div className="hidden md:flex items-center pl-2 gap-1">
         <ToolbarButton onAction={toggleTheme} tooltip={theme === 'light' ? t('toolbar.darkMode') : t('toolbar.lightMode')}>
             {theme === 'light' ? <MoonIcon /> : <SunIcon />}
