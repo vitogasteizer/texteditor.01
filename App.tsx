@@ -2419,22 +2419,24 @@ const App: React.FC = () => {
       
       <TeleprompterModal 
         isOpen={isTeleprompterModalVisible} 
-        htmlContent={content}
+        htmlContent={editorRef.current?.innerHTML || content}
         editorSelectedText={editorSelectedText}
         onClose={() => setIsTeleprompterModalVisible(false)} 
         onLaunch={handleLaunchTeleprompter} 
         t={t} 
       />
 
-      <TeleprompterViewer 
-        isOpen={isTeleprompterViewerActive} 
-        htmlContent={content} 
-        editorSelectedText={editorSelectedText}
-        settings={teleprompterSettings} 
-        onClose={() => setIsTeleprompterViewerActive(false)} 
-        onUpdateSettings={(newSettings) => setTeleprompterSettings(newSettings)} 
-        t={t} 
-      />
+      {isTeleprompterViewerActive && (
+        <TeleprompterViewer 
+          isOpen={isTeleprompterViewerActive} 
+          htmlContent={editorRef.current?.innerHTML || content} 
+          editorSelectedText={editorSelectedText}
+          settings={teleprompterSettings} 
+          onClose={() => setIsTeleprompterViewerActive(false)} 
+          onUpdateSettings={(newSettings) => setTeleprompterSettings(newSettings)} 
+          t={t} 
+        />
+      )}
     </div>
   );
 

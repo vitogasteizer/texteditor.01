@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ka"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ტიტრები · ტელეპრომპტერი · სუბტიტრები</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--line:#e6e8f0;--line-2:#d9dde8;--txt:#0f1320;--muted:#5d6578;--accent:#4f46e5;--accent-d:#4338ca;--soft:#eef0ff;--r:12px;--r-sm:8px;--stage-bg:#000}
+*{box-sizing:border-box}html,body{height:100%}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Georgian",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.screen{min-height:100%;display:flex;align-items:flex-start;justify-content:center;gap:24px;padding:32px 24px}
+.hidden{display:none!important}
+.card{flex:1 1 0;max-width:780px;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:32px}
+h1{font-size:24px;font-weight:700;letter-spacing:-.02em;margin:0 0 6px}
+.sub{margin:0 0 28px;color:var(--muted);font-size:14.5px;line-height:1.6;max-width:600px}
+h2{font-size:15px;font-weight:650;margin:32px 0 16px;padding-top:24px;border-top:1px solid var(--line)}
+.field{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:500;color:var(--muted);margin:0;min-width:0}
+.field b{color:var(--txt);font-weight:600}.tip{font-size:12.5px;font-weight:400;line-height:1.55}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px 20px;margin-bottom:16px}
+select,input[type=color]{width:100%;height:44px;background:#fff;color:var(--txt);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:0 12px;font:inherit;font-size:14px;transition:border-color .15s,background .15s}
+select:hover,input[type=color]:hover{border-color:#aab1c4}
+select:focus,input[type=color]:focus{outline:none;border-color:var(--accent);background:var(--soft)}
+input[type=color]{padding:4px;cursor:pointer}input[type=range]{accent-color:var(--accent);height:28px;width:100%}
+.checkbox{flex-direction:row;align-items:center;gap:12px;color:var(--txt);min-height:44px;align-self:end}
+.checkbox input{appearance:none;-webkit-appearance:none;width:38px;height:22px;border-radius:22px;background:#cdd3e2;position:relative;margin:0;flex:none;cursor:pointer;transition:background .15s}
+.checkbox input::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+.checkbox input:checked{background:var(--accent)}.checkbox input:checked::after{left:19px}
+button{font:inherit;font-size:14px;font-weight:600;padding:0 18px;height:40px;border-radius:var(--r-sm);cursor:pointer;border:1px solid var(--line-2);background:#fff;color:var(--txt);transition:background .15s,border-color .15s}
+button:hover{background:var(--soft);border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;width:100%;height:52px;font-size:15px;border-radius:var(--r)}
+button.primary:hover{background:var(--accent-d);border-color:var(--accent-d)}
+.seg{display:flex;gap:4px;padding:4px;background:#eef0f6;border-radius:var(--r)}
+.seg button{flex:1;height:56px;border:0;background:transparent;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.2}
+.seg button small{font-weight:400;font-size:12px}
+.seg button.on{background:#fff;color:var(--txt);box-shadow:inset 0 0 0 1px var(--line-2)}
+.seg button:hover{background:rgba(255,255,255,.6);border:0}.seg button.on:hover{background:#fff}
+.hint{color:var(--muted);font-size:12.5px;margin:28px 0 0;line-height:2}
+kbd{background:#f1f3f9;border:1px solid var(--line);border-radius:6px;padding:2px 7px;font:600 11px ui-monospace,Consolas,monospace;color:var(--txt)}
+.editor-wrap{border:1px solid var(--line-2);border-radius:var(--r);overflow:hidden;background:#fff}
+.editor-wrap:focus-within{border-color:var(--accent)}
+.toolbar{display:flex;flex-wrap:wrap;gap:2px;padding:6px 8px;align-items:center;border-bottom:1px solid var(--line);background:#fafbfd}
+.toolbar button{min-width:34px;height:32px;padding:0 8px;font-size:13px;font-weight:500;background:transparent;border:none;border-radius:6px;display:inline-flex;align-items:center;justify-content:center}
+.toolbar button:hover{background:var(--soft)}.toolbar button.active{background:var(--accent);color:#fff}
+.sep{width:1px;height:20px;background:var(--line);margin:0 6px}
+.toolbar select{width:auto;height:32px;padding:0 6px;font-size:12px;border-radius:6px;margin:0 3px;border-color:transparent;background:transparent}
+.toolbar select:hover{background:var(--soft)}
+.color-tool{position:relative;width:34px;height:32px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+.color-tool:hover{background:var(--soft)}
+.color-tool input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;padding:0}
+#editor{padding:18px 20px;min-height:240px;max-height:380px;overflow-y:auto;outline:none;line-height:1.55;white-space:pre-wrap;overflow-wrap:break-word}
+@media(max-width:820px){.card{padding:24px 20px}}
+@media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}}
+#stage{position:fixed;inset:0;overflow:hidden;display:none;z-index:1;background:var(--stage-bg);user-select:none}
+#stage.on{display:block}
+#credits{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;line-height:1.55}
+#credits::-webkit-scrollbar{display:none}
+#inner{white-space:pre-wrap;overflow-wrap:break-word}
+.mode-credits #inner{padding:100vh 5vw 30vh}
+.mode-sentence #inner{padding:40vh 8vw}
+.sentence{opacity:.2;transition:opacity var(--exit,.3s),color var(--exit,.3s),text-shadow var(--exit,.3s)}
+.fade{position:absolute;left:0;right:0;height:120px;pointer-events:none;z-index:2;display:none}
+.fade.on{display:block}
+#fadeTop{top:0;background:linear-gradient(to bottom,var(--stage-bg),transparent)}
+#fadeBottom{bottom:0;background:linear-gradient(to top,var(--stage-bg),transparent)}
+#guide{position:absolute;left:0;right:0;top:33%;height:2px;background:rgba(255,255,255,.28);pointer-events:none;display:none;z-index:2}
+#guide.on{display:block}
+#hud{position:fixed;right:16px;bottom:16px;z-index:3;display:none;align-items:center;gap:4px;padding:6px;border-radius:12px;background:rgba(20,22,28,.6);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(8px);opacity:.25;transition:opacity .2s}
+#hud.on{display:flex}#hud:hover{opacity:1}
+#hud button{background:transparent;border:none;color:#fff;font-size:16px;padding:7px 11px;border-radius:8px}
+#hud button:hover{background:rgba(255,255,255,.15)}
+#eta{color:#c8ceda;font-size:12px;padding:0 8px;font-variant-numeric:tabular-nums}
+#cd{position:fixed;inset:0;z-index:6;display:none;align-items:center;justify-content:center;font-size:30vmin;font-weight:700;pointer-events:none}
+#cd.on{display:flex}
+#monitor{width:420px;flex:none;position:sticky;top:40px;border:1px solid var(--line);background:#fff;border-radius:var(--r);padding:14px}
+.mon-head{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--txt);margin-bottom:12px}
+.mon-head .mon-meta{color:var(--muted);font-weight:500;letter-spacing:0;flex:1}
+.mon-head button{height:28px;padding:0 10px;font-size:12px}
+#monWrap{border-radius:var(--r-sm);position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border:1px solid var(--line);background:#000}
+#monScreen{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0;overflow:hidden;line-height:1.55}
+#monInner{position:absolute;left:0;right:0;top:0;white-space:pre-wrap;overflow-wrap:break-word;transition:transform .45s ease}
+.mon-note{font-size:12px;color:var(--muted);line-height:1.6;margin:10px 0 0}
+@media(max-width:1280px){.screen{flex-direction:column;align-items:center}#monitor{order:-1;position:static;width:min(820px,100%)}.card{flex:none;width:min(820px,100%)}}
+</style></head><body>
+<div id="setup" class="screen"><div class="card">
+<h1>🎬 ტიტრები · ტელეპრომპტერი · სუბტიტრები</h1>
+<p class="sub">დაწერეთ ან ჩასვით ტექსტი, გამოიყენეთ ფორმატირება, აირჩიეთ რეჟიმი და პარამეტრები — შემდეგ დააჭირეთ „დაწყებას“.</p>
+<h2 style="margin-top:0;border:0;padding-top:0">ტექსტი</h2>
+<div class="field"><span class="tip"><b>[ამ ნიშნებში]</b> ჩასმული ტექსტი ცალკე წინადადებაა. <b>{კომენტარი}</b> ჩაწერილი ტექსტი თქვენი პირადი ნოტებისთვისაა და ეკრანზე არ გამოჩნდება. [ ] ნიშნებიც არ ჩანს.</span>
+<div class="editor-wrap"><div class="toolbar" id="toolbar">
+<button type="button" data-cmd="undo" title="უკან">↶</button><button type="button" data-cmd="redo" title="წინ">↷</button><span class="sep"></span>
+<button type="button" data-cmd="bold" title="მუქი"><b>B</b></button><button type="button" data-cmd="italic" title="იტალიკი"><i>I</i></button>
+<button type="button" data-cmd="underline" title="ხაზგასმული"><u>U</u></button><button type="button" data-cmd="strikeThrough" title="გადახაზული"><s>S</s></button>
+<button type="button" data-cmd="superscript" title="ზედა ინდექსი">x²</button><button type="button" data-cmd="subscript" title="ქვედა ინდექსი">x₂</button><span class="sep"></span>
+<button type="button" data-cmd="justifyLeft" title="მარცხნივ">⯇</button><button type="button" data-cmd="justifyCenter" title="შუაში">≡</button>
+<button type="button" data-cmd="justifyRight" title="მარჯვნივ">⯈</button><button type="button" data-cmd="justifyFull" title="ორივე მხრიდან">☰</button><span class="sep"></span>
+<select id="tbFontFamily" title="შრიფტი"><option value="">Aa</option><option>Arial</option><option>Verdana</option><option>Georgia</option><option value="Times New Roman">Times</option><option value="Courier New">Courier</option><option value="Noto Sans Georgian">Noto Sans</option><option value="Noto Serif Georgian">Noto Serif</option></select>
+<button type="button" id="btnAplus" title="დიდი">A+</button><button type="button" id="btnAminus" title="პატარა">A−</button><span class="sep"></span>
+<label class="color-tool" title="ტექსტის ფერი"><span>A</span><input type="color" id="selColor" value="#ffffff"></label>
+<label class="color-tool" title="მონიშვნის ფერი"><span style="background:#ffe680;color:#000;border-radius:3px;padding:0 3px">A</span><input type="color" id="selBg" value="#ffe680"></label><span class="sep"></span>
+<button type="button" data-cmd="removeFormat" title="ფორმატის გასუფთავება">✕</button>
+</div><div id="editor" contenteditable="true" spellcheck="false"></div></div></div>
+<h2>რეჟიმი</h2>
+<div class="seg" id="seg"><button type="button" data-v="credits"><span>ტიტრები / ტელეპრომპტერი</span><small>ვერტიკალური სქროლი</small></button><button type="button" data-v="sentence"><span>სუბტიტრები</span><small>წინადადება-წინადადებით</small></button></div>
+<select id="mode" hidden><option value="credits">ტიტრები</option><option value="sentence">სუბტიტრები</option></select>
+<h2>გარეგნობა</h2>
+<div class="grid">
+<label class="field"><span>თემა</span><select id="theme"><option value="dark">🌑 მუქი</option><option value="light">☀️ ღია (თეთრი ფონი)</option><option value="contrast">⚡ მაღალი კონტრასტი</option><option value="sepia">📜 სეპია</option><option value="night">🌌 ღამის ლურჯი</option><option value="custom">🎨 მორგებული</option></select></label>
+<label class="field"><span>შრიფტი</span><select id="fontFamily"><option value="sans">Sans — უბრალო</option><option value="serif">Serif — კლასიკური</option><option value="mono">Monospace</option></select></label>
+<label class="field"><span>შრიფტის ზომა: <b id="fontSizeVal">34</b> px</span><input type="range" id="fontSize" min="14" max="140" value="34"></label>
+<label class="field"><span>განლაგება</span><select id="align"><option value="center">შუაში</option><option value="left">მარცხნივ</option><option value="right">მარჯვნივ</option></select></label>
+<label class="field"><span>ტექსტის ფერი</span><input type="color" id="fg" value="#ffffff"></label>
+<label class="field"><span>ფონის ფერი</span><input type="color" id="bg" value="#000000"></label>
+<label class="field checkbox"><input type="checkbox" id="fadeEdges" checked><span>კიდეების გაბნევა</span></label>
+<label class="field checkbox"><input type="checkbox" id="autoFs" checked><span>დაწყებისას სრულ ეკრანზე</span></label>
+<label class="field checkbox"><input type="checkbox" id="wakeLock" checked><span>ეკრანი არ ჩაქრეს (Wake Lock)</span></label>
+<label class="field"><span>უკუთვლა დაწყებამდე</span><select id="countdown"><option value="0">გამორთული</option><option value="3" selected>3 წამი</option><option value="5">5 წამი</option><option value="10">10 წამი</option></select></label>
+</div>
+<h2>მოძრაობა და ეფექტები</h2>
+<div class="mode-section" data-mode="credits"><div class="grid">
+<label class="field"><span>სიჩქარე: <b id="speedVal">80</b> px/წმ</span><input type="range" id="speed" min="10" max="300" step="5" value="80"></label>
+<label class="field"><span>სვეტები</span><select id="columns"><option value="1">1 სვეტი</option><option value="2">2 სვეტი</option><option value="3">3 სვეტი</option></select></label>
+<label class="field checkbox"><input type="checkbox" id="guideLine"><span>სახელმძღვანელო ხაზი (ტელეპრომპტერი)</span></label>
+</div></div>
+<div class="mode-section" data-mode="sentence"><div class="grid">
+<label class="field"><span>ავტომატური გადასვლა</span><select id="autoAdvance"><option value="0">ხელით</option><option value="3">3 წამში</option><option value="5" selected>5 წამში</option><option value="8">8 წამში</option><option value="12">12 წამში</option></select></label>
+<label class="field"><span>წინადადებების გამოყოფა</span><select id="splitMode"><option value="auto">ავტომატური + [ ] ნიშნები</option><option value="manual">მხოლოდ [ ] ნიშნებით (დანარჩენი დაიმალება)</option></select></label>
+<label class="field"><span>შემოსვლის ეფექტი</span><select id="entryEffect"><option value="none">არცერთი</option><option value="fade">fade</option><option value="slide">გვერდიდან</option><option value="scale">გადიდება</option><option value="typewriter">ბეჭდვა</option><option value="word">სიტყვა-სიტყვით</option><option value="blur">გამოკვეთა (blur)</option><option value="up">ქვემოდან ამოსვლა</option><option value="down">ზემოდან ჩამოსვლა</option><option value="flip">გადატრიალება</option><option value="bounce">ხტუნვა (bounce)</option><option value="wave">ასო-ასო ტალღა</option><option value="karaoke">კარაოკე (ფერის შევსება)</option></select></label>
+<label class="field"><span>ეფექტის სიჩქარე</span><select id="effectDur"><option value="300">სწრაფი</option><option value="500" selected>ჩვეულებრივი</option><option value="900">ნელი</option></select></label>
+<label class="field"><span>მონიშვნის ფერი</span><input type="color" id="highlightColor" value="#ffe680"></label>
+<label class="field checkbox"><input type="checkbox" id="autoCenter" checked><span>ავტომატური ცენტრირება</span></label>
+<label class="field"><span>წინა წინადადების გასვლა</span><select id="exitFx"><option value="none">მყისიერად</option><option value="fade" selected>სწრაფი გაქრობა</option><option value="slow">ნელი გაქრობა</option><option value="rise">ნელა ზემოთ გაქრობა</option></select></label>
+<label class="field checkbox"><input type="checkbox" id="glow" checked><span>რბილი ანათება (glow)</span></label>
+<label class="field checkbox"><input type="checkbox" id="draw"><span>ხაზგასმის „გაწერვა“</span></label>
+
+</div></div>
+
+<p class="hint"><kbd>Space</kbd> — პაუზა / შემდეგი · <kbd>←</kbd> <kbd>→</kbd> — სიჩქარე (ტიტრები) ან წინა/შემდეგი (სუბტიტრები) · <kbd>R</kbd> — თავიდან · <kbd>F</kbd> — სრული ეკრანი · <kbd>Esc</kbd> — გასვლა · ეკრანზე დაჭერა — პაუზა/შემდეგი</p>
+</div>
+<aside id="monitor"><div class="mon-head"><span>Live monitor</span><span class="mon-meta" id="monMeta"></span><button id="monPlay" type="button" title="ანიმაციის ტესტი">▶ ტესტი</button></div>
+<div id="monWrap"><div id="monScreen"><div id="monInner"></div></div></div>
+<p class="mon-note">ზუსტი გადახედვა 1280×720 ეკრანზე. ცვლილებები მყისიერად ჩანს; [ ] ნიშნები აქ არ გამოჩნდება.</p><button id="startBtn" class="primary">▶ დაწყება</button></aside></div>
+<div id="stage"><div id="credits"><div id="inner"></div></div><div id="fadeTop" class="fade"></div><div id="fadeBottom" class="fade"></div><div id="guide"></div></div>
+<div id="cd"></div><div id="hud"><span id="eta">0:00</span><button id="playPause" title="Space">⏸</button><button id="prevBtn" title="←" style="display:none">◀</button><button id="nextBtn" title="→" style="display:none">▶</button><button id="restartBtn" title="R">↺</button><button id="fsBtn" title="F">⤢</button><button id="exitBtn" title="Esc">✕</button></div>
+<script>
+(()=>{'use strict';
+const E={};'setup stage credits inner hud eta editor toolbar selColor selBg btnAplus btnAminus tbFontFamily mode align fontSize fontSizeVal fontFamily bg fg autoFs fadeEdges speed speedVal columns guideLine autoAdvance entryEffect highlightColor autoCenter startBtn playPause prevBtn nextBtn restartBtn fsBtn exitBtn fadeTop fadeBottom guide theme wakeLock countdown effectDur cd splitMode monitor monWrap monScreen monInner monPlay monMeta exitFx glow draw'.split(' ').forEach(i=>E[i]=document.getElementById(i));
+const FONTS={sans:'system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Georgian",Arial,sans-serif',serif:'Georgia,"Times New Roman","Noto Serif Georgian",serif',mono:'ui-monospace,"Cascadia Mono","DejaVu Sans Mono",Consolas,monospace'};
+const DEFAULT_TEXT=`დიდი მადლობა ყველას, ვინც ამ პროექტში მიიღო მონაწილეობა.\n\nრეჟისორი — სახელი გვარი. ოპერატორი — სახელი გვარი. მონტაჟი — სახელი გვარი. მუსიკა — სახელი გვარი.\n\nმადლობა მხარდაჭერისთვის. განსაკუთრებული მადლობა ყველა მოხალისეს.\n\n© 2026`;
+const esc=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+const store=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}};
+
+/* ===== Editor ===== */
+let saved=null;
+function saveSel(){const s=getSelection();if(s.rangeCount&&E.editor.contains(s.anchorNode))saved=s.getRangeAt(0).cloneRange()}
+function restoreSel(){if(!saved)return;const s=getSelection();s.removeAllRanges();s.addRange(saved)}
+function exec(c,v){E.editor.focus();restoreSel();try{document.execCommand('styleWithCSS',false,true)}catch(e){}document.execCommand(c,false,v==null?null:v);toolbarState();saveSel()}
+function fontStep(d){
+ const s=getSelection();if(!s.rangeCount||s.isCollapsed||!E.editor.contains(s.anchorNode))return;
+ const a=s.anchorNode,n=a.nodeType===1?a:a.parentElement;
+ const base=parseFloat(getComputedStyle(n).fontSize)||16,r=s.getRangeAt(0),sp=document.createElement('span');
+ sp.style.fontSize=Math.max(8,Math.min(200,base+d))+'px';
+ sp.appendChild(r.extractContents());r.insertNode(sp);
+ s.removeAllRanges();const nr=document.createRange();nr.selectNodeContents(sp);s.addRange(nr);saved=nr.cloneRange();
+}
+const STATE=['bold','italic','underline','strikeThrough','superscript','subscript','justifyLeft','justifyCenter','justifyRight','justifyFull'];
+function toolbarState(){STATE.forEach(c=>{const b=E.toolbar.querySelector(`[data-cmd="${c}"]`);let on=false;try{on=document.queryCommandState(c)}catch(e){}b&&b.classList.toggle('active',on)})}
+E.toolbar.addEventListener('mousedown',e=>{if(e.target.closest('button'))e.preventDefault()});
+E.toolbar.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&b.dataset.cmd)exec(b.dataset.cmd)});
+E.btnAplus.onclick=()=>{fontStep(2);monUpdate()};E.btnAminus.onclick=()=>{fontStep(-2);monUpdate()};
+E.tbFontFamily.onchange=()=>{if(E.tbFontFamily.value)exec('fontName',E.tbFontFamily.value);E.tbFontFamily.value=''};
+[['selColor','foreColor'],['selBg','hiliteColor']].forEach(([id,cmd])=>{E[id].addEventListener('mousedown',saveSel);E[id].addEventListener('focus',saveSel);E[id].addEventListener('change',()=>exec(cmd,E[id].value))});
+E.editor.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='\\'){e.preventDefault();exec('removeFormat')}});
+E.editor.addEventListener('keyup',toolbarState);
+E.editor.addEventListener('mouseup',()=>{toolbarState();saveSel()});
+E.editor.addEventListener('input',()=>store('credits_editor_html',E.editor.innerHTML));
+document.addEventListener('selectionchange',()=>{const s=getSelection();if(s.anchorNode&&E.editor.contains(s.anchorNode)){toolbarState();saveSel()}});
+function sanitize(html){
+ const d=document.createElement('div');d.innerHTML=html;
+ d.querySelectorAll('script,style,meta,link,iframe,object,embed,xml').forEach(x=>x.remove());
+ d.querySelectorAll('*').forEach(el=>[...el.attributes].forEach(a=>{
+  const n=a.name.toLowerCase();
+  if(n.startsWith('on')||n==='id'||(n==='class'))el.removeAttribute(a.name);
+  else if(n==='style'){const c=a.value.split(';').filter(s=>!/^\s*mso-/i.test(s)).join(';');c.trim()?el.setAttribute('style',c):el.removeAttribute('style')}
+  else if(n==='href'&&/^\s*javascript:/i.test(a.value))el.removeAttribute(a.name);
+ }));
+ return d.innerHTML;
+}
+E.editor.addEventListener('paste',e=>{
+ e.preventDefault();const h=e.clipboardData.getData('text/html'),t=e.clipboardData.getData('text/plain');
+ if(h){try{document.execCommand('styleWithCSS',false,true)}catch(x){}if(!document.execCommand('insertHTML',false,sanitize(h)))document.execCommand('insertText',false,t)}
+ else if(t)document.execCommand('insertText',false,t);
+});
+
+/* ===== Settings UI ===== */
+const modeUI=()=>document.querySelectorAll('.mode-section').forEach(el=>el.style.display=el.dataset.mode===E.mode.value?'':'none');
+function previewStyle(){
+ const ed=E.editor;ed.style.color=E.fg.value;ed.style.fontSize=E.fontSize.value+'px';ed.style.fontFamily=FONTS[E.fontFamily.value];
+ ed.style.textAlign=E.align.value;ed.style.background=E.bg.value;ed.parentElement.style.background=E.bg.value;
+ document.documentElement.style.setProperty('--stage-bg',E.bg.value);
+}
+E.mode.onchange=modeUI;
+const THEMES={dark:['#000000','#ffffff','#ffe680'],light:['#ffffff','#111827','#b45309'],contrast:['#000000','#ffff00','#ffffff'],sepia:['#f4ecd8','#3b2f1e','#9a3412'],night:['#0b1220','#dbe7ff','#7dd3fc']};
+E.theme.onchange=()=>{const t=THEMES[E.theme.value];if(!t)return;[E.bg.value,E.fg.value,E.highlightColor.value]=t;previewStyle()};
+['fg','bg','highlightColor'].forEach(i=>E[i].addEventListener('input',()=>E.theme.value='custom'));
+E.fontSize.oninput=()=>{E.fontSizeVal.textContent=E.fontSize.value;previewStyle()};
+E.speed.oninput=()=>{E.speedVal.textContent=E.speed.value};
+['fontFamily','align','fg','bg'].forEach(i=>E[i].addEventListener('input',previewStyle));
+
+/* ===== Credits mode ===== */
+const C={playing:false,done:false,raf:0,last:0,speed:80,pos:0,set:0};
+const maxScroll=()=>E.credits.scrollHeight-E.credits.clientHeight;
+function cLoop(t){
+ if(!C.playing)return;
+ if(!C.last)C.last=t;
+ const dt=Math.min(.25,(t-C.last)/1000);C.last=t;
+ if(Math.abs(E.credits.scrollTop-C.set)>3)C.pos=E.credits.scrollTop; // მომხმარებელმა ხელით გადაახვია
+ const max=maxScroll();C.pos=Math.min(max,C.pos+C.speed*dt);
+ E.credits.scrollTop=C.pos;C.set=E.credits.scrollTop; // წილადი პიქსელების დაგროვება — ნელი სიჩქარეც მუშაობს
+ E.eta.textContent=fmt((max-C.pos)/C.speed);
+ if(C.pos>=max-.5){C.playing=false;C.done=true;playBtn();return}
+ C.raf=requestAnimationFrame(cLoop);
+}
+function cRun(){cancelAnimationFrame(C.raf);C.last=0;C.playing=true;playBtn();C.raf=requestAnimationFrame(cLoop)}
+function cRestart(){E.credits.scrollTop=0;C.pos=0;C.set=0;C.done=false;cRun()}
+function cToggle(){if(C.done)return cRestart();C.playing=!C.playing;if(C.playing){C.pos=E.credits.scrollTop;cRun()}else playBtn()}
+
+/* ===== Sentence mode ===== */
+const S={els:[],i:-1,timer:0,iv:[],auto:0,paused:false,on:false,run:0};
+function stripBrackets(root){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode())if(/[\[\]{}]/.test(n.textContent))n.textContent=n.textContent.replace(/\{[^{}]*\}/g,'').replace(/[\[\]]/g,'')}
+function wrapSentences(root){ // აბრუნებს ჯგუფების მასივს; [ ... ] = ერთი წინადადება
+ const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[],groups=[];let n,open=null;
+ while(n=w.nextNode())nodes.push(n);
+ const mk=t=>{const sp=document.createElement('span');sp.className='sentence';sp.textContent=t;sp.dataset.full=t;return sp};
+ const manual=E.splitMode.value==='manual';
+ nodes.forEach(node=>{
+  const frag=document.createDocumentFragment();
+  node.textContent.split(/(\[|\]|\{[^{}]*\})/).forEach(tok=>{
+   if(tok==='['){if(open&&open.length)groups.push(open);open=[];return}
+   if(tok===']'){if(open&&open.length)groups.push(open);open=null;return}
+   if(!tok)return;
+   if(/^\{[^{}]*\}$/.test(tok)){const g=open||groups[groups.length-1];if(g)g.note=((g.note||'')+' '+tok.slice(1,-1)).trim();return}
+   if(open){if(tok.trim()||open.length){const sp=mk(tok);frag.appendChild(sp);open.push(sp)}return}
+   if(manual)return;
+   tok.split(/(?<=[.!?…։])(\s+)/).forEach((t,i)=>{
+    if(i%2||!t.trim()){frag.appendChild(document.createTextNode(t));return}
+    const sp=mk(t);frag.appendChild(sp);groups.push([sp]);
+   });
+  });
+  node.replaceWith(frag);
+ });
+ if(open&&open.length)groups.push(open);
+ return groups;
+}
+function clearT(){clearTimeout(S.timer);S.iv.forEach(clearInterval);S.iv=[]}
+function center(el,smooth){
+ if(!E.autoCenter.checked||el.ownerDocument!==document)return;
+ const r=el.getBoundingClientRect(),c=E.credits.getBoundingClientRect();
+ const top=Math.max(0,r.top-c.top+E.credits.scrollTop-E.credits.clientHeight/2+r.height/2);
+ E.credits.scrollTo({top,behavior:smooth?'smooth':'auto'});
+}
+function deact(i){
+ const g=S.els[i];if(!g)return;
+ g.forEach(el=>{el.getAnimations().filter(a=>!(a instanceof CSSTransition)).forEach(a=>a.cancel());el.textContent=el.dataset.full;el.classList.remove('active');el.style.cssText=''});
+}
+function decorate(el,col){
+ if(E.glow.checked)el.style.textShadow=`0 0 .5em ${col}aa,0 0 1.4em ${col}55`;
+ if(E.draw.checked){
+  el.style.background=`linear-gradient(${col},${col}) 0 100%/0 .09em no-repeat`;
+  el.animate([{backgroundSize:'0% .09em'},{backgroundSize:'100% .09em'}],{duration:900,easing:'ease-out',fill:'forwards'});
+ }
+}
+function act(g){g.forEach(el=>{el.classList.add('active');el.style.opacity='1';el.style.color=E.highlightColor.value;el.style.fontWeight='700';decorate(el,E.highlightColor.value)})}
+const XF={ // transform-ეფექტები (მოითხოვს inline-block-ს)
+ slide:[{transform:'translateX(-40px)',opacity:0},{transform:'none',opacity:1}],
+ scale:[{transform:'scale(.7)',opacity:0},{transform:'none',opacity:1}],
+ up:[{transform:'translateY(30px)',opacity:0},{transform:'none',opacity:1}],
+ down:[{transform:'translateY(-30px)',opacity:0},{transform:'none',opacity:1}],
+ flip:[{transform:'perspective(600px) rotateX(-90deg)',opacity:0},{transform:'none',opacity:1}],
+ bounce:[{transform:'scale(.3)',opacity:0},{transform:'scale(1.12)',opacity:1,offset:.6},{transform:'scale(.94)',offset:.8},{transform:'scale(1)',opacity:1}]};
+const KF={fade:[{opacity:0},{opacity:1}],blur:[{filter:'blur(14px)',opacity:0},{filter:'none',opacity:1}]};
+function effect(el){
+ const ef=E.entryEffect.value,dur=+E.effectDur.value,kf=XF[ef]||KF[ef];
+ if(kf){
+  if(XF[ef])el.style.display='inline-block';
+  const a=el.animate(kf,{duration:dur,easing:'ease-out'});a.onfinish=()=>{el.style.display=''};return;
+ }
+ if(ef==='typewriter'||ef==='word'){
+  const full=el.dataset.full,parts=ef==='word'?full.split(/(\s+)/).filter(Boolean):[...full];
+  let i=0;el.textContent='';
+  return new Promise(res=>{
+   const t=setInterval(()=>{
+    el.textContent+=parts[i++];center(el,false);
+    if(i>=parts.length){clearInterval(t);res()}
+   },ef==='word'?110:45);S.iv.push(t);
+  });
+ }
+ if(ef==='karaoke'||ef==='wave'){
+  const sp=[];el.textContent='';
+  el.dataset.full.split(/(\s+)/).forEach(w=>{
+   if(!w.trim()){el.append(w);return}
+   if(ef==='karaoke'){const s=document.createElement('span');s.textContent=w;s.style.color=E.fg.value;el.append(s);sp.push(s);return}
+   const wr=document.createElement('span');wr.style.whiteSpace='nowrap';
+   [...w].forEach(ch=>{const s=document.createElement('span');s.textContent=ch;s.style.display='inline-block';wr.append(s);sp.push(s)});
+   el.append(wr);
+  });
+  if(ef==='wave'){sp.forEach((s,i)=>s.animate([{transform:'translateY(14px)',opacity:0},{transform:'none',opacity:1}],{duration:dur,delay:i*30,fill:'backwards',easing:'ease-out'}));return}
+  let i=0;
+  return new Promise(res=>{
+   const t=setInterval(()=>{
+    if(i<sp.length)sp[i++].style.color=E.highlightColor.value;
+    if(i>=sp.length){clearInterval(t);res()}
+   },dur/2);S.iv.push(t);
+  });
+ }
+}
+function sched(){if(S.auto&&!S.paused&&S.on&&S.i<S.els.length-1)S.timer=setTimeout(sNext,S.auto)}
+async function sNext(){
+ if(!S.on)return;clearT();
+ if(S.i>=S.els.length-1)return; // ბოლო წინადადება ჩანს
+ deact(S.i);S.i++;
+ const g=S.els[S.i],el=g[0],id=++S.run;act(g);center(el,true);
+ const p=g.length>1?(g.forEach(x=>x.animate(KF.fade,{duration:+E.effectDur.value})),null):effect(el);if(p)await p;
+ if(id===S.run)sched();
+}
+function sPrev(){
+ clearT();S.run++;
+ if(S.i>0){deact(S.i);S.i--;const g=S.els[S.i];act(g);center(g[0],true)}
+ sched();
+}
+function sRestart(){clearT();S.run++;S.els.forEach((_,i)=>deact(i));S.i=-1;S.paused=false;S.on=true;E.credits.scrollTop=0;playBtn();sNext()}
+function sPause(){if(!S.auto)return sNext();S.paused=!S.paused;S.paused?(clearT(),S.run++):sched();playBtn()}
+function sStart(){
+ S.els=wrapSentences(E.inner);
+ if(!S.els.length){alert('ტექსტი ვერ მოიძებნა');return false}
+ S.auto=(+E.autoAdvance.value)*1000;S.i=-1;S.paused=false;S.on=true;return true;
+}
+
+/* ===== HUD / general ===== */
+const isCredits=()=>E.stage.dataset.mode==='credits';
+function playBtn(){E.playPause.textContent=isCredits()?(C.playing?'⏸':'▶'):(S.auto&&!S.paused?'⏸':'▶')}
+const toggleFs=async()=>{try{document.fullscreenElement?await document.exitFullscreen():await E.stage.requestFullscreen()}catch(e){}};
+let cdTok=0,wl=null;
+const EXIT={none:0,fade:500,slow:1400,rise:900};
+async function lock(){try{if(E.wakeLock.checked&&navigator.wakeLock&&!wl){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null})}}catch(e){}}
+function unlock(){try{wl&&wl.release()}catch(e){}wl=null}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&E.stage.classList.contains('on'))lock()});
+async function countdown(){
+ const n=+E.countdown.value;if(!n)return true;
+ const tok=++cdTok;E.cd.style.color=E.fg.value;E.cd.classList.add('on');
+ for(let i=n;i>0;i--){
+  E.cd.textContent=i;E.cd.animate([{transform:'scale(1.3)',opacity:0},{transform:'none',opacity:1}],{duration:400,easing:'ease-out'});
+  await new Promise(r=>setTimeout(r,1000));
+  if(tok!==cdTok)return false;
+ }
+ E.cd.classList.remove('on');return true;
+}
+const mainAction=()=>{if(E.cd.classList.contains('on'))return;isCredits()?cToggle():sPause()};
+async function restart(){
+ C.playing=false;cancelAnimationFrame(C.raf);clearT();S.run++;
+ if(!await countdown())return;
+ isCredits()?cRestart():sRestart();
+}
+
+async function start(){
+ if(M.play)E.monPlay.click();
+ const m=E.mode.value;
+ E.credits.style.color=E.fg.value;E.credits.style.fontSize=E.fontSize.value+'px';
+ E.credits.style.fontFamily=FONTS[E.fontFamily.value];E.credits.style.textAlign=E.align.value;E.credits.style.setProperty('--exit',EXIT[E.exitFx.value]/1000+'s');
+ document.documentElement.style.setProperty('--stage-bg',E.bg.value);
+ E.stage.dataset.mode=m;E.stage.className='on mode-'+m;
+ E.setup.classList.add('hidden');E.hud.classList.add('on');
+ E.fadeTop.classList.toggle('on',E.fadeEdges.checked);E.fadeBottom.classList.toggle('on',E.fadeEdges.checked);
+ E.guide.classList.toggle('on',m==='credits'&&E.guideLine.checked);
+ E.prevBtn.style.display=E.nextBtn.style.display=m==='credits'?'none':'';
+ E.eta.style.display=m==='credits'?'':'none';
+ if(E.autoFs.checked&&!document.fullscreenElement)await toggleFs();
+ await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+ try{await document.fonts.ready}catch(e){}
+ E.inner.innerHTML=E.editor.innerHTML||'<div><br></div>';
+ if(m==='credits')stripBrackets(E.inner);
+ const cols=m==='credits'?+E.columns.value:1;
+ E.inner.style.columnCount=cols;
+ E.inner.style.columnGap=cols===3?'4vw':cols===2?'5vw':'0';
+ E.inner.style.columnRule=cols>1?`1px solid color-mix(in srgb,${E.fg.value} 20%,transparent)`:'none';
+ E.credits.scrollTop=0;
+ E.guide.style.background=`color-mix(in srgb,${E.fg.value} 35%,transparent)`;
+ lock();
+ if(m==='credits'){C.speed=+E.speed.value;C.pos=C.set=0;C.done=false;C.playing=false;playBtn();if(await countdown())cRun()}
+ else{if(!sStart()){exitShow();return}playBtn();if(await countdown())sNext()}
+}
+function exitShow(){
+ C.playing=false;cancelAnimationFrame(C.raf);clearT();S.on=false;S.run++;cdTok++;E.cd.classList.remove('on');unlock();
+ E.stage.className='';E.hud.classList.remove('on');
+ [E.fadeTop,E.fadeBottom,E.guide].forEach(x=>x.classList.remove('on'));
+ if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
+ E.setup.classList.remove('hidden');
+}
+
+E.startBtn.onclick=start;E.playPause.onclick=mainAction;
+E.prevBtn.onclick=sPrev;E.nextBtn.onclick=sNext;
+E.restartBtn.onclick=restart;E.exitBtn.onclick=exitShow;E.fsBtn.onclick=toggleFs;
+E.stage.addEventListener('click',mainAction);
+const onKey=e=>{
+ if(!E.stage.classList.contains('on'))return;
+ const cr=isCredits(),k=e.key;
+ if(k===' '){e.preventDefault();mainAction()}
+ else if(k==='ArrowRight'){e.preventDefault();cr?C.speed=Math.min(300,C.speed+10):sNext()}
+ else if(k==='ArrowLeft'){e.preventDefault();cr?C.speed=Math.max(10,C.speed-10):sPrev()}
+ else if(k==='r'||k==='R'){e.preventDefault();restart()}
+ else if(k==='f'||k==='F'){e.preventDefault();toggleFs()}
+ else if(k==='Escape'){e.preventDefault();exitShow()}
+};
+document.addEventListener('keydown',onKey);
+E.stage.addEventListener('touchmove',e=>{if(!isCredits())e.preventDefault()},{passive:false});
+E.stage.addEventListener('wheel',e=>{if(!isCredits())e.preventDefault()},{passive:false});
+
+/* ===== Live Monitor ===== */
+const M={play:false,raf:0,last:0,pos:0,idx:0,t:0,groups:[]};
+const monFit=()=>{E.monScreen.style.transform=`scale(${E.monWrap.clientWidth/1280})`};
+function monSetActive(){
+ M.groups.forEach((g,i)=>g.forEach(sp=>{const on=i===M.idx;sp.style.opacity=on?'1':'';sp.style.color=on?E.highlightColor.value:'';sp.style.fontWeight=on?'700':'';sp.style.textShadow=on&&E.glow.checked?`0 0 .5em ${E.highlightColor.value}aa,0 0 1.4em ${E.highlightColor.value}55`:''}));
+ const g=M.groups[M.idx];if(!g)return;
+ const sp=g[0];E.monInner.style.transform=`translateY(${360-(sp.offsetTop+sp.offsetHeight/2)}px)`;
+}
+function monRender(){
+ const m=E.mode.value,sc=E.monScreen,inn=E.monInner,cols=m==='credits'?+E.columns.value:1;
+ sc.style.background=E.bg.value;sc.style.color=E.fg.value;sc.style.fontFamily=FONTS[E.fontFamily.value];
+ sc.style.fontSize=E.fontSize.value+'px';sc.style.textAlign=E.align.value;
+ inn.innerHTML=E.editor.innerHTML;
+ inn.style.columnCount=cols;inn.style.columnGap=cols>1?'64px':'0';
+ inn.style.padding=m==='credits'?'40px 64px':'0 100px';inn.style.transition=m==='credits'?'none':'';
+ if(m==='credits'){M.groups=[];stripBrackets(inn);inn.style.transform=`translateY(${-M.pos}px)`;E.monMeta.textContent='ტიტრები · 16:9'}
+ else{M.groups=wrapSentences(inn);M.idx=Math.min(M.idx,Math.max(0,M.groups.length-1));monSetActive();E.monMeta.textContent=`სუბტიტრები · ${M.groups.length} წინადადება`}
+}
+function monLoop(t){
+ if(!M.play)return;
+ const dt=Math.min(.25,(t-(M.last||t))/1000);M.last=t;
+ if(E.mode.value==='credits'){
+  const max=Math.max(0,E.monInner.scrollHeight-680);
+  M.pos+=(+E.speed.value)*dt;if(M.pos>max)M.pos=0;
+  E.monInner.style.transform=`translateY(${-M.pos}px)`;
+ }else{
+  M.t+=dt;
+  if(M.t>=(+E.autoAdvance.value||3)&&M.groups.length){
+   M.t=0;M.idx=(M.idx+1)%M.groups.length;monSetActive();
+   const ef=E.entryEffect.value,kf=XF[ef]||KF[ef];
+   if(kf)M.groups[M.idx].forEach(sp=>{if(XF[ef])sp.style.display='inline-block';sp.animate(kf,{duration:+E.effectDur.value,easing:'ease-out'}).onfinish=()=>{sp.style.display=''}});
+  }
+ }
+ M.raf=requestAnimationFrame(monLoop);
+}
+E.monPlay.onclick=()=>{
+ M.play=!M.play;M.last=0;M.t=0;E.monPlay.textContent=M.play?'■ გაჩერება':'▶ ტესტი';
+ if(M.play)M.raf=requestAnimationFrame(monLoop);else{cancelAnimationFrame(M.raf);M.pos=0;monRender()}
+};
+let mq=0;
+const monUpdate=()=>{cancelAnimationFrame(mq);mq=requestAnimationFrame(()=>{if(!M.play)M.pos=0;monRender()})};
+E.setup.addEventListener('input',monUpdate);E.setup.addEventListener('change',monUpdate);
+
+const segSync=()=>document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.v===E.mode.value));
+document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{E.mode.value=b.dataset.v;E.mode.dispatchEvent(new Event('change',{bubbles:true}))});
+E.mode.addEventListener('change',segSync);segSync();
+/* ===== Init ===== */
+const savedHtml=store('credits_editor_html');
+E.editor.innerHTML=savedHtml&&savedHtml.trim()?sanitize(savedHtml):DEFAULT_TEXT.split('\n').map(l=>l?`<div>${esc(l)}</div>`:'<div><br></div>').join('');
+modeUI();previewStyle();E.editor.focus();
+new ResizeObserver(monFit).observe(E.monWrap);monFit();monRender();
+})();
+</script></body></html>
