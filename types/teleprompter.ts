@@ -71,6 +71,12 @@ export interface TeleprompterSettings {
   textAlign: TeleprompterTextAlign;   // center, left, right
   fadeEdges: boolean;      // ზედა და ქვედა კიდეების გლუვი გაბნევა (gradient mask)
   
+  // დამატებითი დისპლეის პარამეტრები
+  lineHeight?: number;     // 1.2 - 2.4
+  letterSpacing?: number;  // 0 - 10 px
+  flipHorizontal?: boolean; // ჰორიზონტალური სარკე (Teleprompter Glass)
+  flipVertical?: boolean;   // ვერტიკალური სარკე
+  
   // სისტემური და პრეზენტაციის პარამეტრები
   countdown: number;        // უკუთვლა დაწყებამდე: 0 (გამორთული), 3, 5, 10 წამი
   wakeLock: boolean;        // ეკრანის ჩაქრობის პრევენცია
@@ -119,6 +125,10 @@ export const DEFAULT_TELEPROMPTER_SETTINGS: TeleprompterSettings = {
   fontFamily: 'sans',
   textAlign: 'center',
   fadeEdges: true,
+  lineHeight: 1.6,
+  letterSpacing: 0,
+  flipHorizontal: false,
+  flipVertical: false,
   
   // სისტემური
   countdown: 3,
@@ -127,6 +137,24 @@ export const DEFAULT_TELEPROMPTER_SETTINGS: TeleprompterSettings = {
   mirrorMode: false,
   autoPlay: true,
 };
+
+export const THEMES: Record<string, { name: string; bg: string; fg: string; hl: string }> = {
+  dark: { name: '🌑 მუქი (OLED Black)', bg: '#000000', fg: '#ffffff', hl: '#ffe680' },
+  light: { name: '☀️ ღია (თეთრი ფონი)', bg: '#ffffff', fg: '#0f172a', hl: '#b45309' },
+  contrast: { name: '⚡ მაღალი კონტრასტი (ყვითელი)', bg: '#000000', fg: '#ffff00', hl: '#38bdf8' },
+  sepia: { name: '📜 სეპია (კინო / თბილი)', bg: '#f4ecd8', fg: '#292524', hl: '#c2410c' },
+  night: { name: '🌌 ღამის ლურჯი (Navy)', bg: '#0b1329', fg: '#e2e8f0', hl: '#38bdf8' },
+  matrix: { name: '🟢 მატრიცა (Matrix Green)', bg: '#051308', fg: '#4ade80', hl: '#86efac' },
+  amber: { name: '📻 რეტრო ქარვისფერი (CRT Amber)', bg: '#170f03', fg: '#fbbf24', hl: '#fef08a' },
+};
+
+export const MODES_LIST: { id: TeleprompterAnimationMode; title: string; subtitle: string; icon: string }[] = [
+  { id: 'continuous', title: 'ტიტრები (ტელეპრომპტერი)', subtitle: 'გლუვი უწყვეტი სქროლი', icon: '📜' },
+  { id: 'sentence', title: 'სუბტიტრები', subtitle: 'წინადადებები ანიმაციით', icon: '💬' },
+  { id: 'word_zoom', title: 'სიტყვების მიყოლა & გამოკვეთა', subtitle: 'ტექსტის სქროლი + სიტყვა-სიტყვით', icon: '🔤' },
+  { id: 'stanza', title: 'სტროფებად', subtitle: 'პრეზენტაციის სლაიდები', icon: '📑' },
+  { id: 'marquee', title: 'მორბენალი სტრიქონი', subtitle: 'ჰორიზონტალური ტიტრი', icon: '🏃' },
+];
 
 export const FONT_FAMILY_MAP: Record<TeleprompterFontFamily, string> = {
   sans: 'system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Georgian", Arial, sans-serif',
@@ -146,3 +174,4 @@ export function getOptimalContrastTextColor(bgHex: string): string {
 }
 
 export const TELEPROMPTER_STORAGE_KEY = 'app_teleprompter_settings_v3';
+

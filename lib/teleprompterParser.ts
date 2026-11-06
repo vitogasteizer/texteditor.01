@@ -26,8 +26,8 @@ export interface ParsedWord {
 }
 
 /**
- * ასუფთავებს HTML-ს inline ფერებისგან (color და background-color), რათა ტექსტი
- * იდეალურად დაემორჩილოს ტელესუფლიორის კონტრასტულ ფონს
+ * ასუფთავებს HTML-ს ტელესუფლიორისთვის ისე, რომ სრულად შენარჩუნდეს
+ * ყველა გრაფიკი, სურათი, ნახატი (canvas/svg), ფორმულა (KaTeX), ფიგურა და ცხრილი!
  */
 export function sanitizeTeleprompterHtml(html: string): string {
   if (!html || !html.trim()) return '';
@@ -35,13 +35,22 @@ export function sanitizeTeleprompterHtml(html: string): string {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     
-    // მოვხსნათ სკრიპტები და სტილები
-    doc.querySelectorAll('script, style, meta, link, iframe, object, embed, xml').forEach(el => el.remove());
+    // მოვხსნათ მხოლოდ შეუსაბამო ტეგები (სკრიპტები, მეტა)
+    doc.querySelectorAll('script, meta').forEach(el => el.remove());
 
-    // ყველა ელემენტიდან წავშალოთ inline color და background-color (თუ გარედან მართულია)
+    // გრაფიკული და მედია ელემენტების სელექტორი, რომელთა სტილები და ფერები ხელუხლებელი უნდა დარჩეს
+    const graphicSelector = 'svg, svg *, canvas, img, table, td, th, [data-shape-type], .shape-container, .drawing-image, [class*="chart"], [class*="shape"], [class*="drawing"], [class*="katex"], math, figure, picture';
+
+    // მხოლოდ ჩვეულებრივი ტექსტური ბლოკებიდან მოვხსნათ შეუსაბამო მყარი ფერები
     doc.body.querySelectorAll('*').forEach((el) => {
       const htmlEl = el as HTMLElement;
+      // თუ ეს ელემენტი არის გრაფიკა, სურათი, ცხრილი ან ფიგურა — ხელს არ ვკიდებთ!
+      if (htmlEl.matches(graphicSelector) || htmlEl.closest(graphicSelector)) {
+        return;
+      }
+
       if (htmlEl.style) {
+        // ტექსტურ ელემენტებს მოვხსნათ მყარი ფონი და ტექსტის ფერი, რათა ტელესუფლიორის თემას მოერგოს
         htmlEl.style.removeProperty('color');
         htmlEl.style.removeProperty('background-color');
         if (!htmlEl.getAttribute('style') || htmlEl.getAttribute('style')?.trim() === '') {
@@ -52,9 +61,7 @@ export function sanitizeTeleprompterHtml(html: string): string {
 
     return doc.body.innerHTML;
   } catch (e) {
-    return html
-      .replace(/color\s*:\s*[^;"]+;?/gi, '')
-      .replace(/background-color\s*:\s*[^;"]+;?/gi, '');
+    return html;
   }
 }
 
@@ -85,9 +92,13 @@ export function stripBracketsAndNotes(html: string): string {
  * ასუფთავებს DOM ხეს [ ] და { } ნიშნებისგან ადგილზე (In-place)
  */
 export function stripBracketsFromElement(root: HTMLElement): void {
+  const graphicSelector = 'svg, svg *, canvas, img, [data-shape-type], .shape-container, .drawing-image, [class*="chart"], [class*="shape"], [class*="drawing"], [class*="katex"], math';
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let node: Node | null;
   while ((node = walker.nextNode())) {
+    if ((node.parentElement as HTMLElement)?.closest(graphicSelector)) {
+      continue;
+    }
     if (node.textContent && /[\[\]{}]/.test(node.textContent)) {
       node.textContent = node.textContent
         .replace(/\{[^{}]*\}/g, '')
@@ -109,10 +120,14 @@ export interface SentenceGroupElement {
 }
 
 export function wrapSentencesInElement(root: HTMLElement, splitMode: SplitMode): SentenceGroupElement[] {
+  const graphicSelector = 'svg, svg *, canvas, img, [data-shape-type], .shape-container, .drawing-image, [class*="chart"], [class*="shape"], [class*="drawing"], [class*="katex"], math';
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   const nodes: Node[] = [];
   let n: Node | null;
   while ((n = walker.nextNode())) {
+    if ((n.parentElement as HTMLElement)?.closest(graphicSelector)) {
+      continue;
+    }
     nodes.push(n);
   }
 
@@ -340,10 +355,14 @@ export function getPlainTextFromHtml(html: string): string {
  */
 export function wrapWordsInElement(root: HTMLElement): HTMLSpanElement[] {
   stripBracketsFromElement(root);
+  const graphicSelector = 'svg, svg *, canvas, img, [data-shape-type], .shape-container, .drawing-image, [class*="chart"], [class*="shape"], [class*="drawing"], [class*="katex"], math';
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   const nodes: Node[] = [];
   let n: Node | null;
   while ((n = walker.nextNode())) {
+    if ((n.parentElement as HTMLElement)?.closest(graphicSelector)) {
+      continue;
+    }
     nodes.push(n);
   }
 

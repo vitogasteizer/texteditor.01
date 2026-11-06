@@ -1,7 +1,7 @@
 
 import React from 'react';
 import type { WordCountStats } from '../App';
-import { ZoomInIcon, ZoomOutIcon, PresentationIcon } from './icons/EditorIcons';
+import { ZoomInIcon, ZoomOutIcon, PresentationIcon, BookOpenIcon } from './icons/EditorIcons';
 
 interface StatusBarProps {
   stats: WordCountStats;
@@ -9,10 +9,11 @@ interface StatusBarProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onOpenTeleprompter?: () => void;
+  onOpenFlipbook?: () => void;
   t: (key: string) => string;
 }
 
-const StatusBar: React.FC<StatusBarProps> = ({ stats, zoomLevel, onZoomIn, onZoomOut, onOpenTeleprompter, t }) => {
+const StatusBar: React.FC<StatusBarProps> = ({ stats, zoomLevel, onZoomIn, onZoomOut, onOpenTeleprompter, onOpenFlipbook, t }) => {
   return (
     <footer className="hidden md:flex h-9 px-6 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 items-center justify-between text-[11px] font-medium text-gray-400 dark:text-gray-500 flex-shrink-0 z-10">
       <div className="flex items-center gap-6">
@@ -52,7 +53,20 @@ const StatusBar: React.FC<StatusBarProps> = ({ stats, zoomLevel, onZoomIn, onZoo
               title="ტექსტის ანიმირება / სუფლიორი & პრეზენტატორი"
             >
               <PresentationIcon className="w-3.5 h-3.5" />
-              <span>ტექსტის ანიმირება</span>
+              <span>სუფლიორი</span>
+            </button>
+          </>
+        )}
+
+        {onOpenFlipbook && (
+          <>
+            <button
+              onClick={onOpenFlipbook}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-600/10 hover:bg-emerald-600 text-emerald-600 hover:text-white dark:bg-emerald-500/20 dark:text-emerald-300 dark:hover:bg-emerald-600 dark:hover:text-white transition-all text-xs font-semibold active:scale-95 shadow-sm"
+              title="ელექტრონული წიგნი (3D Flipbook პრეზენტატორი)"
+            >
+              <BookOpenIcon className="w-3.5 h-3.5" />
+              <span>ელ. წიგნი</span>
             </button>
           </>
         )}

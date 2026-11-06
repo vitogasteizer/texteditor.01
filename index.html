@@ -39,6 +39,7 @@
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
       }
+    </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <!-- Google API Scripts -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -295,6 +296,55 @@
       box-shadow: inset 0 4px 6px -2px rgba(0, 0, 0, 0.5), inset 0 -4px 6px -2px rgba(0, 0, 0, 0.5);
     }
     
+    /* PDF Page Sheet 100% Full-bleed Expansion */
+    .pdf-page-sheet {
+      display: block !important;
+      position: relative !important;
+      margin-left: calc(-1 * var(--page-margin-left, 0in)) !important;
+      margin-right: calc(-1 * var(--page-margin-right, 0in)) !important;
+      width: calc(100% + var(--page-margin-left, 0in) + var(--page-margin-right, 0in)) !important;
+      max-width: none !important;
+      margin-top: 0.5rem !important;
+      margin-bottom: 1.5rem !important;
+      padding: 0 !important;
+      text-align: center;
+      clear: both;
+    }
+
+    .pdf-page-sheet img,
+    .pdf-page-img {
+      width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+      display: block !important;
+      margin: 0 auto !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Inside Flipbook Viewer: 100% full fit */
+    .flipbook-viewer .pdf-page-sheet {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    .flipbook-viewer .pdf-page-sheet img,
+    .flipbook-viewer .pdf-page-img {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+      object-fit: contain !important;
+      box-shadow: none !important;
+      border: none !important;
+    }
+
     /* Table Resizing Cursor */
     .col-resize {
         cursor: col-resize;
@@ -313,6 +363,36 @@
       .fixed.bottom-0.z-50 {
         display: none !important;
       }
+    }
+
+    /* 3D Flipbook Page Turn Animations */
+    @keyframes flipPageNext {
+      0% {
+        transform: translate3d(0, 0, 0) rotateY(0deg);
+      }
+      50% {
+        transform: translate3d(0, -6px, 80px) rotateY(-3.5deg);
+      }
+      100% {
+        transform: translate3d(0, 0, 0) rotateY(0deg);
+      }
+    }
+    @keyframes flipPagePrev {
+      0% {
+        transform: translate3d(0, 0, 0) rotateY(0deg);
+      }
+      50% {
+        transform: translate3d(0, -6px, 80px) rotateY(3.5deg);
+      }
+      100% {
+        transform: translate3d(0, 0, 0) rotateY(0deg);
+      }
+    }
+    .animate-flip-next {
+      animation: flipPageNext 0.42s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .animate-flip-prev {
+      animation: flipPagePrev 0.42s cubic-bezier(0.25, 1, 0.5, 1);
     }
   </style>
   <script type="importmap">

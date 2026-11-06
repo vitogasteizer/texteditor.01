@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon, ListOrderedIcon, ListUnorderedIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon, AlignJustifyIcon, UndoIcon, RedoIcon, ClearFormattingIcon, ChevronDownIcon, TextColorIcon, BgColorIcon, LineHeightIcon, PaintBrushIcon, TextShadowIcon, SparklesIcon, ChecklistIcon, ChevronRightIcon, SunIcon, MoonIcon, MenuIcon, ImageIcon, LinkIcon, TableIcon, PresentationIcon } from './icons/EditorIcons';
+import { BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon, ListOrderedIcon, ListUnorderedIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon, AlignJustifyIcon, UndoIcon, RedoIcon, ClearFormattingIcon, ChevronDownIcon, TextColorIcon, BgColorIcon, LineHeightIcon, PaintBrushIcon, TextShadowIcon, SparklesIcon, ChecklistIcon, ChevronRightIcon, SunIcon, MoonIcon, MenuIcon, ImageIcon, LinkIcon, TableIcon, PresentationIcon, BookOpenIcon } from './icons/EditorIcons';
 import TextShadowDropdown from './TextShadowDropdown';
 import { useUIStore } from '../store/uiStore';
 
@@ -23,6 +23,7 @@ interface ToolbarProps {
   appMode?: 'standard' | 'code';
   onInsertCode?: (snippet: string) => void;
   onOpenTeleprompter?: () => void;
+  onOpenFlipbook?: () => void;
   t: (key: string, replacements?: { [key: string]: string | number }) => string;
 }
 
@@ -548,6 +549,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
     appMode = 'standard',
     onInsertCode,
     onOpenTeleprompter,
+    onOpenFlipbook,
     t 
 }) => {
     const { theme, toggleTheme } = useUIStore();
@@ -808,6 +810,11 @@ const Toolbar: React.FC<ToolbarProps> = ({
               <PresentationIcon />
             </ToolbarButton>
           )}
+          {onOpenFlipbook && (
+            <ToolbarButton onAction={onOpenFlipbook} tooltip={t('toolbar.flipbook')}>
+              <BookOpenIcon />
+            </ToolbarButton>
+          )}
           <ToolbarButton onAction={toggleTheme} tooltip={theme === 'light' ? t('toolbar.darkMode') : t('toolbar.lightMode')}>
               {theme === 'light' ? <MoonIcon /> : <SunIcon />}
           </ToolbarButton>
@@ -876,6 +883,13 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <div className="flex items-center pl-1 border-l border-gray-300 dark:border-gray-600 ml-1">
             <ToolbarButton onAction={onOpenTeleprompter} tooltip={t('toolbar.teleprompter')}>
               <PresentationIcon />
+            </ToolbarButton>
+          </div>
+        )}
+        {onOpenFlipbook && (
+          <div className="flex items-center pl-1">
+            <ToolbarButton onAction={onOpenFlipbook} tooltip={t('toolbar.flipbook')}>
+              <BookOpenIcon />
             </ToolbarButton>
           </div>
         )}

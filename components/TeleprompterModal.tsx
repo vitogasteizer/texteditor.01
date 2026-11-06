@@ -15,7 +15,10 @@ import {
   SentenceEntranceEffect,
   SentenceExitEffect,
   SplitMode,
-  getOptimalContrastTextColor
+  getOptimalContrastTextColor,
+  THEMES,
+  MODES_LIST,
+  FONT_FAMILY_MAP
 } from '../types/teleprompter';
 import { 
   wrapSentencesInElement,
@@ -34,22 +37,6 @@ interface TeleprompterModalProps {
   onLaunch: (settings: TeleprompterSettings) => void;
   t: (key: string) => string;
 }
-
-const THEMES: Record<string, { name: string; bg: string; fg: string; hl: string }> = {
-  dark: { name: '🌑 მუქი (OLED Black)', bg: '#000000', fg: '#ffffff', hl: '#ffe680' },
-  light: { name: '☀️ ღია (თეთრი ფონი)', bg: '#ffffff', fg: '#111827', hl: '#b45309' },
-  contrast: { name: '⚡ მაღალი კონტრასტი', bg: '#000000', fg: '#ffff00', hl: '#ffffff' },
-  sepia: { name: '📜 სეპია (კინო)', bg: '#f4ecd8', fg: '#3b2f1e', hl: '#9a3412' },
-  night: { name: '🌌 ღამის ლურჯი', bg: '#0b1220', fg: '#dbe7ff', hl: '#7dd3fc' },
-};
-
-const MODES_LIST: { id: TeleprompterAnimationMode; title: string; subtitle: string; icon: string }[] = [
-  { id: 'continuous', title: 'ტიტრები (ტელეპრომპტერი)', subtitle: 'გლუვი უწყვეტი სქროლი', icon: '📜' },
-  { id: 'sentence', title: 'სუბტიტრები', subtitle: 'წინადადებები ანიმაციით', icon: '💬' },
-  { id: 'word_zoom', title: 'სიტყვების მიყოლა & გამოკვეთა', subtitle: 'ტექსტის სქროლი + სიტყვა-სიტყვით', icon: '🔤' },
-  { id: 'stanza', title: 'სტროფებად', subtitle: 'პრეზენტაციის სლაიდები', icon: '📑' },
-  { id: 'marquee', title: 'მორბენალი სტრიქონი', subtitle: 'ჰორიზონტალური ტიტრი', icon: '🏃' },
-];
 
 export const TeleprompterModal: React.FC<TeleprompterModalProps> = ({
   isOpen,

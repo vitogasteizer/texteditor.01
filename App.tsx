@@ -39,6 +39,7 @@ import { Template } from './lib/templates';
 import CalculatorModal from './components/CalculatorModal';
 import TeleprompterModal from './components/TeleprompterModal';
 import TeleprompterViewer from './components/TeleprompterViewer';
+import FlipbookViewer from './components/FlipbookViewer';
 import { TeleprompterSettings, DEFAULT_TELEPROMPTER_SETTINGS, TELEPROMPTER_STORAGE_KEY } from './types/teleprompter';
 import { useUIStore } from './store/uiStore';
 
@@ -216,6 +217,11 @@ const App: React.FC = () => {
     setTeleprompterSettings(settings);
     setIsTeleprompterModalVisible(false);
     setIsTeleprompterViewerActive(true);
+  }, []);
+
+  const [isFlipbookActive, setIsFlipbookActive] = useState<boolean>(false);
+  const handleOpenFlipbook = useCallback(() => {
+    setIsFlipbookActive(true);
   }, []);
 
   const [toast, setToast] = useState<string | null>(null);
@@ -1852,9 +1858,50 @@ const App: React.FC = () => {
       // Implementation
   };
 
-  const handleOcrImport = async (base64Image: string) => {
-      if (!checkAiAvailability()) return;
-      // Implementation
+  const handleImportDocument = (htmlContent: string, mode: 'replace' | 'append') => {
+    // როდესაც შემოგვაქვს ვიზუალური PDF გვერდები, ფურცლის არეებს (margins) ვსვამთ 0-ზე, რათა 100%-ით გაიშალოს ფურცელზე
+    const isVisualPdf = htmlContent.includes('pdf-page-sheet') || htmlContent.includes('pdf-page-img');
+    if (isVisualPdf && (mode === 'replace' || !editorRef.current?.innerText.trim())) {
+      setPageMargins({ top: 0, bottom: 0, left: 0, right: 0 });
+    }
+
+    if (mode === 'replace' || !editorRef.current?.innerText.trim()) {
+      setContent(htmlContent);
+      if (editorRef.current) {
+        editorRef.current.innerHTML = htmlContent;
+      }
+      handleContentChange(htmlContent);
+    } else {
+      const currentHtml = editorRef.current?.innerHTML || content || '';
+      const combined = currentHtml + '\n<div class="page-break-indicator"></div><p><br></p>\n' + htmlContent;
+      setContent(combined);
+      if (editorRef.current) {
+        editorRef.current.innerHTML = combined;
+      }
+      handleContentChange(combined);
+    }
+    setToast('დოკუმენტი წარმატებით ჩაიტვირთა რედაქტორში');
+    setIsImportModalVisible(false);
+  };
+
+  const handlePerformAiOcr = async (base64Image: string): Promise<string> => {
+    if (!checkAiAvailability() || !aiRef.current) {
+      throw new Error('AI ასისტენტი მიუწვდომელია. გთხოვთ, შეამოწმოთ API გასაღები.');
+    }
+    const cleanBase64 = base64Image.includes('base64,') ? base64Image.split('base64,')[1] : base64Image;
+    const response = await aiRef.current.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: 'გთხოვთ, ამოიცნოთ და ზუსტად გადმოიტანოთ ამ დოკუმენტის/სურათის მთელი ტექსტი (განსაკუთრებული ყურადღება მიაქციეთ ქართულ შრიფტს). შეინარჩუნეთ აბზაცები, სიები და სათაურები. დააბრუნეთ მხოლოდ ამოცნობილი ტექსტი, ყოველგვარი ზედმეტი შესავლის გარეშე.' },
+            { inlineData: { mimeType: 'image/jpeg', data: cleanBase64 } }
+          ]
+        }
+      ]
+    });
+    return response.text || 'ტექსტის ამოცნობა ვერ მოხერხდა';
   };
 
   const handleSaveDrawing = (imageDataUrl: string) => {
@@ -2019,6 +2066,7 @@ const App: React.FC = () => {
                   onOpenFileImport={() => { saveSelection(); setIsImportModalVisible(true); }}
                   onInsertDrawing={() => { saveSelection(); setIsDrawingModalVisible(true); setEditingDrawingElement(null); }}
                   onOpenTeleprompter={handleOpenTeleprompter}
+                  onOpenFlipbook={handleOpenFlipbook}
                   isMobileMenuOpen={isMobileMenuOpen}
                   setIsMobileMenuOpen={setIsMobileMenuOpen}
                   t={t}
@@ -2078,6 +2126,7 @@ const App: React.FC = () => {
                   onOpenFileImport={() => { saveSelection(); setIsImportModalVisible(true); }}
                   onInsertDrawing={() => { saveSelection(); setIsDrawingModalVisible(true); setEditingDrawingElement(null); }}
                   onOpenTeleprompter={handleOpenTeleprompter}
+                  onOpenFlipbook={handleOpenFlipbook}
                   isMobileMenuOpen={isMobileMenuOpen}
                   setIsMobileMenuOpen={setIsMobileMenuOpen}
                   t={t}
@@ -2100,6 +2149,7 @@ const App: React.FC = () => {
                   appMode={appMode}
                   onInsertCode={handleInsertCode}
                   onOpenTeleprompter={handleOpenTeleprompter}
+                  onOpenFlipbook={handleOpenFlipbook}
                   t={t}
                 />
 
@@ -2261,6 +2311,7 @@ const App: React.FC = () => {
               onZoomIn={() => handleZoom('in')} 
               onZoomOut={() => handleZoom('out')} 
               onOpenTeleprompter={handleOpenTeleprompter}
+              onOpenFlipbook={handleOpenFlipbook}
               t={t} 
             />
             
@@ -2281,6 +2332,7 @@ const App: React.FC = () => {
                             showLineNumbers={showLineNumbers}
                             onOpenMenu={() => setIsMobileMenuOpen(true)}
                             onOpenTeleprompter={handleOpenTeleprompter}
+                            onOpenFlipbook={handleOpenFlipbook}
                             isBottom={true}
                             t={t}
                         />
@@ -2411,7 +2463,13 @@ const App: React.FC = () => {
       <DocumentPreviewModal isOpen={isPreviewModalVisible} onClose={() => setIsPreviewModalVisible(false)} content={previewDocContent} t={t} />
       <AboutModal isOpen={isAboutModalVisible} onClose={() => setIsAboutModalVisible(false)} t={t} />
       <CalculatorModal isVisible={isCalculatorVisible} onClose={() => setIsCalculatorVisible(false)} t={t} />
-      <ImportModal isOpen={isImportModalVisible} onClose={() => setIsImportModalVisible(false)} onImport={handleOcrImport} t={t} />
+      <ImportModal 
+        isOpen={isImportModalVisible} 
+        onClose={() => setIsImportModalVisible(false)} 
+        onImportDocument={handleImportDocument} 
+        onPerformAiOcr={handlePerformAiOcr}
+        t={t} 
+      />
       <DrawingModal isOpen={isDrawingModalVisible} onClose={() => { setIsDrawingModalVisible(false); setEditingDrawingElement(null); }} onSave={handleSaveDrawing} initialDataUrl={editingDrawingElement?.src} t={t} />
       <CropModal isOpen={isCropModalVisible} onClose={() => { setIsCropModalVisible(false); setCroppingImageElement(null); }} onApply={handleApplyCrop} imageSrc={croppingImageElement?.src || null} t={t} />
       <TemplatesModal isOpen={isTemplatesModalVisible} onClose={() => setIsTemplatesModalVisible(false)} onSelect={(content, template) => handleInsertTemplate(content, template)} t={t} />
@@ -2434,6 +2492,15 @@ const App: React.FC = () => {
           settings={teleprompterSettings} 
           onClose={() => setIsTeleprompterViewerActive(false)} 
           onUpdateSettings={(newSettings) => setTeleprompterSettings(newSettings)} 
+          t={t} 
+        />
+      )}
+
+      {isFlipbookActive && (
+        <FlipbookViewer 
+          isOpen={isFlipbookActive} 
+          htmlContent={editorRef.current?.innerHTML || content} 
+          onClose={() => setIsFlipbookActive(false)} 
           t={t} 
         />
       )}

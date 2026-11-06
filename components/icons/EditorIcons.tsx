@@ -139,3 +139,5 @@ export const PresentationIcon = createIcon(Lucide.Presentation);
 export const SlidersIcon = createIcon(Lucide.Sliders);
 export const MonitorPlayIcon = createIcon(Lucide.Tv);
 export const ChevronLeftIcon = createIcon(Lucide.ChevronLeft);
+export const BookOpenIcon = createIcon(Lucide.BookOpen);
+export const VolumeXIcon = createIcon(Lucide.VolumeX);
