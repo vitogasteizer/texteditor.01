@@ -3,13 +3,14 @@ import { CloseIcon, UploadCloudIcon, SparklesIcon, EyeIcon } from './icons/Edito
 import { 
   extractTextFromPdf, 
   renderPdfPageToDataUrl, 
-  renderAllPdfPagesToDataUrls 
+  renderAllPdfPagesToDataUrls,
+  getPdfInfo
 } from '../lib/pdfHelper';
 
 interface ImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onImportDocument: (htmlContent: string, mode: 'replace' | 'append') => void;
+  onImportDocument: (htmlContent: string, mode: 'replace' | 'append', orientation?: 'portrait' | 'landscape') => void;
   onPerformAiOcr?: (base64Image: string) => Promise<string>;
   t: (key: string) => string;
 }
@@ -24,6 +25,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
   const [fileDataUrl, setFileDataUrl] = useState<string | null>(null);
   const [fileType, setFileType] = useState<'pdf' | 'image' | null>(null);
   const [pdfPagesCount, setPdfPagesCount] = useState<number>(1);
+  const [detectedOrientation, setDetectedOrientation] = useState<'portrait' | 'landscape'>('portrait');
   const [previewThumbnail, setPreviewThumbnail] = useState<string | null>(null);
 
   // ჩატვირთვის რეჟიმი: 'visual' (ვიზუალური გვერდები) თუ 'text' (რედაქტირებადი ტექსტი)
@@ -66,8 +68,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({
           try {
             const thumb = await renderPdfPageToDataUrl(dataUrl, 1);
             setPreviewThumbnail(thumb);
-            const { pagesCount } = await extractTextFromPdf(dataUrl);
-            setPdfPagesCount(pagesCount || 1);
+            const pdfInfo = await getPdfInfo(dataUrl);
+            setPdfPagesCount(pdfInfo.pagesCount || 1);
+            setDetectedOrientation(pdfInfo.orientation);
           } catch (err) {
             console.warn('PDF-ის მინიატურის შეცდომა:', err);
           } finally {
@@ -76,6 +79,12 @@ export const ImportModal: React.FC<ImportModalProps> = ({
           }
         } else {
           setPreviewThumbnail(dataUrl);
+          const img = new Image();
+          img.onload = () => {
+            const isLandscape = img.naturalWidth > img.naturalHeight;
+            setDetectedOrientation(isLandscape ? 'landscape' : 'portrait');
+          };
+          img.src = dataUrl;
         }
       };
       reader.readAsDataURL(selectedFile);
@@ -104,33 +113,32 @@ export const ImportModal: React.FC<ImportModalProps> = ({
         if (importType === 'visual') {
           // 1. ვიზუალური გვერდების რენდერი (თითოეული გვერდი რეალურ ფურცლად)
           setProgressStatus(`მუშავდება 1 / ${pdfPagesCount} გვერდი...`);
-          const pages = await renderAllPdfPagesToDataUrls(
+          const renderResult = await renderAllPdfPagesToDataUrls(
             fileDataUrl, 
             60, 
             (cur, total) => setProgressStatus(`მუშავდება ${cur} / ${total} გვერდი...`)
           );
 
-          const htmlSheets = pages.map((pageDataUrl, idx) => `
-            <div class="pdf-page-sheet w-full my-4" data-pdf-page="${idx + 1}" style="width: 100%; max-width: 100%; display: block; margin: 0 auto 1.5rem auto;">
+          const htmlSheets = renderResult.pages.map((pageDataUrl, idx) => `
+            <div class="pdf-page-sheet w-full" data-pdf-page="${idx + 1}" data-aspect-ratio="${renderResult.aspectRatio}" data-orientation="${renderResult.orientation}">
               <img 
                 src="${pageDataUrl}" 
                 alt="გვერდი ${idx + 1}" 
                 class="pdf-page-img"
-                style="width: 100%; max-width: 100%; height: auto; display: block; border-radius: 2px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; margin: 0 auto;" 
               />
             </div>
           `).join('\n<div class="page-break-indicator"></div>\n');
 
-          onImportDocument(htmlSheets, destMode);
+          onImportDocument(htmlSheets, destMode, renderResult.orientation);
           handleClose();
         } else {
           // 2. ტექსტის ამოღება
           setProgressStatus('ტექსტური შრის ამოღება...');
-          const { formattedHtml, text } = await extractTextFromPdf(fileDataUrl);
+          const { formattedHtml, text, orientation } = await extractTextFromPdf(fileDataUrl);
 
           // თუ ციფრული ტექსტი მოიძებნა
           if (text && text.trim().length > 30) {
-            onImportDocument(formattedHtml, destMode);
+            onImportDocument(formattedHtml, destMode, orientation);
             handleClose();
             return;
           }
@@ -141,10 +149,10 @@ export const ImportModal: React.FC<ImportModalProps> = ({
             const pageImg = previewThumbnail || await renderPdfPageToDataUrl(fileDataUrl, 1);
             const ocrResult = await onPerformAiOcr(pageImg);
             const html = ocrResult.split(/\n\s*\n/).map(p => `<p>${p.replace(/\n/g, '<br/>')}</p>`).join('');
-            onImportDocument(html, destMode);
+            onImportDocument(html, destMode, orientation || detectedOrientation);
             handleClose();
           } else {
-            onImportDocument(formattedHtml, destMode);
+            onImportDocument(formattedHtml, destMode, orientation);
             handleClose();
           }
         }
@@ -169,11 +177,11 @@ export const ImportModal: React.FC<ImportModalProps> = ({
           setProgressStatus('სურათიდან ტექსტის ამოცნობა (Gemini AI OCR)...');
           const ocrResult = await onPerformAiOcr(targetImg);
           const html = ocrResult.split(/\n\s*\n/).map(p => `<p>${p.replace(/\n/g, '<br/>')}</p>`).join('');
-          onImportDocument(html, destMode);
+          onImportDocument(html, destMode, detectedOrientation);
         } else {
           // სურათად ჩასმა
           const imgHtml = `<p class="text-center my-4"><img src="${targetImg}" style="max-width:100%; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1);" alt="${file?.name || 'სურათი'}" /></p>`;
-          onImportDocument(imgHtml, destMode);
+          onImportDocument(imgHtml, destMode, detectedOrientation);
         }
         handleClose();
       }
@@ -304,10 +312,15 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                     <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-xs sm:max-w-md">
                       {file?.name}
                     </h4>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                      {fileType === 'pdf' ? `${pdfPagesCount} გვერდი · ` : ''}
-                      {((file?.size || 0) / (1024 * 1024)).toFixed(2)} MB
-                    </span>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {fileType === 'pdf' ? `${pdfPagesCount} გვერდი · ` : ''}
+                        {((file?.size || 0) / (1024 * 1024)).toFixed(2)} MB
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 text-[10px] font-semibold border border-indigo-200/50 dark:border-indigo-800/50">
+                        {detectedOrientation === 'landscape' ? '📐 ალბომური (Landscape)' : '📄 ვერტიკალური (Portrait)'}
+                      </span>
+                    </div>
                   </div>
                 </div>
 

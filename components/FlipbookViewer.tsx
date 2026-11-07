@@ -27,6 +27,7 @@ import { playPaperFlipSound } from '../lib/flipbookAudio';
 interface FlipbookViewerProps {
   isOpen: boolean;
   htmlContent: string;
+  pageOrientation?: 'portrait' | 'landscape';
   onClose: () => void;
   t: (key: string) => string;
 }
@@ -34,6 +35,7 @@ interface FlipbookViewerProps {
 export const FlipbookViewer: React.FC<FlipbookViewerProps> = ({
   isOpen,
   htmlContent,
+  pageOrientation,
   onClose,
 }) => {
   const [settings, setSettings] = useState<FlipbookSettings>(() => {
@@ -68,8 +70,12 @@ export const FlipbookViewer: React.FC<FlipbookViewerProps> = ({
   const [isPanning, setIsPanning] = useState<boolean>(false);
   const panStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  // გადაფურცვლის ანიმაცია
-  const [flippingDirection, setFlippingDirection] = useState<'next' | 'prev' | null>(null);
+  // 3D გადაფურცვლის ანიმაციის მდგომარეობა
+  const [flippingState, setFlippingState] = useState<{
+    direction: 'next' | 'prev';
+    fromSpread: number;
+    toSpread: number;
+  } | null>(null);
   const isFlippingRef = useRef<boolean>(false);
 
   // მენიუები და სტატუსი
@@ -113,12 +119,36 @@ export const FlipbookViewer: React.FC<FlipbookViewerProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // ხედვის რეჟიმი
+  // დოკუმენტის/გვერდების ორიენტაციის დადგენა
+  const isLandscapeDoc = useMemo<boolean>(() => {
+    if (pageOrientation === 'landscape') return true;
+    if (pageOrientation === 'portrait') return false;
+    const sampleHtml = pages.slice(0, 3).map(p => p.html).join(' ');
+    return sampleHtml.includes('orientation="landscape"') || sampleHtml.includes('data-orientation="landscape"');
+  }, [pageOrientation, pages]);
+
+  // ზუსტი პროპორციის გამოთვლა (Aspect Ratio) დოკუმენტის მეტამონაცემებიდან
+  const singleAspectRatio = useMemo<number>(() => {
+    const match = htmlContent.match(/data-aspect-ratio=["']([\d.]+)["']/);
+    if (match && match[1]) {
+      const val = parseFloat(match[1]);
+      if (!isNaN(val) && val > 0.2 && val < 5) return val;
+    }
+    return isLandscapeDoc ? 1.414 : 0.707;
+  }, [htmlContent, isLandscapeDoc]);
+
+  const doubleAspectRatio = useMemo<number>(() => {
+    return singleAspectRatio * 2;
+  }, [singleAspectRatio]);
+
+  // ხედვის რეჟიმი: თუ დოკუმენტი Landscape-ია და მომხმარებელს არ დაუფიქსირებია viewMode, ნაგულისხმევად 1 გვერდი 100%-ით ავსებს ეკრანს
   const effectiveViewMode = useMemo<'single' | 'double'>(() => {
     if (isMobileScreen) return 'single';
     if (settings.viewMode === 'single') return 'single';
+    if (settings.viewMode === 'double') return 'double';
+    if (isLandscapeDoc) return 'single';
     return 'double';
-  }, [isMobileScreen, settings.viewMode]);
+  }, [isMobileScreen, settings.viewMode, isLandscapeDoc]);
 
   // HUD-ის ავტომატური დამალვა
   const showHudTemporarily = useCallback(() => {
@@ -136,28 +166,35 @@ export const FlipbookViewer: React.FC<FlipbookViewerProps> = ({
   // მიმდინარე თემა (ღია, სადა ფერებით)
   const theme = FLIPBOOK_THEME_CONFIG[settings.theme] || FLIPBOOK_THEME_CONFIG.classic;
 
-  // გადასვლა კონკრეტულ გვერდზე
+  // გადასვლა კონკრეტულ გვერდზე 3D გადაშლის ანიმაციით
   const goToPage = useCallback((targetIdx: number) => {
     if (isFlippingRef.current) return;
     const bounded = Math.max(0, Math.min(pages.length - 1, targetIdx));
     if (bounded === currentPageIndex) return;
 
-    const dir = bounded > currentPageIndex ? 'next' : 'prev';
+    const dir: 'next' | 'prev' = bounded > currentPageIndex ? 'next' : 'prev';
     if (settings.soundEnabled) {
-      playPaperFlipSound(0.3);
+      playPaperFlipSound(0.35);
     }
 
+    const fromSpread = effectiveViewMode === 'double'
+      ? Math.floor(currentPageIndex / 2) * 2
+      : currentPageIndex;
+    const toSpread = effectiveViewMode === 'double'
+      ? Math.floor(bounded / 2) * 2
+      : bounded;
+
     isFlippingRef.current = true;
-    setFlippingDirection(dir);
+    setFlippingState({ direction: dir, fromSpread, toSpread });
 
     setTimeout(() => {
       setCurrentPageIndex(bounded);
-      setFlippingDirection(null);
+      setFlippingState(null);
       isFlippingRef.current = false;
     }, 380);
-  }, [pages.length, currentPageIndex, settings.soundEnabled]);
+  }, [pages.length, currentPageIndex, settings.soundEnabled, effectiveViewMode]);
 
-  // წინ გადაფურცვლა
+  // წინ გადაფურცვლა (2P რეჟიმში 2 გვერდით გადაადგილება)
   const flipNext = useCallback(() => {
     if (effectiveViewMode === 'single') {
       if (currentPageIndex < pages.length - 1) {
@@ -166,17 +203,17 @@ export const FlipbookViewer: React.FC<FlipbookViewerProps> = ({
         showOsd('ბოლო გვერდი');
       }
     } else {
-      const step = currentPageIndex === 0 ? 1 : 2;
-      const nextIdx = currentPageIndex + step;
-      if (nextIdx < pages.length) {
-        goToPage(nextIdx);
+      const curSpread = Math.floor(currentPageIndex / 2) * 2;
+      const nextSpread = curSpread + 2;
+      if (nextSpread < pages.length) {
+        goToPage(nextSpread);
       } else {
         showOsd('ბოლო გვერდი');
       }
     }
   }, [effectiveViewMode, currentPageIndex, pages.length, goToPage, showOsd]);
 
-  // უკან გადაფურცვლა
+  // უკან გადაფურცვლა (2P რეჟიმში 2 გვერდით უკან დაბრუნება)
   const flipPrev = useCallback(() => {
     if (effectiveViewMode === 'single') {
       if (currentPageIndex > 0) {
@@ -185,10 +222,12 @@ export const FlipbookViewer: React.FC<FlipbookViewerProps> = ({
         showOsd('პირველი გვერდი');
       }
     } else {
-      if (currentPageIndex <= 1) {
-        goToPage(0);
+      const curSpread = Math.floor(currentPageIndex / 2) * 2;
+      const prevSpread = curSpread - 2;
+      if (prevSpread >= 0) {
+        goToPage(prevSpread);
       } else {
-        goToPage(currentPageIndex - 2);
+        showOsd('პირველი გვერდი');
       }
     }
   }, [effectiveViewMode, currentPageIndex, goToPage, showOsd]);
@@ -202,34 +241,13 @@ export const FlipbookViewer: React.FC<FlipbookViewerProps> = ({
 
     const intervalSec = Math.max(3, settings.autoFlipInterval || 5);
     autoFlipTimerRef.current = window.setInterval(() => {
-      if (effectiveViewMode === 'single') {
-        setCurrentPageIndex(prev => {
-          if (prev >= pages.length - 1) {
-            setIsPlayingAuto(false);
-            showOsd('დასრულდა');
-            return prev;
-          }
-          if (settings.soundEnabled) playPaperFlipSound(0.2);
-          return prev + 1;
-        });
-      } else {
-        setCurrentPageIndex(prev => {
-          const step = prev === 0 ? 1 : 2;
-          if (prev + step >= pages.length) {
-            setIsPlayingAuto(false);
-            showOsd('დასრულდა');
-            return prev;
-          }
-          if (settings.soundEnabled) playPaperFlipSound(0.2);
-          return prev + step;
-        });
-      }
+      flipNext();
     }, intervalSec * 1000);
 
     return () => {
       if (autoFlipTimerRef.current) clearInterval(autoFlipTimerRef.current);
     };
-  }, [isOpen, isPlayingAuto, settings.autoFlipInterval, settings.soundEnabled, effectiveViewMode, pages.length, showOsd]);
+  }, [isOpen, isPlayingAuto, settings.autoFlipInterval, flipNext]);
 
   // მასშტაბირება
   const handleZoomIn = useCallback(() => {
@@ -400,25 +418,76 @@ export const FlipbookViewer: React.FC<FlipbookViewerProps> = ({
 
   if (!isOpen) return null;
 
-  // გვერდების განსაზღვრა
+  // გვერდების განსაზღვრა (2P რეჟიმში დოკუმენტი იწყება პირველივე გვერდიდან: მარცხნივ გვერდი 1, მარჯვნივ გვერდი 2)
+  const spreadIndex = effectiveViewMode === 'double'
+    ? Math.floor(currentPageIndex / 2) * 2
+    : currentPageIndex;
+
   let leftPage: FlipbookPage | null = null;
   let rightPage: FlipbookPage | null = null;
 
   if (effectiveViewMode === 'single') {
     rightPage = pages[currentPageIndex] || null;
   } else {
-    if (currentPageIndex === 0) {
-      leftPage = null;
-      rightPage = pages[0] || null;
-    } else {
-      const leftIdx = currentPageIndex % 2 === 1 ? currentPageIndex : currentPageIndex - 1;
-      leftPage = pages[leftIdx] || null;
-      rightPage = pages[leftIdx + 1] || null;
-    }
+    leftPage = pages[spreadIndex] || null;
+    rightPage = pages[spreadIndex + 1] || null;
   }
 
   // პროგრესი
   const progressPercent = Math.round(((currentPageIndex + 1) / Math.max(1, pages.length)) * 100);
+
+  // გვერდის ერთიანი სუფთა კომპონენტი (PDF ან ტექსტი)
+  const renderPageCard = (page: FlipbookPage | null, isLeft: boolean, customShadow?: string) => {
+    const isPdf = Boolean(page?.html && (page.html.includes('pdf-page-sheet') || page.html.includes('pdf-page-img')));
+
+    return (
+      <div
+        className={`w-full h-full relative flex flex-col justify-between ${
+          isPdf ? 'p-0 m-0 overflow-hidden' : 'p-8 sm:p-10 md:p-12 overflow-y-auto'
+        } custom-scrollbar transition-colors select-none`}
+        style={{
+          backgroundColor: page ? theme.pageBg : undefined,
+          color: theme.textColor,
+          boxShadow: customShadow ?? (isLeft
+            ? `inset -20px 0 30px -15px ${theme.spineShadow}`
+            : `inset 20px 0 30px -15px ${theme.spineShadow}`),
+        }}
+      >
+        {page ? (
+          <>
+            <div className={isPdf ? "w-full h-full p-0 m-0 flex items-stretch justify-stretch overflow-hidden" : "flex-1 w-full h-full flex flex-col justify-center"}>
+              {page.title && !isPdf && (
+                <div className={`text-[11px] font-semibold tracking-wider uppercase opacity-40 mb-4 pb-2 border-b border-black/5 dark:border-white/10 ${isLeft ? '' : 'text-right'}`}>
+                  {page.title}
+                </div>
+              )}
+              <div 
+                className={isPdf ? "w-full h-full p-0 m-0" : "prose prose-slate max-w-none text-justify"}
+                style={{
+                  fontSize: `${settings.fontSize}px`,
+                  lineHeight: settings.lineHeight,
+                  color: theme.textColor,
+                }}
+                dangerouslySetInnerHTML={{ __html: page.html }}
+              />
+            </div>
+            {settings.showPageNumbers && !isPdf && (
+              <div className="text-center text-xs font-mono opacity-40 pt-4 mt-auto">
+                — {page.pageNumber} —
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-center p-8 select-none opacity-40">
+            <span className="text-3xl mb-2">🏁</span>
+            <span className="text-xs font-mono uppercase tracking-widest text-slate-500">
+              დოკუმენტის დასასრული
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div
@@ -442,186 +511,158 @@ export const FlipbookViewer: React.FC<FlipbookViewerProps> = ({
         </div>
       )}
 
-      {/* ===================== მთავარი წიგნის სცენა (Clean Book Area) ===================== */}
+      {/* ===================== მთავარი წიგნის სცენა (Edge-to-Edge 100% Clean Area) ===================== */}
       <main 
-        className="w-full flex-1 flex items-center justify-center p-3 sm:p-6 md:p-8 relative overflow-hidden"
-        style={{ perspective: '2200px' }}
+        className="w-full h-full flex items-center justify-center p-0 m-0 relative overflow-hidden"
+        style={{ perspective: '2600px' }}
       >
         {/* წიგნის კონტეინერი */}
         <div
-          className={`relative max-w-full transition-transform duration-200 ease-out ${
-            flippingDirection === 'next' ? 'animate-flip-next' : flippingDirection === 'prev' ? 'animate-flip-prev' : ''
-          }`}
+          className="relative max-w-full transition-transform duration-200 ease-out flex items-center justify-center"
           style={{
             transform: `translate3d(${panOffset.x}px, ${panOffset.y}px, 0) scale(${zoom})`,
             transformStyle: 'preserve-3d',
             filter: 'drop-shadow(0 16px 36px rgba(0,0,0,0.12))',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          {/* ===================== ორგვერდიანი გაშლა ===================== */}
+          {/* ===================== ორგვერდიანი გაშლა (2P Real 3D Flip) ===================== */}
           {(() => {
-            const isLeftPdf = Boolean(leftPage?.html && (leftPage.html.includes('pdf-page-sheet') || leftPage.html.includes('pdf-page-img')));
-            const isRightPdf = Boolean(rightPage?.html && (rightPage.html.includes('pdf-page-sheet') || rightPage.html.includes('pdf-page-img')));
+            const isFlipping = Boolean(flippingState);
+            const isNext = flippingState?.direction === 'next';
+            const isPrev = flippingState?.direction === 'prev';
+
+            // ბაზისური ფურცლები (ქვედა სტაციონარული ფენა გადაფურცვლისას)
+            let baseLeftPage: FlipbookPage | null = leftPage;
+            let baseRightPage: FlipbookPage | null = rightPage;
+
+            if (isFlipping && flippingState) {
+              if (isNext) {
+                baseLeftPage = pages[flippingState.fromSpread] || null;
+                baseRightPage = pages[flippingState.toSpread + 1] || null;
+              } else if (isPrev) {
+                baseLeftPage = pages[flippingState.toSpread] || null;
+                baseRightPage = pages[flippingState.fromSpread + 1] || null;
+              }
+            }
 
             return effectiveViewMode === 'double' ? (
             <div 
-              className="flex items-stretch rounded-[12px] overflow-hidden border border-slate-300/80 dark:border-slate-700/80 shadow-2xl"
+              className="flex items-stretch overflow-hidden border border-slate-300/80 dark:border-slate-700/80 shadow-2xl relative select-none"
               style={{
-                minHeight: '76vh',
-                maxHeight: '84vh',
-                width: 'min(94vw, 1340px)',
-                aspectRatio: '1.414 / 1',
+                height: !isLandscapeDoc 
+                  ? '100vh' 
+                  : `min(100vh, calc(100vw / ${doubleAspectRatio}))`,
+                width: !isLandscapeDoc 
+                  ? `min(100vw, calc(100vh * ${doubleAspectRatio}))` 
+                  : '100vw',
+                maxHeight: '100vh',
+                maxWidth: '100vw',
+                aspectRatio: `${doubleAspectRatio} / 1`,
+                perspective: '2000px',
               }}
             >
               {/* მარცხენა გვერდი */}
               <div
                 onClick={flipPrev}
-                className={`flex-1 relative flex flex-col justify-between ${
-                  isLeftPdf ? 'p-0 overflow-hidden' : 'p-8 sm:p-10 md:p-12 overflow-y-auto'
-                } custom-scrollbar border-r border-slate-200/80 dark:border-slate-700/80 cursor-pointer transition-colors ${
-                  !leftPage ? 'items-center justify-center bg-slate-100/60 dark:bg-slate-800/40' : ''
-                }`}
-                style={{
-                  backgroundColor: leftPage ? theme.pageBg : undefined,
-                  color: theme.textColor,
-                  boxShadow: `inset -20px 0 30px -15px ${theme.spineShadow}`,
-                }}
+                className="flex-1 relative border-r border-slate-200/80 dark:border-slate-700/80 cursor-pointer overflow-hidden"
               >
-                {leftPage ? (
-                  <>
-                    <div className="flex-1 w-full h-full flex flex-col justify-center">
-                      {leftPage.title && !isLeftPdf && (
-                        <div className="text-[11px] font-semibold tracking-wider uppercase opacity-40 mb-4 pb-2 border-b border-black/5 dark:border-white/10">
-                          {leftPage.title}
-                        </div>
-                      )}
-                      <div 
-                        className={isLeftPdf ? "w-full h-full flex items-center justify-center" : "prose prose-slate max-w-none text-justify"}
-                        style={{
-                          fontSize: `${settings.fontSize}px`,
-                          lineHeight: settings.lineHeight,
-                          color: theme.textColor,
-                        }}
-                        dangerouslySetInnerHTML={{ __html: leftPage.html }}
-                      />
+                {isFlipping && flippingState ? (
+                  isNext ? (
+                    <div className="w-full h-full">
+                      {renderPageCard(pages[flippingState.fromSpread] || null, true)}
                     </div>
-                    {settings.showPageNumbers && (
-                      <div className={isLeftPdf 
-                        ? "absolute bottom-3 left-4 z-10 px-2.5 py-0.5 rounded-full bg-black/50 text-white text-[10px] font-mono backdrop-blur-sm pointer-events-none select-none shadow-sm"
-                        : "text-center text-xs font-mono opacity-40 pt-4 mt-auto"
-                      }>
-                        — {leftPage.pageNumber} —
-                      </div>
-                    )}
-                  </>
+                  ) : (
+                    <div className="w-full h-full page-glide-prev-in">
+                      {renderPageCard(pages[flippingState.toSpread] || null, true)}
+                    </div>
+                  )
                 ) : (
-                  <div className="text-center p-8 select-none opacity-40">
-                    <span className="text-4xl block mb-2">📖</span>
-                    <span className="text-xs font-mono uppercase tracking-widest text-slate-500">
-                      თავფურცელი
-                    </span>
-                  </div>
+                  renderPageCard(leftPage, true)
                 )}
               </div>
 
-              {/* წიგნის ცენტრალური ნაკეცი (Subtle spine) */}
+              {/* წიგნის ცენტრალური ნაკეცი (Spine with dynamic shadow wave) */}
               <div 
                 className="w-1.5 relative z-20 flex-shrink-0"
                 style={{
                   background: 'linear-gradient(to right, rgba(0,0,0,0.12), rgba(255,255,255,0.15) 50%, rgba(0,0,0,0.12))',
                 }}
-              />
+              >
+                {isFlipping && (
+                  <div className="absolute inset-0 bg-black/25 spine-shadow-sweep pointer-events-none" />
+                )}
+              </div>
 
               {/* მარჯვენა გვერდი */}
               <div
                 onClick={flipNext}
-                className={`flex-1 relative flex flex-col justify-between ${
-                  isRightPdf ? 'p-0 overflow-hidden' : 'p-8 sm:p-10 md:p-12 overflow-y-auto'
-                } custom-scrollbar cursor-pointer transition-colors`}
-                style={{
-                  backgroundColor: theme.pageBg,
-                  color: theme.textColor,
-                  boxShadow: `inset 20px 0 30px -15px ${theme.spineShadow}`,
-                }}
+                className="flex-1 relative cursor-pointer overflow-hidden"
               >
-                {rightPage ? (
-                  <>
-                    <div className="flex-1 w-full h-full flex flex-col justify-center">
-                      {rightPage.title && !isRightPdf && (
-                        <div className="text-[11px] font-semibold tracking-wider uppercase opacity-40 mb-4 pb-2 border-b border-black/5 dark:border-white/10 text-right">
-                          {rightPage.title}
-                        </div>
-                      )}
-                      <div 
-                        className={isRightPdf ? "w-full h-full flex items-center justify-center" : "prose prose-slate max-w-none text-justify"}
-                        style={{
-                          fontSize: `${settings.fontSize}px`,
-                          lineHeight: settings.lineHeight,
-                          color: theme.textColor,
-                        }}
-                        dangerouslySetInnerHTML={{ __html: rightPage.html }}
-                      />
-                    </div>
-                    {settings.showPageNumbers && (
-                      <div className={isRightPdf 
-                        ? "absolute bottom-3 right-4 z-10 px-2.5 py-0.5 rounded-full bg-black/50 text-white text-[10px] font-mono backdrop-blur-sm pointer-events-none select-none shadow-sm"
-                        : "text-center text-xs font-mono opacity-40 pt-4 mt-auto"
-                      }>
-                        — {rightPage.pageNumber} —
+                {isFlipping && flippingState ? (
+                  isNext ? (
+                    <div className="w-full h-full relative">
+                      {/* შემომსვლელი ახალი გვერდი */}
+                      <div className="w-full h-full page-glide-next-in">
+                        {renderPageCard(pages[flippingState.toSpread + 1] || null, false)}
                       </div>
-                    )}
-                  </>
+                      {/* გამავალი გვერდი */}
+                      <div className="absolute inset-0 page-glide-next-out pointer-events-none">
+                        {renderPageCard(pages[flippingState.fromSpread + 1] || null, false)}
+                        <div className="absolute inset-0 bg-gradient-to-l from-black/15 via-transparent to-transparent pointer-events-none" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full relative">
+                      <div className="w-full h-full">
+                        {renderPageCard(pages[flippingState.toSpread + 1] || null, false)}
+                      </div>
+                      <div className="absolute inset-0 page-glide-prev-out pointer-events-none">
+                        {renderPageCard(pages[flippingState.fromSpread + 1] || null, false)}
+                      </div>
+                    </div>
+                  )
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-center p-8 select-none opacity-40">
-                    <span className="text-3xl mb-2">🏁</span>
-                    <span className="text-xs font-mono uppercase tracking-widest">
-                      დოკუმენტის დასასრული
-                    </span>
-                  </div>
+                  renderPageCard(rightPage, false)
                 )}
               </div>
             </div>
           ) : (
-            /* ===================== ერთგვერდიანი ხედი (Single Page) ===================== */
+            /* ===================== ერთგვერდიანი ხედი (Single Page Tactile Glide) ===================== */
             rightPage && (
             <div 
-              className={`rounded-[12px] overflow-hidden border border-slate-300/80 dark:border-slate-700/80 shadow-2xl flex flex-col justify-between ${
-                isRightPdf ? 'p-0 overflow-hidden' : 'p-6 sm:p-10 overflow-y-auto'
-              } custom-scrollbar relative`}
+              className="overflow-hidden border border-slate-300/80 dark:border-slate-700/80 shadow-2xl relative select-none"
               style={{
                 backgroundColor: theme.pageBg,
                 color: theme.textColor,
-                width: 'min(94vw, 680px)',
-                minHeight: '76vh',
-                maxHeight: '84vh',
-                aspectRatio: '0.707 / 1',
+                height: !isLandscapeDoc 
+                  ? '100vh' 
+                  : `min(100vh, calc(100vw / ${singleAspectRatio}))`,
+                width: !isLandscapeDoc 
+                  ? `min(100vw, calc(100vh * ${singleAspectRatio}))` 
+                  : '100vw',
+                maxHeight: '100vh',
+                maxWidth: '100vw',
+                aspectRatio: `${singleAspectRatio} / 1`,
                 boxShadow: `inset 0 0 20px ${theme.spineShadow}, 0 16px 36px rgba(0,0,0,0.15)`,
               }}
             >
-              <div className="flex-1 w-full h-full flex flex-col justify-center">
-                {rightPage.title && !isRightPdf && (
-                  <div className="text-[11px] font-semibold tracking-wider uppercase opacity-40 mb-4 pb-2 border-b border-black/5 dark:border-white/10 text-center">
-                    {rightPage.title}
+              {isFlipping && flippingState ? (
+                <div className="w-full h-full relative">
+                  {/* შემომსვლელი გვერდი */}
+                  <div className={`w-full h-full ${isNext ? 'single-glide-next-in' : 'single-glide-prev-in'}`}>
+                    {renderPageCard(pages[flippingState.toSpread] || null, false)}
                   </div>
-                )}
-                <div 
-                  className={isRightPdf ? "w-full h-full flex items-center justify-center" : "prose prose-slate max-w-none text-justify"}
-                  style={{
-                    fontSize: `${settings.fontSize}px`,
-                    lineHeight: settings.lineHeight,
-                    color: theme.textColor,
-                  }}
-                  dangerouslySetInnerHTML={{ __html: rightPage.html }}
-                />
-              </div>
-
-              {settings.showPageNumbers && (
-                <div className={isRightPdf 
-                  ? "absolute bottom-3 inset-x-0 mx-auto w-max z-10 px-2.5 py-0.5 rounded-full bg-black/50 text-white text-[10px] font-mono backdrop-blur-sm pointer-events-none select-none shadow-sm"
-                  : "text-center text-xs font-mono opacity-40 pt-4 mt-auto"
-                }>
-                  — {rightPage.pageNumber} / {pages.length} —
+                  {/* გამავალი გვერდი */}
+                  <div className={`absolute inset-0 ${isNext ? 'single-glide-next-out' : 'single-glide-prev-out'} pointer-events-none`}>
+                    {renderPageCard(pages[flippingState.fromSpread] || null, false)}
+                  </div>
                 </div>
+              ) : (
+                renderPageCard(rightPage, false)
               )}
             </div>
             )
@@ -640,7 +681,7 @@ export const FlipbookViewer: React.FC<FlipbookViewerProps> = ({
         <button
           type="button"
           onClick={flipPrev}
-          disabled={currentPageIndex === 0}
+          disabled={effectiveViewMode === 'double' ? spreadIndex === 0 : currentPageIndex === 0}
           className="p-1.5 rounded-[8px] hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 transition-colors"
           title="წინა გვერდი (←)"
         >
@@ -650,14 +691,17 @@ export const FlipbookViewer: React.FC<FlipbookViewerProps> = ({
         {/* გვერდის ნომერი და პროგრესის ზოლი */}
         <div className="flex items-center gap-2 px-1">
           <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap min-w-[50px] text-center">
-            {currentPageIndex + 1}/{pages.length}
+            {effectiveViewMode === 'double'
+              ? (rightPage ? `${spreadIndex + 1}-${spreadIndex + 2} / ${pages.length}` : `${spreadIndex + 1} / ${pages.length}`)
+              : `${currentPageIndex + 1} / ${pages.length}`}
           </span>
 
           <input
             type="range"
             min={0}
-            max={pages.length - 1}
-            value={currentPageIndex}
+            max={Math.max(0, pages.length - 1)}
+            step={effectiveViewMode === 'double' ? 2 : 1}
+            value={effectiveViewMode === 'double' ? spreadIndex : currentPageIndex}
             onChange={(e) => goToPage(Number(e.target.value))}
             className="w-16 sm:w-28 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-600 focus:outline-none"
             title="გვერდებზე გადასვლა"
@@ -672,7 +716,7 @@ export const FlipbookViewer: React.FC<FlipbookViewerProps> = ({
         <button
           type="button"
           onClick={flipNext}
-          disabled={currentPageIndex >= pages.length - 1}
+          disabled={effectiveViewMode === 'double' ? spreadIndex + 2 >= pages.length : currentPageIndex >= pages.length - 1}
           className="p-1.5 rounded-[8px] hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 transition-colors"
           title="შემდეგი გვერდი (→)"
         >
@@ -710,6 +754,26 @@ export const FlipbookViewer: React.FC<FlipbookViewerProps> = ({
         >
           <ZoomInIcon className="w-4 h-4" />
         </button>
+
+        {/* 1P / 2P რეჟიმის გადამრთველი */}
+        {!isMobileScreen && (
+          <button
+            type="button"
+            onClick={() => {
+              const nextMode = effectiveViewMode === 'double' ? 'single' : 'double';
+              updateSettings({ viewMode: nextMode });
+              showOsd(nextMode === 'double' ? 'ორგვერდიანი გაშლა (2P)' : 'ერთგვერდიანი ხედი (1P - 100% სიმაღლე)');
+            }}
+            className={`px-2 py-0.5 rounded-[6px] text-[11px] font-mono font-bold transition-colors ${
+              effectiveViewMode === 'single'
+                ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
+                : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
+            }`}
+            title={effectiveViewMode === 'double' ? 'ერთ გვერდზე გადართვა (100% სიმაღლეზე გაშლა)' : 'ორ გვერდზე გაშლა (2P)'}
+          >
+            {effectiveViewMode === 'double' ? '2P' : '1P'}
+          </button>
+        )}
 
         <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-0.5" />
 
@@ -813,7 +877,14 @@ export const FlipbookViewer: React.FC<FlipbookViewerProps> = ({
 
           <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-2 pt-1">
             {pages.map((p, idx) => {
-              const isActive = idx === currentPageIndex;
+              const isActive = effectiveViewMode === 'double'
+                ? (idx === spreadIndex || idx === spreadIndex + 1)
+                : (idx === currentPageIndex);
+
+              // ამოვიღოთ რეალური სურათის URL, თუ PDF გვერდია
+              const imgMatch = p.html.match(/<img[^>]+src=["']([^"']+)["']/i);
+              const previewImgSrc = imgMatch ? imgMatch[1] : null;
+
               return (
                 <button
                   key={p.pageNumber}
@@ -822,22 +893,36 @@ export const FlipbookViewer: React.FC<FlipbookViewerProps> = ({
                     goToPage(idx);
                     setIsThumbnailsOpen(false);
                   }}
-                  className={`flex-shrink-0 w-28 h-36 rounded-[8px] p-2 text-left flex flex-col justify-between border transition-all ${
+                  className={`flex-shrink-0 w-24 sm:w-28 h-36 sm:h-40 rounded-[8px] p-1.5 text-left flex flex-col justify-between border transition-all ${
                     isActive
-                      ? 'border-indigo-600 ring-2 ring-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-950/40'
-                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-400'
+                      ? 'border-indigo-600 ring-2 ring-indigo-500/40 bg-indigo-50/70 dark:bg-indigo-950/50 shadow-md scale-[1.02]'
+                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-400 opacity-90 hover:opacity-100'
                   }`}
                   style={{
                     backgroundColor: theme.pageBg,
                     color: theme.textColor,
                   }}
                 >
-                  <div className="text-[9px] line-clamp-6 opacity-75 overflow-hidden font-sans">
-                    {p.title ? <strong>{p.title} </strong> : null}
-                    {p.html.replace(/<[^>]+>/g, ' ').slice(0, 110)}
+                  <div className="w-full flex-1 min-h-0 overflow-hidden rounded-[4px] bg-slate-100 dark:bg-slate-900 flex items-center justify-center border border-slate-200/50 dark:border-slate-700/50">
+                    {previewImgSrc ? (
+                      <img 
+                        src={previewImgSrc} 
+                        alt={`გვერდი ${p.pageNumber}`} 
+                        className="w-full h-full object-contain pointer-events-none select-none" 
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full p-1.5 text-[8px] line-clamp-6 opacity-75 font-sans overflow-hidden">
+                        {p.title ? <strong className="block mb-0.5">{p.title}</strong> : null}
+                        {p.html.replace(/<[^>]+>/g, ' ').slice(0, 110)}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-[10px] font-mono text-center pt-1 border-t border-slate-200/60 dark:border-slate-700/60 font-semibold">
-                    {p.pageNumber}
+                  <div className="text-[10px] font-mono text-center pt-1 mt-1 border-t border-slate-200/60 dark:border-slate-700/60 font-semibold flex items-center justify-between px-1">
+                    <span className="opacity-50 text-[9px] font-sans">გვ.</span>
+                    <span className={isActive ? "text-indigo-600 dark:text-indigo-400 font-bold" : ""}>
+                      {p.pageNumber}
+                    </span>
                   </div>
                 </button>
               );

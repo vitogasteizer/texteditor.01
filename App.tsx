@@ -1858,7 +1858,16 @@ const App: React.FC = () => {
       // Implementation
   };
 
-  const handleImportDocument = (htmlContent: string, mode: 'replace' | 'append') => {
+  const handleImportDocument = (
+    htmlContent: string, 
+    mode: 'replace' | 'append',
+    detectedOrientation?: 'portrait' | 'landscape'
+  ) => {
+    // ავტომატური ორიენტაციის მორგება ატვირთული ფაილის მიხედვით
+    if (detectedOrientation && (mode === 'replace' || !editorRef.current?.innerText.trim())) {
+      setPageOrientation(detectedOrientation);
+    }
+
     // როდესაც შემოგვაქვს ვიზუალური PDF გვერდები, ფურცლის არეებს (margins) ვსვამთ 0-ზე, რათა 100%-ით გაიშალოს ფურცელზე
     const isVisualPdf = htmlContent.includes('pdf-page-sheet') || htmlContent.includes('pdf-page-img');
     if (isVisualPdf && (mode === 'replace' || !editorRef.current?.innerText.trim())) {
@@ -2500,6 +2509,7 @@ const App: React.FC = () => {
         <FlipbookViewer 
           isOpen={isFlipbookActive} 
           htmlContent={editorRef.current?.innerHTML || content} 
+          pageOrientation={pageOrientation}
           onClose={() => setIsFlipbookActive(false)} 
           t={t} 
         />

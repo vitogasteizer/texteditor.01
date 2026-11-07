@@ -2,7 +2,8 @@
  * PDF დამხმარე ბიბლიოთეკა:
  * 1. PDF-დან ტექსტის ამოღება გვერდის გამყოფებით (PDF.js Text Layer)
  * 2. PDF ყველა გვერდის რენდერი მაღალი ხარისხის სურათებად (A4 Sheets დოკუმენტში ჩასასმელად)
- * 3. Gemini Vision OCR სკანირებული ფურცლებისთვის
+ * 3. გვერდის ზომებისა და ორიენტაციის (Portrait/Landscape) ავტომატური ამოცნობა
+ * 4. Gemini Vision OCR სკანირებული ფურცლებისთვის
  */
 
 import * as pdfjsModule from 'pdfjs-dist';
@@ -15,6 +16,22 @@ declare global {
 
 // Resolves the module whether loaded via CommonJS, UMD, or ES Module
 const resolvedPdfjs: any = (pdfjsModule as any).default || pdfjsModule;
+
+export interface PdfDocumentInfo {
+  pagesCount: number;
+  orientation: 'portrait' | 'landscape';
+  width: number;
+  height: number;
+  aspectRatio: number;
+}
+
+export interface RenderPdfResult {
+  pages: string[];
+  orientation: 'portrait' | 'landscape';
+  width: number;
+  height: number;
+  aspectRatio: number;
+}
 
 /**
  * გარდაქმნის base64 Data URL-ს Uint8Array-ად მეხსიერებიდან პირდაპირი წაკითხვისთვის
@@ -59,6 +76,35 @@ export async function ensurePdfJsLoaded(): Promise<boolean> {
 }
 
 /**
+ * აბრუნებს PDF ფაილის მეტამონაცემებსა და პირველი გვერდის ზომებს/ორიენტაციას
+ */
+export async function getPdfInfo(pdfDataUrl: string): Promise<PdfDocumentInfo> {
+  const lib = getPdfJs();
+  if (!lib || typeof lib.getDocument !== 'function') {
+    throw new Error('PDF.js ბიბლიოთეკა მიუწვდომელია');
+  }
+
+  const rawData = pdfDataUrl.startsWith('data:') ? dataUrlToUint8Array(pdfDataUrl) : pdfDataUrl;
+  const loadingTask = lib.getDocument(typeof rawData === 'string' ? rawData : { data: rawData });
+  const pdfDoc = await loadingTask.promise;
+  const page = await pdfDoc.getPage(1);
+  const viewport = page.getViewport({ scale: 1 });
+
+  const width = viewport.width;
+  const height = viewport.height;
+  const orientation: 'portrait' | 'landscape' = width > height ? 'landscape' : 'portrait';
+  const aspectRatio = width / height;
+
+  return {
+    pagesCount: pdfDoc.numPages,
+    orientation,
+    width,
+    height,
+    aspectRatio,
+  };
+}
+
+/**
  * PDF-ის პირველი გვერდის რენდერი მინიატურისთვის
  */
 export async function renderPdfPageToDataUrl(pdfDataUrl: string, pageNum: number = 1): Promise<string> {
@@ -93,13 +139,13 @@ export async function renderPdfPageToDataUrl(pdfDataUrl: string, pageNum: number
 }
 
 /**
- * PDF-ის ყველა გვერდის რენდერი სურათებად (დოკუმენტში პირდაპირ ჩასასმელად)
+ * PDF-ის ყველა გვერდის რენდერი სურათებად (დოკუმენტში პირდაპირ ჩასასმელად) და ორიენტაციის დადგენა
  */
 export async function renderAllPdfPagesToDataUrls(
   pdfDataUrl: string, 
   maxPages: number = 60,
   onProgress?: (current: number, total: number) => void
-): Promise<string[]> {
+): Promise<RenderPdfResult> {
   const lib = getPdfJs();
   if (!lib || typeof lib.getDocument !== 'function') {
     throw new Error('PDF.js ბიბლიოთეკა მიუწვდომელია');
@@ -111,9 +157,24 @@ export async function renderAllPdfPagesToDataUrls(
   const numPages = Math.min(pdfDoc.numPages, maxPages);
   const pageImages: string[] = [];
 
+  // პირველი გვერდის ზომების ამოღება ორიენტაციისთვის
+  let docWidth = 595;
+  let docHeight = 842;
+  let docOrientation: 'portrait' | 'landscape' = 'portrait';
+  let docAspectRatio = 0.707;
+
   for (let i = 1; i <= numPages; i++) {
     if (onProgress) onProgress(i, numPages);
     const page = await pdfDoc.getPage(i);
+
+    if (i === 1) {
+      const baseViewport = page.getViewport({ scale: 1 });
+      docWidth = baseViewport.width;
+      docHeight = baseViewport.height;
+      docOrientation = docWidth > docHeight ? 'landscape' : 'portrait';
+      docAspectRatio = docWidth / docHeight;
+    }
+
     // 1.5x მასშტაბი იძლევა კრისტალურ ხარისხს A4 ეკრანზე
     const viewport = page.getViewport({ scale: 1.5 });
     const canvas = document.createElement('canvas');
@@ -135,13 +196,27 @@ export async function renderAllPdfPagesToDataUrls(
     }
   }
 
-  return pageImages;
+  return {
+    pages: pageImages,
+    orientation: docOrientation,
+    width: docWidth,
+    height: docHeight,
+    aspectRatio: docAspectRatio,
+  };
 }
 
 /**
- * PDF-დან ტექსტის ამოღება და დაფორმატება გვერდის გამყოფებით
+ * PDF-დან ტექსტის ამოღება და დაფორმატება გვერდის გამყოფებით და ორიენტაციის დადგენა
  */
-export async function extractTextFromPdf(pdfDataUrl: string): Promise<{ text: string; pagesCount: number; formattedHtml: string }> {
+export async function extractTextFromPdf(pdfDataUrl: string): Promise<{ 
+  text: string; 
+  pagesCount: number; 
+  formattedHtml: string;
+  orientation: 'portrait' | 'landscape';
+  width: number;
+  height: number;
+  aspectRatio: number;
+}> {
   const lib = getPdfJs();
   if (!lib || typeof lib.getDocument !== 'function') {
     throw new Error('PDF.js ბიბლიოთეკა მიუწვდომელია');
@@ -152,11 +227,25 @@ export async function extractTextFromPdf(pdfDataUrl: string): Promise<{ text: st
   const pdfDoc = await loadingTask.promise;
   const numPages = pdfDoc.numPages;
 
+  let docWidth = 595;
+  let docHeight = 842;
+  let docOrientation: 'portrait' | 'landscape' = 'portrait';
+  let docAspectRatio = 0.707;
+
   let plainTextAll = '';
   const htmlParts: string[] = [];
 
   for (let i = 1; i <= numPages; i++) {
     const page = await pdfDoc.getPage(i);
+    
+    if (i === 1) {
+      const baseViewport = page.getViewport({ scale: 1 });
+      docWidth = baseViewport.width;
+      docHeight = baseViewport.height;
+      docOrientation = docWidth > docHeight ? 'landscape' : 'portrait';
+      docAspectRatio = docWidth / docHeight;
+    }
+
     const textContent = await page.getTextContent();
     const pageItems = textContent.items || [];
 
@@ -208,5 +297,9 @@ export async function extractTextFromPdf(pdfDataUrl: string): Promise<{ text: st
     text: plainTextAll.trim(),
     pagesCount: numPages,
     formattedHtml,
+    orientation: docOrientation,
+    width: docWidth,
+    height: docHeight,
+    aspectRatio: docAspectRatio,
   };
 }

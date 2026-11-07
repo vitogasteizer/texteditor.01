@@ -323,16 +323,17 @@
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
     }
 
-    /* Inside Flipbook Viewer: 100% full fit */
+    /* Inside Flipbook Viewer: 100% full fit with ZERO empty gaps */
     .flipbook-viewer .pdf-page-sheet {
       width: 100% !important;
       height: 100% !important;
       max-width: 100% !important;
+      max-height: 100% !important;
       margin: 0 !important;
       padding: 0 !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
+      display: block !important;
+      position: relative !important;
+      overflow: hidden !important;
     }
     .flipbook-viewer .pdf-page-sheet img,
     .flipbook-viewer .pdf-page-img {
@@ -340,9 +341,13 @@
       height: 100% !important;
       max-width: 100% !important;
       max-height: 100% !important;
-      object-fit: contain !important;
+      object-fit: fill !important;
+      display: block !important;
+      margin: 0 !important;
+      padding: 0 !important;
       box-shadow: none !important;
       border: none !important;
+      border-radius: 0 !important;
     }
 
     /* Table Resizing Cursor */
@@ -365,34 +370,159 @@
       }
     }
 
-    /* 3D Flipbook Page Turn Animations */
-    @keyframes flipPageNext {
+
+    /* Premium Tactile Page Transition (Apple Books / Kindle Style) */
+    @keyframes flipGlideNextOut {
       0% {
-        transform: translate3d(0, 0, 0) rotateY(0deg);
+        transform: translateX(0) scale(1) rotateY(0deg);
+        opacity: 1;
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
       }
-      50% {
-        transform: translate3d(0, -6px, 80px) rotateY(-3.5deg);
+      35% {
+        box-shadow: -12px 0 24px rgba(0, 0, 0, 0.25);
       }
       100% {
-        transform: translate3d(0, 0, 0) rotateY(0deg);
+        transform: translateX(-35%) scale(0.97) rotateY(-14deg);
+        opacity: 0;
+        box-shadow: -20px 0 30px rgba(0, 0, 0, 0);
       }
     }
-    @keyframes flipPagePrev {
+
+    @keyframes flipGlideNextIn {
       0% {
-        transform: translate3d(0, 0, 0) rotateY(0deg);
-      }
-      50% {
-        transform: translate3d(0, -6px, 80px) rotateY(3.5deg);
+        transform: translateX(25px) scale(0.985);
+        opacity: 0.35;
       }
       100% {
-        transform: translate3d(0, 0, 0) rotateY(0deg);
+        transform: translateX(0) scale(1);
+        opacity: 1;
       }
     }
-    .animate-flip-next {
-      animation: flipPageNext 0.42s cubic-bezier(0.25, 1, 0.5, 1);
+
+    @keyframes flipGlidePrevOut {
+      0% {
+        transform: translateX(0) scale(1) rotateY(0deg);
+        opacity: 1;
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      }
+      35% {
+        box-shadow: 12px 0 24px rgba(0, 0, 0, 0.25);
+      }
+      100% {
+        transform: translateX(35%) scale(0.97) rotateY(14deg);
+        opacity: 0;
+        box-shadow: 20px 0 30px rgba(0, 0, 0, 0);
+      }
     }
-    .animate-flip-prev {
-      animation: flipPagePrev 0.42s cubic-bezier(0.25, 1, 0.5, 1);
+
+    @keyframes flipGlidePrevIn {
+      0% {
+        transform: translateX(-25px) scale(0.985);
+        opacity: 0.35;
+      }
+      100% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes spineShadowSweep {
+      0% { opacity: 0; transform: scaleX(0.7); }
+      50% { opacity: 0.45; transform: scaleX(2.0); }
+      100% { opacity: 0; transform: scaleX(0.7); }
+    }
+
+    @keyframes singleGlideNextOut {
+      0% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(-30%) scale(0.97);
+        opacity: 0;
+      }
+    }
+
+    @keyframes singleGlideNextIn {
+      0% {
+        transform: translateX(30%) scale(0.97);
+        opacity: 0;
+      }
+      100% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes singleGlidePrevOut {
+      0% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(30%) scale(0.97);
+        opacity: 0;
+      }
+    }
+
+    @keyframes singleGlidePrevIn {
+      0% {
+        transform: translateX(-30%) scale(0.97);
+        opacity: 0;
+      }
+      100% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .page-glide-next-out {
+      animation: flipGlideNextOut 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      transform-origin: left center;
+      transform-style: preserve-3d;
+      will-change: transform, opacity, box-shadow;
+    }
+
+    .page-glide-next-in {
+      animation: flipGlideNextIn 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      will-change: transform, opacity;
+    }
+
+    .page-glide-prev-out {
+      animation: flipGlidePrevOut 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      transform-origin: right center;
+      transform-style: preserve-3d;
+      will-change: transform, opacity, box-shadow;
+    }
+
+    .page-glide-prev-in {
+      animation: flipGlidePrevIn 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      will-change: transform, opacity;
+    }
+
+    .spine-shadow-sweep {
+      animation: spineShadowSweep 0.38s ease-in-out forwards;
+      will-change: opacity, transform;
+    }
+
+    .single-glide-next-out {
+      animation: singleGlideNextOut 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      will-change: transform, opacity;
+    }
+
+    .single-glide-next-in {
+      animation: singleGlideNextIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      will-change: transform, opacity;
+    }
+
+    .single-glide-prev-out {
+      animation: singleGlidePrevOut 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      will-change: transform, opacity;
+    }
+
+    .single-glide-prev-in {
+      animation: singleGlidePrevIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      will-change: transform, opacity;
     }
   </style>
   <script type="importmap">
