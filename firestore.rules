@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function isValidSharedDocument(data) {
+      return data.keys().hasAll(['id', 'title', 'pageCount', 'orientation', 'aspectRatio', 'isPdf'])
+        && data.id is string && isValidId(data.id)
+        && data.title is string && data.title.size() <= 200
+        && data.pageCount is number && data.pageCount >= 1 && data.pageCount <= 1000
+        && data.orientation in ['portrait', 'landscape']
+        && (data.aspectRatio is number || data.aspectRatio is float)
+        && data.isPdf is bool
+        && (!('createdAt' in data) || data.createdAt is string)
+        && (!('content' in data) || (data.content is string && data.content.size() <= 900000));
+    }
+
+    function isValidDocumentPage(data) {
+      return data.keys().hasAll(['pageNumber', 'html'])
+        && data.pageNumber is number && data.pageNumber >= 1
+        && data.html is string && data.html.size() <= 900000;
+    }
+
+    match /shared_documents/{docId} {
+      allow get: if isValidId(docId);
+      allow list: if false;
+      allow create: if isValidId(docId) && incoming().id == docId && isValidSharedDocument(incoming());
+      allow update, delete: if false;
+
+      match /pages/{pageId} {
+        allow get: if isValidId(docId) && isValidId(pageId);
+        allow list: if isValidId(docId);
+        allow create: if isValidId(docId) && isValidId(pageId) && isValidDocumentPage(incoming());
+        allow update, delete: if false;
+      }
+    }
+  }
+}

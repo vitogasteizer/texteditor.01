@@ -141,3 +141,6 @@ export const MonitorPlayIcon = createIcon(Lucide.Tv);
 export const ChevronLeftIcon = createIcon(Lucide.ChevronLeft);
 export const BookOpenIcon = createIcon(Lucide.BookOpen);
 export const VolumeXIcon = createIcon(Lucide.VolumeX);
+export const Share2Icon = createIcon(Lucide.Share2);
+export const CheckIcon = createIcon(Lucide.Check);
+export const ExternalLinkIcon = createIcon(Lucide.ExternalLink);

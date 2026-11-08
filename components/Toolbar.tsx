@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon, ListOrderedIcon, ListUnorderedIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon, AlignJustifyIcon, UndoIcon, RedoIcon, ClearFormattingIcon, ChevronDownIcon, TextColorIcon, BgColorIcon, LineHeightIcon, PaintBrushIcon, TextShadowIcon, SparklesIcon, ChecklistIcon, ChevronRightIcon, SunIcon, MoonIcon, MenuIcon, ImageIcon, LinkIcon, TableIcon, PresentationIcon, BookOpenIcon } from './icons/EditorIcons';
+import { BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon, ListOrderedIcon, ListUnorderedIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon, AlignJustifyIcon, UndoIcon, RedoIcon, ClearFormattingIcon, ChevronDownIcon, TextColorIcon, BgColorIcon, LineHeightIcon, PaintBrushIcon, TextShadowIcon, SparklesIcon, ChecklistIcon, ChevronRightIcon, SunIcon, MoonIcon, MenuIcon, ImageIcon, LinkIcon, TableIcon, PresentationIcon, BookOpenIcon, Share2Icon } from './icons/EditorIcons';
 import TextShadowDropdown from './TextShadowDropdown';
 import { useUIStore } from '../store/uiStore';
 
@@ -24,6 +24,7 @@ interface ToolbarProps {
   onInsertCode?: (snippet: string) => void;
   onOpenTeleprompter?: () => void;
   onOpenFlipbook?: () => void;
+  onShareDocument?: () => void;
   t: (key: string, replacements?: { [key: string]: string | number }) => string;
 }
 
@@ -550,6 +551,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
     onInsertCode,
     onOpenTeleprompter,
     onOpenFlipbook,
+    onShareDocument,
     t 
 }) => {
     const { theme, toggleTheme } = useUIStore();
@@ -815,6 +817,11 @@ const Toolbar: React.FC<ToolbarProps> = ({
               <BookOpenIcon />
             </ToolbarButton>
           )}
+          {onShareDocument && (
+            <ToolbarButton onAction={onShareDocument} tooltip="დოკუმენტის გაზიარება (Share)">
+              <Share2Icon />
+            </ToolbarButton>
+          )}
           <ToolbarButton onAction={toggleTheme} tooltip={theme === 'light' ? t('toolbar.darkMode') : t('toolbar.lightMode')}>
               {theme === 'light' ? <MoonIcon /> : <SunIcon />}
           </ToolbarButton>
@@ -890,6 +897,13 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <div className="flex items-center pl-1">
             <ToolbarButton onAction={onOpenFlipbook} tooltip={t('toolbar.flipbook')}>
               <BookOpenIcon />
+            </ToolbarButton>
+          </div>
+        )}
+        {onShareDocument && (
+          <div className="flex items-center pl-1">
+            <ToolbarButton onAction={onShareDocument} tooltip="დოკუმენტის გაზიარება / საზიარო ბმული">
+              <Share2Icon />
             </ToolbarButton>
           </div>
         )}

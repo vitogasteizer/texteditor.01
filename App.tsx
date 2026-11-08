@@ -40,6 +40,8 @@ import CalculatorModal from './components/CalculatorModal';
 import TeleprompterModal from './components/TeleprompterModal';
 import TeleprompterViewer from './components/TeleprompterViewer';
 import FlipbookViewer from './components/FlipbookViewer';
+import { ShareModal } from './components/ShareModal';
+import { fetchSharedDocument } from './lib/shareService';
 import { TeleprompterSettings, DEFAULT_TELEPROMPTER_SETTINGS, TELEPROMPTER_STORAGE_KEY } from './types/teleprompter';
 import { useUIStore } from './store/uiStore';
 
@@ -144,6 +146,7 @@ const App: React.FC = () => {
   const [view, setView] = useState<'editor' | 'drive'>('editor');
   const [documents, setDocuments] = useState<Doc[]>([]);
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
+  const [docTitle, setDocTitle] = useState<string>('დოკუმენტი');
   const [content, setContent] = useState<string>('<p><br></p>');
   const [comments, setComments] = useState<Comment[]>([]);
   
@@ -224,7 +227,54 @@ const App: React.FC = () => {
     setIsFlipbookActive(true);
   }, []);
 
+  const [isShareModalVisible, setIsShareModalVisible] = useState<boolean>(false);
+  const [isSharedDocLoading, setIsSharedDocLoading] = useState<boolean>(false);
+  const [sharedDocError, setSharedDocError] = useState<string | null>(null);
+
   const [toast, setToast] = useState<string | null>(null);
+
+  // საზიარო ბმულით დოკუმენტის ავტომატური ჩატვირთვა URL პარამეტრებიდან
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shareId = params.get('share') || params.get('doc');
+    const mode = params.get('mode');
+
+    if (shareId) {
+      setIsSharedDocLoading(true);
+      setSharedDocError(null);
+      fetchSharedDocument(shareId)
+        .then((result) => {
+          if (result) {
+            setContent(result.htmlContent);
+            if (editorRef.current) {
+              editorRef.current.innerHTML = result.htmlContent;
+            }
+            if (result.metadata.title) {
+              setDocTitle(result.metadata.title);
+            }
+            if (result.metadata.orientation) {
+              setPageOrientation(result.metadata.orientation);
+            }
+            if (result.metadata.isPdf) {
+              setPageMargins({ top: 0, bottom: 0, left: 0, right: 0 });
+            }
+            if (mode === 'book' || result.metadata.isPdf) {
+              setIsFlipbookActive(true);
+            }
+            setToast('საზიარო დოკუმენტი წარმატებით ჩაიტვირთა!');
+          } else {
+            setSharedDocError('საზიარო დოკუმენტი ვერ მოიძებნა ან ვადაგასულია');
+          }
+        })
+        .catch((err) => {
+          console.error('შეცდომა საზიარო დოკუმენტის ჩატვირთვისას:', err);
+          setSharedDocError('დოკუმენტის ჩატვირთვა ვერ მოხერხდა');
+        })
+        .finally(() => {
+          setIsSharedDocLoading(false);
+        });
+    }
+  }, []);
   
   const [isSaving, setIsSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -982,6 +1032,7 @@ const App: React.FC = () => {
     const newDoc: Doc = { id: `doc_${now}`, name: docName.trim(), content, comments, createdAt: now, updatedAt: now, pageSize, pageOrientation, pageMargins, pageColor };
     setDocuments(docs => [...docs, newDoc]);
     setCurrentDocId(newDoc.id);
+    setDocTitle(newDoc.name);
     setOriginalContent(content);
     setOriginalComments([...comments]);
     setIsDirty(false);
@@ -1010,6 +1061,7 @@ const App: React.FC = () => {
       setOriginalComments(docToOpen.comments || []);
       setIsDirty(false);
       setCurrentDocId(docToOpen.id);
+      setDocTitle(docToOpen.name);
       setLastSaved(docToOpen.updatedAt);
       setIsCommentsSidebarVisible(docToOpen.comments && docToOpen.comments.length > 0);
       setActivePanel(null);
@@ -2076,6 +2128,7 @@ const App: React.FC = () => {
                   onInsertDrawing={() => { saveSelection(); setIsDrawingModalVisible(true); setEditingDrawingElement(null); }}
                   onOpenTeleprompter={handleOpenTeleprompter}
                   onOpenFlipbook={handleOpenFlipbook}
+                  onShareDocument={() => setIsShareModalVisible(true)}
                   isMobileMenuOpen={isMobileMenuOpen}
                   setIsMobileMenuOpen={setIsMobileMenuOpen}
                   t={t}
@@ -2136,6 +2189,7 @@ const App: React.FC = () => {
                   onInsertDrawing={() => { saveSelection(); setIsDrawingModalVisible(true); setEditingDrawingElement(null); }}
                   onOpenTeleprompter={handleOpenTeleprompter}
                   onOpenFlipbook={handleOpenFlipbook}
+                  onShareDocument={() => setIsShareModalVisible(true)}
                   isMobileMenuOpen={isMobileMenuOpen}
                   setIsMobileMenuOpen={setIsMobileMenuOpen}
                   t={t}
@@ -2159,6 +2213,7 @@ const App: React.FC = () => {
                   onInsertCode={handleInsertCode}
                   onOpenTeleprompter={handleOpenTeleprompter}
                   onOpenFlipbook={handleOpenFlipbook}
+                  onShareDocument={() => setIsShareModalVisible(true)}
                   t={t}
                 />
 
@@ -2342,6 +2397,7 @@ const App: React.FC = () => {
                             onOpenMenu={() => setIsMobileMenuOpen(true)}
                             onOpenTeleprompter={handleOpenTeleprompter}
                             onOpenFlipbook={handleOpenFlipbook}
+                            onShareDocument={() => setIsShareModalVisible(true)}
                             isBottom={true}
                             t={t}
                         />
@@ -2511,8 +2567,40 @@ const App: React.FC = () => {
           htmlContent={editorRef.current?.innerHTML || content} 
           pageOrientation={pageOrientation}
           onClose={() => setIsFlipbookActive(false)} 
+          onShare={() => setIsShareModalVisible(true)}
           t={t} 
         />
+      )}
+
+      {/* საზიარო ბმულის მოდალური ფანჯარა */}
+      <ShareModal
+        isOpen={isShareModalVisible}
+        onClose={() => setIsShareModalVisible(false)}
+        documentTitle={docTitle || 'დოკუმენტი'}
+        htmlContent={editorRef.current?.innerHTML || content}
+        pageOrientation={pageOrientation}
+      />
+
+      {/* საზიარო დოკუმენტის ჩატვირთვის ინდიკატორი */}
+      {isSharedDocLoading && (
+        <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-md flex flex-col items-center justify-center text-white select-none animate-in fade-in duration-200">
+          <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4" />
+          <h2 className="text-base font-bold text-slate-100 mb-1">საზიარო დოკუმენტი იტვირთება...</h2>
+          <p className="text-xs text-slate-400">მიმდინარეობს მონაცემების მიღება ღრუბლიდან</p>
+        </div>
+      )}
+
+      {/* შეცდომის შეტყობინება საზიარო დოკუმენტის ჩატვირთვისას */}
+      {sharedDocError && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] px-5 py-3 rounded-[12px] bg-rose-900/90 text-white text-xs font-semibold backdrop-blur-md shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-2">
+          <span>⚠️ {sharedDocError}</span>
+          <button 
+            onClick={() => setSharedDocError(null)}
+            className="p-1 rounded-full hover:bg-white/20 transition-colors"
+          >
+            ✕
+          </button>
+        </div>
       )}
     </div>
   );

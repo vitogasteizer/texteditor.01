@@ -13,6 +13,7 @@ import {
   Volume2Icon, 
   VolumeXIcon,
   SlidersIcon,
+  Share2Icon,
 } from './icons/EditorIcons';
 import { 
   FlipbookPage, 
@@ -29,6 +30,7 @@ interface FlipbookViewerProps {
   htmlContent: string;
   pageOrientation?: 'portrait' | 'landscape';
   onClose: () => void;
+  onShare?: () => void;
   t: (key: string) => string;
 }
 
@@ -37,6 +39,7 @@ export const FlipbookViewer: React.FC<FlipbookViewerProps> = ({
   htmlContent,
   pageOrientation,
   onClose,
+  onShare,
 }) => {
   const [settings, setSettings] = useState<FlipbookSettings>(() => {
     try {
@@ -846,6 +849,17 @@ export const FlipbookViewer: React.FC<FlipbookViewerProps> = ({
         >
           <MaximizeIcon className="w-4 h-4" />
         </button>
+
+        {onShare && (
+          <button
+            type="button"
+            onClick={onShare}
+            className="p-1.5 rounded-[8px] hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 transition-colors"
+            title="წიგნის გაზიარება / ბმულის შექმნა"
+          >
+            <Share2Icon className="w-4 h-4" />
+          </button>
+        )}
 
         <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-0.5" />
 

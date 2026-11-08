@@ -1,0 +1,70 @@
+{
+  "entities": {
+    "SharedDocument": {
+      "title": "Shared Document",
+      "description": "Publicly shared document metadata and content",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "pageCount": {
+          "type": "number"
+        },
+        "orientation": {
+          "type": "string"
+        },
+        "aspectRatio": {
+          "type": "number"
+        },
+        "isPdf": {
+          "type": "boolean"
+        },
+        "content": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "pageCount",
+        "orientation",
+        "aspectRatio",
+        "isPdf"
+      ]
+    },
+    "DocumentPage": {
+      "title": "Document Page",
+      "description": "Individual page chunk of a multi-page shared document or PDF",
+      "type": "object",
+      "properties": {
+        "pageNumber": {
+          "type": "number"
+        },
+        "html": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "pageNumber",
+        "html"
+      ]
+    }
+  },
+  "firestore": {
+    "/shared_documents/{docId}": {
+      "schema": "SharedDocument",
+      "description": "Collection of shared documents accessible via shareable links"
+    },
+    "/shared_documents/{docId}/pages/{pageId}": {
+      "schema": "DocumentPage",
+      "description": "Pages subcollection for multi-page documents"
+    }
+  }
+}

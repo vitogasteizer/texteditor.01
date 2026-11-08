@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useUIStore } from '../store/uiStore';
-import { MenuIcon, CloseIcon, FilePlusIcon, SaveIcon, FolderIcon, DownloadIcon, PrinterIcon, UndoIcon, RedoIcon, ScissorsIcon, CopyIcon, ClipboardIcon, SelectAllIcon, SearchIcon, LinkIcon, ImageIcon, TableIcon, MinusIcon, MessageSquareIcon, CodeIcon, BarChartIcon, EyeIcon, MaximizeIcon, InfoIcon, OmegaIcon, PaintBrushIcon, PdfIcon, SquareIcon, CircleIcon, TriangleIcon, TypeIcon, ChevronRightIcon, FileTextIcon, SplitSquareVerticalIcon, RectangleVerticalIcon, RectangleHorizontalIcon, LanguageIcon, SparklesIcon, Volume2Icon, KeyboardIcon, ChecklistIcon, UploadCloudIcon, PencilIcon, SlashIcon, MathIcon, SunIcon, MoonIcon, ListOrderedIcon, PresentationIcon, BookOpenIcon } from './icons/EditorIcons';
+import { MenuIcon, CloseIcon, FilePlusIcon, SaveIcon, FolderIcon, DownloadIcon, PrinterIcon, UndoIcon, RedoIcon, ScissorsIcon, CopyIcon, ClipboardIcon, SelectAllIcon, SearchIcon, LinkIcon, ImageIcon, TableIcon, MinusIcon, MessageSquareIcon, CodeIcon, BarChartIcon, EyeIcon, MaximizeIcon, InfoIcon, OmegaIcon, PaintBrushIcon, PdfIcon, SquareIcon, CircleIcon, TriangleIcon, TypeIcon, ChevronRightIcon, FileTextIcon, SplitSquareVerticalIcon, RectangleVerticalIcon, RectangleHorizontalIcon, LanguageIcon, SparklesIcon, Volume2Icon, KeyboardIcon, ChecklistIcon, UploadCloudIcon, PencilIcon, SlashIcon, MathIcon, SunIcon, MoonIcon, ListOrderedIcon, PresentationIcon, BookOpenIcon, Share2Icon } from './icons/EditorIcons';
 import type { ShapeType } from '../App';
 import type { Language } from '../lib/translations';
 
@@ -76,6 +76,7 @@ interface MenuBarProps {
   onOpenFileImport: () => void;
   onOpenTeleprompter?: () => void;
   onOpenFlipbook?: () => void;
+  onShareDocument?: () => void;
   isMobileMenuOpen?: boolean;
   setIsMobileMenuOpen?: (open: boolean) => void;
   t: (key: string, replacements?: { [key: string]: string | number }) => string;
@@ -312,6 +313,8 @@ const MenuBar: React.FC<MenuBarProps> = (props) => {
         { label: t('menu.fileExportWord'), action: props.onExportToWord, icon: <DownloadIcon isMenuIcon /> },
         { label: t('menu.fileExportPdf'), action: props.onExportToPdf, icon: <PdfIcon isMenuIcon />, shortcut: 'Ctrl+P' },
         { separator: true },
+        { label: 'გაზიარება (საზიარო ბმული)...', action: props.onShareDocument, icon: <Share2Icon isMenuIcon /> },
+        { separator: true },
         { label: t('menu.filePageSetup'), action: props.onOpenPageSetup, icon: <FileTextIcon isMenuIcon /> },
         { separator: true },
         { label: t('menu.filePrint'), action: props.onPrint, icon: <PrinterIcon isMenuIcon />, shortcut: 'Ctrl+P' },
@@ -472,6 +475,17 @@ const MenuBar: React.FC<MenuBarProps> = (props) => {
             </div>
 
             <AutoSaveStatus isSaving={props.isSaving} lastSaved={props.lastSaved} isDocumentSaved={props.isDocumentSaved} t={t} />
+
+            {props.onShareDocument && (
+                <button
+                    onClick={props.onShareDocument}
+                    className="flex items-center gap-1.5 px-3 py-1.5 ml-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-all shadow-sm active:scale-95"
+                    title="დოკუმენტის გაზიარება / ბმულის შექმნა"
+                >
+                    <Share2Icon className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">გაზიარება</span>
+                </button>
+            )}
 
             {props.appMode === 'code' && (
                 <button
