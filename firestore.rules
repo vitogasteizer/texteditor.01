@@ -23,13 +23,13 @@ service cloud.firestore {
         && (data.aspectRatio is number || data.aspectRatio is float)
         && data.isPdf is bool
         && (!('createdAt' in data) || data.createdAt is string)
-        && (!('content' in data) || (data.content is string && data.content.size() <= 900000));
+        && (!('content' in data) || (data.content is string && data.content.size() <= 950000));
     }
 
     function isValidDocumentPage(data) {
       return data.keys().hasAll(['pageNumber', 'html'])
         && data.pageNumber is number && data.pageNumber >= 1
-        && data.html is string && data.html.size() <= 900000;
+        && data.html is string && data.html.size() <= 950000;
     }
 
     match /shared_documents/{docId} {

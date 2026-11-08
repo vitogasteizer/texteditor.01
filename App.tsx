@@ -1913,8 +1913,16 @@ const App: React.FC = () => {
   const handleImportDocument = (
     htmlContent: string, 
     mode: 'replace' | 'append',
-    detectedOrientation?: 'portrait' | 'landscape'
+    detectedOrientation?: 'portrait' | 'landscape',
+    fileName?: string
   ) => {
+    if (fileName) {
+      const cleanName = fileName.replace(/\.[^/.]+$/, '').trim();
+      if (cleanName) {
+        setDocTitle(cleanName);
+      }
+    }
+
     // ავტომატური ორიენტაციის მორგება ატვირთული ფაილის მიხედვით
     if (detectedOrientation && (mode === 'replace' || !editorRef.current?.innerText.trim())) {
       setPageOrientation(detectedOrientation);
@@ -2564,7 +2572,11 @@ const App: React.FC = () => {
       {isFlipbookActive && (
         <FlipbookViewer 
           isOpen={isFlipbookActive} 
-          htmlContent={editorRef.current?.innerHTML || content} 
+          htmlContent={
+            (editorRef.current?.innerHTML && editorRef.current.innerHTML.includes('pdf-page-sheet'))
+              ? editorRef.current.innerHTML
+              : (content.includes('pdf-page-sheet') ? content : (editorRef.current?.innerHTML || content))
+          } 
           pageOrientation={pageOrientation}
           onClose={() => setIsFlipbookActive(false)} 
           onShare={() => setIsShareModalVisible(true)}
@@ -2577,8 +2589,13 @@ const App: React.FC = () => {
         isOpen={isShareModalVisible}
         onClose={() => setIsShareModalVisible(false)}
         documentTitle={docTitle || 'დოკუმენტი'}
-        htmlContent={editorRef.current?.innerHTML || content}
+        htmlContent={
+          (editorRef.current?.innerHTML && editorRef.current.innerHTML.includes('pdf-page-sheet'))
+            ? editorRef.current.innerHTML
+            : (content.includes('pdf-page-sheet') ? content : (editorRef.current?.innerHTML || content))
+        }
         pageOrientation={pageOrientation}
+        aspectRatio={pageOrientation === 'landscape' ? 1.414 : 0.707}
       />
 
       {/* საზიარო დოკუმენტის ჩატვირთვის ინდიკატორი */}

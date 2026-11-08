@@ -175,12 +175,23 @@ export async function renderAllPdfPagesToDataUrls(
       docAspectRatio = docWidth / docHeight;
     }
 
-    // 1.5x მასშტაბი იძლევა კრისტალურ ხარისხს A4 ეკრანზე
-    const viewport = page.getViewport({ scale: 1.5 });
+    // ოპტიმალური მასშტაბი: მაქსიმალური სიგანე 1100px, მაქსიმალური სიმაღლე 1500px
+    // ეს უზრუნველყოფს კრისტალურ Retina ხარისხს და კომპაქტურ ზომას (~180KB - 280KB)
+    const baseViewport = page.getViewport({ scale: 1 });
+    let renderScale = 1.35;
+    if (baseViewport.width * renderScale > 1100) {
+      renderScale = 1100 / baseViewport.width;
+    }
+    if (baseViewport.height * renderScale > 1500) {
+      renderScale = Math.min(renderScale, 1500 / baseViewport.height);
+    }
+    renderScale = Math.max(0.75, renderScale);
+
+    const viewport = page.getViewport({ scale: renderScale });
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
+    canvas.width = Math.round(viewport.width);
+    canvas.height = Math.round(viewport.height);
 
     if (context) {
       // თეთრი ფონი
@@ -192,7 +203,12 @@ export async function renderAllPdfPagesToDataUrls(
         viewport: viewport,
       }).promise;
 
-      pageImages.push(canvas.toDataURL('image/jpeg', 0.86));
+      let dataUrl = canvas.toDataURL('image/jpeg', 0.78);
+      // თუ ზომა მაინც აჭარბებს 420,000 სიმბოლოს (~315KB), ვამცირებთ კომპრესიას 0.68-მდე
+      if (dataUrl.length > 420000) {
+        dataUrl = canvas.toDataURL('image/jpeg', 0.68);
+      }
+      pageImages.push(dataUrl);
     }
   }
 

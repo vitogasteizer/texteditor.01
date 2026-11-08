@@ -10,7 +10,7 @@ import {
 interface ImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onImportDocument: (htmlContent: string, mode: 'replace' | 'append', orientation?: 'portrait' | 'landscape') => void;
+  onImportDocument: (htmlContent: string, mode: 'replace' | 'append', orientation?: 'portrait' | 'landscape', fileName?: string) => void;
   onPerformAiOcr?: (base64Image: string) => Promise<string>;
   t: (key: string) => string;
 }
@@ -129,7 +129,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
             </div>
           `).join('\n<div class="page-break-indicator"></div>\n');
 
-          onImportDocument(htmlSheets, destMode, renderResult.orientation);
+          onImportDocument(htmlSheets, destMode, renderResult.orientation, file?.name);
           handleClose();
         } else {
           // 2. ტექსტის ამოღება
@@ -138,7 +138,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
 
           // თუ ციფრული ტექსტი მოიძებნა
           if (text && text.trim().length > 30) {
-            onImportDocument(formattedHtml, destMode, orientation);
+            onImportDocument(formattedHtml, destMode, orientation, file?.name);
             handleClose();
             return;
           }
@@ -149,10 +149,10 @@ export const ImportModal: React.FC<ImportModalProps> = ({
             const pageImg = previewThumbnail || await renderPdfPageToDataUrl(fileDataUrl, 1);
             const ocrResult = await onPerformAiOcr(pageImg);
             const html = ocrResult.split(/\n\s*\n/).map(p => `<p>${p.replace(/\n/g, '<br/>')}</p>`).join('');
-            onImportDocument(html, destMode, orientation || detectedOrientation);
+            onImportDocument(html, destMode, orientation || detectedOrientation, file?.name);
             handleClose();
           } else {
-            onImportDocument(formattedHtml, destMode, orientation);
+            onImportDocument(formattedHtml, destMode, orientation, file?.name);
             handleClose();
           }
         }
@@ -177,11 +177,11 @@ export const ImportModal: React.FC<ImportModalProps> = ({
           setProgressStatus('სურათიდან ტექსტის ამოცნობა (Gemini AI OCR)...');
           const ocrResult = await onPerformAiOcr(targetImg);
           const html = ocrResult.split(/\n\s*\n/).map(p => `<p>${p.replace(/\n/g, '<br/>')}</p>`).join('');
-          onImportDocument(html, destMode, detectedOrientation);
+          onImportDocument(html, destMode, detectedOrientation, file?.name);
         } else {
           // სურათად ჩასმა
           const imgHtml = `<p class="text-center my-4"><img src="${targetImg}" style="max-width:100%; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1);" alt="${file?.name || 'სურათი'}" /></p>`;
-          onImportDocument(imgHtml, destMode, detectedOrientation);
+          onImportDocument(imgHtml, destMode, detectedOrientation, file?.name);
         }
         handleClose();
       }
