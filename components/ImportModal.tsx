@@ -50,10 +50,25 @@ export const ImportModal: React.FC<ImportModalProps> = ({
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
+      const isPdf = selectedFile.type === 'application/pdf' || selectedFile.name.toLowerCase().endsWith('.pdf');
+
+      // ფაილის ზომის შემოწმება წესებთან შესაბამისობისთვის
+      const maxPdfBytes = 30 * 1024 * 1024; // 30 MB
+      const maxImgBytes = 10 * 1024 * 1024; // 10 MB
+
+      if (isPdf && selectedFile.size > maxPdfBytes) {
+        alert('PDF ფაილის ზომა აღემატება 30 MB-ს. გთხოვთ აირჩიოთ უფრო კომპაქტური ფაილი (რეკომენდებულია 1-დან 60 გვერდამდე).');
+        return;
+      }
+
+      if (!isPdf && selectedFile.size > maxImgBytes) {
+        alert('სურათის მოცულობა აღემატება 10 MB-ს. გთხოვთ აირჩიოთ უფრო მცირე ზომის სურათი.');
+        return;
+      }
+
       setFile(selectedFile);
       setCrop({ x: 0, y: 0, width: 0, height: 0 });
 
-      const isPdf = selectedFile.type === 'application/pdf' || selectedFile.name.toLowerCase().endsWith('.pdf');
       setFileType(isPdf ? 'pdf' : 'image');
       setImportType(isPdf ? 'visual' : 'text');
 
@@ -289,7 +304,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 max-w-sm">
                 მხარდაჭერილია PDF (.pdf), PNG, JPEG, WEBP
               </p>
-              <label className="cursor-pointer px-5 py-2.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-[8px] transition-colors shadow-sm inline-flex items-center gap-1.5">
+              <label className="cursor-pointer px-5 py-2.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-[8px] transition-colors shadow-sm inline-flex items-center gap-1.5 mb-5">
                 <span>ფაილის არჩევა</span>
                 <input 
                   type="file" 
@@ -298,6 +313,29 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                   onChange={handleFileChange} 
                 />
               </label>
+
+              {/* საინფორმაციო ბარათი: დასაშვები ზომები და რეკომენდაციები */}
+              <div className="w-full max-w-md p-3.5 rounded-[10px] bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/60 text-left space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400 animate-pulse" />
+                  <span className="text-[11px] font-bold text-indigo-950 dark:text-indigo-200">
+                    დასაშვები ზომები და წესები:
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-600 dark:text-slate-300 space-y-1 leading-relaxed">
+                  <div className="flex items-center justify-between">
+                    <span>📄 <strong>PDF დოკუმენტები:</strong></span>
+                    <span className="font-semibold text-indigo-700 dark:text-indigo-300">მაქს. 30 MB (1 – 60 გვერდი)</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>🖼️ <strong>სურათები (PNG, JPG, WebP):</strong></span>
+                    <span className="font-semibold text-indigo-700 dark:text-indigo-300">მაქს. 10 MB</span>
+                  </div>
+                  <p className="text-[9.5px] text-slate-500 dark:text-slate-400 pt-1 border-t border-indigo-100 dark:border-indigo-900/60">
+                    💡 თითოეული გვერდი ავტომატურად ოპტიმიზდება Retina ხარისხით (~200KB) 3D წიგნში გაშლისა და ღრუბელში გაზიარებისთვის.
+                  </p>
+                </div>
+              </div>
             </div>
           ) : (
             /* ატვირთული ფაილის პარამეტრები */

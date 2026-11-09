@@ -144,3 +144,6 @@ export const VolumeXIcon = createIcon(Lucide.VolumeX);
 export const Share2Icon = createIcon(Lucide.Share2);
 export const CheckIcon = createIcon(Lucide.Check);
 export const ExternalLinkIcon = createIcon(Lucide.ExternalLink);
+export const KeyIcon = createIcon(Lucide.Key);
+export const SmartphoneIcon = createIcon(Lucide.Smartphone);
+export const ShieldCheckIcon = createIcon(Lucide.ShieldCheck);

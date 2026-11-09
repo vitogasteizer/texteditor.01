@@ -163,6 +163,19 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             </div>
           </div>
 
+          {/* საინფორმაციო მინიშნება ღრუბლოვან წესებზე */}
+          <div className="p-3 rounded-[10px] bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/60 text-left">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">
+                ღრუბლოვანი გაზიარების წესები:
+              </span>
+            </div>
+            <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              დოკუმენტი ავტომატურად იყოფა ოპტიმიზებულ ღრუბლოვან გვერდებად (1000 გვერდამდე). ბმულის გახსნა ნებისმიერ მოწყობილობაზეა შესაძლებელი ავტორიზაციის გარეშე.
+            </p>
+          </div>
+
           {/* პროგრესის ზოლი ატვირთვისას */}
           {isLoading && (
             <div className="space-y-2 p-3.5 rounded-[10px] bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 animate-in fade-in">

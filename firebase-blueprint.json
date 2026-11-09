@@ -55,6 +55,45 @@
         "pageNumber",
         "html"
       ]
+    },
+    "UserDocument": {
+      "title": "User Document",
+      "description": "User's private synchronized document",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "number"
+        },
+        "content": {
+          "type": "string"
+        },
+        "pageSize": {
+          "type": "string"
+        },
+        "pageOrientation": {
+          "type": "string"
+        },
+        "pageColor": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "updatedAt"
+      ]
     }
   },
   "firestore": {
@@ -65,6 +104,10 @@
     "/shared_documents/{docId}/pages/{pageId}": {
       "schema": "DocumentPage",
       "description": "Pages subcollection for multi-page documents"
+    },
+    "/user_sync/{userId}/documents/{docId}": {
+      "schema": "UserDocument",
+      "description": "User private synchronized cloud documents"
     }
   }
 }

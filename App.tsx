@@ -1101,6 +1101,45 @@ const App: React.FC = () => {
       }
   };
 
+  const handleOpenCloudDoc = async (cloudDoc: Doc) => {
+    const existing = documents.find(d => d.id === cloudDoc.id);
+    if (existing) {
+      const updated = documents.map(d => d.id === cloudDoc.id ? cloudDoc : d);
+      setDocuments(updated);
+      await saveDocument(cloudDoc);
+    } else {
+      setDocuments(prev => [...prev, cloudDoc]);
+      await saveDocument(cloudDoc);
+    }
+    handleOpenDocument(cloudDoc.id);
+  };
+
+  const handleRestoreCloudDocuments = async (cloudDocsToRestore: Doc[]) => {
+    try {
+      let count = 0;
+      const updatedDocs = [...documents];
+      const newDocs: Doc[] = [];
+
+      for (const cloudDoc of cloudDocsToRestore) {
+        const existingIdx = updatedDocs.findIndex(d => d.id === cloudDoc.id);
+        if (existingIdx !== -1) {
+          updatedDocs[existingIdx] = cloudDoc;
+          count++;
+        } else {
+          newDocs.push(cloudDoc);
+          count++;
+        }
+      }
+
+      const merged = [...updatedDocs, ...newDocs];
+      setDocuments(merged);
+      await saveAllDocuments(merged);
+      setToast(`წარმატებით გადმოიწერა და განახლდა ${count} დოკუმენტი თქვენს მოწყობილობაში!`);
+    } catch (e) {
+      setToast('შეცდომა დოკუმენტების მოწყობილობაში გადმოწერისას');
+    }
+  };
+
   const handleRenameDocument = async (docId: string, newName: string) => { 
       const updatedDocs = documents.map(doc => doc.id === docId ? { ...doc, name: newName, updatedAt: Date.now() } : doc);
       setDocuments(updatedDocs);
@@ -2433,6 +2472,8 @@ const App: React.FC = () => {
           onDriveLogout={handleDriveLogout}
           cloudDocs={cloudDocs}
           onOpenFromCloud={handleOpenFromCloud}
+          onOpenCloudDoc={handleOpenCloudDoc}
+          onRestoreCloudDocuments={handleRestoreCloudDocuments}
         />
       )}
       

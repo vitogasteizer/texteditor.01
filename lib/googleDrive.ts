@@ -1,7 +1,11 @@
 
-// Google Cloud Console-ის პარამეტრები გარემოს ცვლადებიდან
-const CLIENT_ID: string = (typeof process !== 'undefined' && (process.env.VITE_GOOGLE_DRIVE_CLIENT_ID || process.env.GOOGLE_DRIVE_CLIENT_ID)) || '';
-const API_KEY: string = (typeof process !== 'undefined' && (process.env.VITE_GOOGLE_DRIVE_API_KEY || process.env.GOOGLE_DRIVE_API_KEY)) || '';
+import firebaseConfig from '../firebase-applet-config.json';
+
+// Google Cloud Console-ის პარამეტრები გარემოს ცვლადებიდან ან firebase-applet-config.json-იდან
+const CLIENT_ID: string = (typeof process !== 'undefined' && (process.env.VITE_GOOGLE_DRIVE_CLIENT_ID || process.env.GOOGLE_DRIVE_CLIENT_ID)) 
+  || (firebaseConfig as any)?.oAuthClientId || '';
+const API_KEY: string = (typeof process !== 'undefined' && (process.env.VITE_GOOGLE_DRIVE_API_KEY || process.env.GOOGLE_DRIVE_API_KEY)) 
+  || (firebaseConfig as any)?.apiKey || '';
 
 // Discovery doc URL for APIs used by the quickstart
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
