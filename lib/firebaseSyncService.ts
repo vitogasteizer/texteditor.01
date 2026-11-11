@@ -194,9 +194,9 @@ export async function fetchUserCloudDocuments(specificUserId?: string): Promise<
 /**
  * დოკუმენტის წაშლა მომხმარებლის პირადი ღრუბლიდან
  */
-export async function deleteUserCloudDocument(docId: string): Promise<boolean> {
+export async function deleteUserCloudDocument(docId: string, specificUserId?: string): Promise<boolean> {
   try {
-    const userId = getOrCreateUserCloudId();
+    const userId = specificUserId?.trim() || getOrCreateUserCloudId();
     const docRef = doc(db, 'user_sync', userId, 'documents', docId);
     await deleteDoc(docRef);
     return true;

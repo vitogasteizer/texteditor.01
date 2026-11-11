@@ -59,6 +59,7 @@ export const MoreVerticalIcon = createIcon(Lucide.MoreVertical);
 export const GridViewIcon = createIcon(Lucide.LayoutGrid);
 export const ListViewIcon = createIcon(Lucide.List);
 export const EyeIcon = createIcon(Lucide.Eye);
+export const EyeOffIcon = createIcon(Lucide.EyeOff);
 export const MaximizeIcon = createIcon(Lucide.Maximize);
 export const InfoIcon = createIcon(Lucide.Info);
 export const SettingsIcon = createIcon(Lucide.Settings);

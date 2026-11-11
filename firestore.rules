@@ -47,8 +47,13 @@ service cloud.firestore {
     }
 
     // მომხმარებლის პირადი ღრუბლოვანი სინქრონიზაცია (მხოლოდ საკუთარი userId-ის ფარგლებში)
-    match /user_sync/{userId}/documents/{docId} {
-      allow read, write: if isValidId(userId) && isValidId(docId);
+    match /user_sync/{userId} {
+      allow get, list: if isValidId(userId);
+
+      match /documents/{docId} {
+        allow get, list: if isValidId(userId);
+        allow create, update, delete: if isValidId(userId) && isValidId(docId);
+      }
     }
   }
 }
