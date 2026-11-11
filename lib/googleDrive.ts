@@ -206,8 +206,8 @@ export const listDriveFiles = async (): Promise<any[]> => {
   }
 
   try {
-    const query = encodeURIComponent("trashed = false and (mimeType = 'application/json' or name contains '.json')");
-    const url = `https://www.googleapis.com/drive/v3/files?pageSize=50&fields=files(id,name,modifiedTime,size)&q=${query}`;
+    const query = encodeURIComponent("trashed = false");
+    const url = `https://www.googleapis.com/drive/v3/files?pageSize=50&fields=files(id,name,mimeType,modifiedTime,size)&q=${query}&orderBy=modifiedTime desc`;
 
     const response = await fetch(url, {
       headers: {
@@ -291,6 +291,30 @@ export const loadFromDrive = async (fileId: string): Promise<any> => {
     throw new Error('Google Drive-იდან ჩასატვირთად გთხოვთ გაიაროთ ავტორიზაცია Google-ით.');
   }
 
+  // შევამოწმოთ ფაილის მეტამონაცემები
+  const metaRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=id,name,mimeType`, {
+    headers: { Authorization: `Bearer ${cachedAccessToken}` },
+  });
+  const meta = metaRes.ok ? await metaRes.json() : null;
+
+  // თუ Google Doc-ია, გამოვიტანოთ როგორც HTML
+  if (meta?.mimeType === 'application/vnd.google-apps.document') {
+    const exportRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=text/html`, {
+      headers: { Authorization: `Bearer ${cachedAccessToken}` },
+    });
+    if (exportRes.ok) {
+      const html = await exportRes.text();
+      return {
+        id: `gdoc_${fileId}`,
+        name: meta.name || 'Google Doc',
+        content: html,
+        updatedAt: Date.now(),
+        createdAt: Date.now(),
+        googleDriveId: fileId,
+      };
+    }
+  }
+
   const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
     headers: {
       Authorization: `Bearer ${cachedAccessToken}`,
@@ -301,7 +325,20 @@ export const loadFromDrive = async (fileId: string): Promise<any> => {
     throw new Error(`Google Drive ფაილის ჩატვირთვა ვერ მოხერხდა (${response.status})`);
   }
 
-  return await response.json();
+  const rawText = await response.text();
+  try {
+    const parsed = JSON.parse(rawText);
+    return parsed;
+  } catch {
+    return {
+      id: `file_${fileId}`,
+      name: meta?.name || 'Drive Document',
+      content: rawText.startsWith('<') ? rawText : `<p>${rawText.replace(/\n/g, '<br>')}</p>`,
+      updatedAt: Date.now(),
+      createdAt: Date.now(),
+      googleDriveId: fileId,
+    };
+  }
 };
 
 /**

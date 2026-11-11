@@ -34,7 +34,7 @@ import {
   setUserCloudId,
   generateNewUserCloudId,
 } from '../lib/firebaseSyncService';
-import { saveToDrive } from '../lib/googleDrive';
+import { saveToDrive, deleteFromDrive } from '../lib/googleDrive';
 
 interface DriveViewProps {
   documents: Doc[];
@@ -289,11 +289,14 @@ const DriveView: React.FC<DriveViewProps> = (props) => {
   const [isCopiedId, setIsCopiedId] = useState<boolean>(false);
   const [isIdRevealed, setIsIdRevealed] = useState<boolean>(false);
   const [showInfoBanner, setShowInfoBanner] = useState<boolean>(false);
-  const [confirmDeleteDoc, setConfirmDeleteDoc] = useState<{ id: string; name: string } | null>(null);
+  const [confirmDeleteDoc, setConfirmDeleteDoc] = useState<{ id: string; name: string; type?: 'firebase' | 'googledrive' } | null>(null);
   const [isEditingCloudId, setIsEditingCloudId] = useState<boolean>(false);
   const [inputCloudId, setInputCloudId] = useState<string>('');
   const [cloudIdError, setCloudIdError] = useState<string>('');
   const [isRestoringToLocal, setIsRestoringToLocal] = useState<boolean>(false);
+  const [isDriveSyncing, setIsDriveSyncing] = useState<boolean>(false);
+  const [showOriginHelp, setShowOriginHelp] = useState<boolean>(false);
+  const [copiedOrigin, setCopiedOrigin] = useState<boolean>(false);
 
   const sortedDocs = [...props.documents].sort((a, b) => b.updatedAt - a.updatedAt);
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -326,6 +329,17 @@ const DriveView: React.FC<DriveViewProps> = (props) => {
       setTimeout(() => setIsCopiedId(false), 2000);
     } catch {
       prompt('დააკოპირეთ თქვენი პირადი Cloud ID:', userCloudId);
+    }
+  };
+
+  const handleCopyOrigin = async () => {
+    try {
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://ais-dev-zqzyzbybxp5ew2j7ql74ch-137563725383.europe-west2.run.app';
+      await navigator.clipboard.writeText(origin);
+      setCopiedOrigin(true);
+      setTimeout(() => setCopiedOrigin(false), 2000);
+    } catch {
+      // fallback
     }
   };
 
@@ -447,22 +461,63 @@ const DriveView: React.FC<DriveViewProps> = (props) => {
     }
   };
 
+  const handleSyncAllToGoogleDrive = async () => {
+    if (!isDriveLoggedIn) {
+      onDriveLogin?.();
+      return;
+    }
+    if (props.documents.length === 0) {
+      setSyncResult({ success: false, message: 'ასატვირთი ლოკალური დოკუმენტები არ მოიძებნა' });
+      return;
+    }
+    setIsDriveSyncing(true);
+    setSyncResult(null);
+    setSyncStatus('იტვირთება დოკუმენტები Google Drive-ზე...');
+    try {
+      let count = 0;
+      for (const d of props.documents) {
+        setSyncStatus(`იტვირთება „${d.name}“ Google Drive-ზე...`);
+        const res = await saveToDrive(d);
+        if (res && res.id) {
+          count++;
+        }
+      }
+      setSyncResult({ success: true, message: `წარმატებით აიტვირთა ${count} დოკუმენტი Google Drive-ზე!` });
+      onDriveLogin?.();
+    } catch (err: any) {
+      setSyncResult({ success: false, message: `Google Drive ატვირთვის შეცდომა: ${err?.message || ''}` });
+    } finally {
+      setIsDriveSyncing(false);
+      setSyncStatus('');
+    }
+  };
+
   const handleDeleteFromFirebase = (e: React.MouseEvent, docId: string, docName: string) => {
     e.stopPropagation();
-    setConfirmDeleteDoc({ id: docId, name: docName });
+    setConfirmDeleteDoc({ id: docId, name: docName, type: 'firebase' });
   };
 
   const handleExecuteDeleteFromFirebase = async () => {
     if (!confirmDeleteDoc) return;
-    const { id: docId, name: docName } = confirmDeleteDoc;
+    const { id: docId, name: docName, type = 'firebase' } = confirmDeleteDoc;
     setConfirmDeleteDoc(null);
     try {
-      const ok = await deleteUserCloudDocument(docId, userCloudId);
-      if (ok) {
-        setFirebaseDocs(prev => prev.filter(d => d.id !== docId));
-        setSyncResult({ success: true, message: `„${docName}“ წარმატებით წაიშალა პირადი ღრუბლიდან!` });
+      if (type === 'googledrive') {
+        const ok = await deleteFromDrive(docId);
+        if (ok) {
+          setSyncResult({ success: true, message: `„${docName}“ წარმატებით წაიშალა Google Drive-იდან!` });
+          onDriveLogin?.();
+        } else {
+          setSyncResult({ success: false, message: `„${docName}“-ის წაშლა Google Drive-იდან ვერ მოხერხდა.` });
+        }
       } else {
-        setSyncResult({ success: false, message: `„${docName}“-ის წაშლა ვერ მოხერხდა.` });
+        const ok = await deleteUserCloudDocument(docId, userCloudId);
+        if (ok) {
+          setFirebaseDocs(prev => prev.filter(d => d.id !== docId));
+          setSyncResult({ success: true, message: `„${docName}“ წარმატებით წაიშალა პირადი ღრუბლიდან!` });
+        } else {
+          setSyncResult({ success: false, message: `„${docName}“-ის წაშლა ვერ მოხერხდა.` });
+        }
       }
     } catch (err: any) {
       setSyncResult({ success: false, message: `შეცდომა წაშლისას: ${err?.message || 'უცნობი'}` });
@@ -1017,46 +1072,194 @@ const DriveView: React.FC<DriveViewProps> = (props) => {
                                     <span>Sign in with Google</span>
                                 </button>
 
-                                <div className="mt-5 p-3 rounded-[8px] bg-gray-50 dark:bg-gray-800/60 border border-gray-200/60 dark:border-gray-700/60 text-[11px] text-gray-500 dark:text-gray-400 max-w-md text-left flex items-start gap-2">
-                                  <InfoIcon className="w-4 h-4 text-indigo-500 flex-shrink-0 mt-0.5" />
-                                  <span>
-                                    თუ ფანჯარა ავტომატურად იხურება (ბრაუზერის Pop-up შეზღუდვის გამო), დართეთ pop-up ნებართვა, ან გამოიყენეთ გვერდით არსებული <strong>„Firebase პირადი ღრუბელი“</strong> — ის მუშაობს მყისიერად, ყოველგვარი დამატებითი ფანჯრის გარეშე!
-                                  </span>
+                                <div className="mt-4 w-full max-w-md text-left">
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowOriginHelp(!showOriginHelp)}
+                                    className="w-full flex items-center justify-between p-3 rounded-[10px] bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-xs font-semibold text-amber-900 dark:text-amber-200 hover:bg-amber-100/80 transition-colors"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-amber-600 font-bold">⚠️</span>
+                                      <span>გამოვიდა „Error 400: origin_mismatch“?</span>
+                                    </div>
+                                    <span className="text-[11px] text-amber-700 dark:text-amber-400 font-mono">
+                                      {showOriginHelp ? '▲ დამალვა' : '▼ 1-წუთიანი ინსტრუქცია'}
+                                    </span>
+                                  </button>
+
+                                  {showOriginHelp && (
+                                    <div className="mt-2.5 p-4 rounded-[12px] bg-white dark:bg-gray-900 border border-amber-200/80 dark:border-amber-800 shadow-md text-xs space-y-3 animate-in fade-in slide-in-from-top-1">
+                                      <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-[11px]">
+                                        Google-ის უსაფრთხოების წესით, აპლიკაციის მისამართი (Origin) ერთხელ უნდა ჩაიწეროს თქვენს Google Cloud Console-ში:
+                                      </p>
+
+                                      <div className="space-y-1.5">
+                                        <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                          თქვენი აპლიკაციის მისამართი (Origin):
+                                        </div>
+                                        <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-mono text-[11px] text-gray-800 dark:text-gray-200">
+                                          <span className="truncate flex-grow select-all">
+                                            {typeof window !== 'undefined' ? window.location.origin : 'https://ais-dev-...run.app'}
+                                          </span>
+                                          <button
+                                            type="button"
+                                            onClick={handleCopyOrigin}
+                                            className="px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-white font-sans text-[11px] font-semibold flex items-center gap-1 transition-colors flex-shrink-0"
+                                          >
+                                            {copiedOrigin ? (
+                                              <>
+                                                <CheckIcon className="w-3 h-3 text-white" />
+                                                <span>დაკოპირდა!</span>
+                                              </>
+                                            ) : (
+                                              <>
+                                                <CopyIcon className="w-3 h-3" />
+                                                <span>კოპირება</span>
+                                              </>
+                                            )}
+                                          </button>
+                                        </div>
+                                      </div>
+
+                                      <div className="space-y-1.5 text-gray-600 dark:text-gray-400 text-[11px]">
+                                        <div className="font-bold text-gray-800 dark:text-gray-200">
+                                          ნაბიჯები Google Cloud-ში:
+                                        </div>
+                                        <ol className="list-decimal list-inside space-y-1">
+                                          <li>გადადით <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 font-semibold underline inline-flex items-center gap-0.5">Google Cloud Credentials <ExternalLinkIcon className="w-3 h-3 inline" /></a></li>
+                                          <li>დააჭირეთ თქვენს OAuth 2.0 Client-ს (<strong>Vito Gasteizer's Apps</strong>).</li>
+                                          <li>სექციაში <strong>„Authorized JavaScript origins“</strong> დააჭირეთ <strong>+ ADD URI</strong>.</li>
+                                          <li>ჩასვით ზემოთ დაკოპირებული მისამართი და დააჭირეთ <strong>SAVE</strong>.</li>
+                                        </ol>
+                                      </div>
+
+                                      <div className="pt-2 border-t border-gray-100 dark:border-gray-800 text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">
+                                        💡 <strong>რჩევა:</strong> ასევე შეგიძლიათ გამოიყენოთ გვერდით არსებული <strong>„Firebase პირადი ღრუბელი“</strong> — მას არანაირი კონფიგურაცია არ სჭირდება და პირდაპირ მუშაობს!
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                             </div>
                         ) : (
                             <>
-                              <div className="flex justify-between items-center bg-blue-50/80 dark:bg-blue-950/40 p-4 rounded-[12px] border border-blue-200/80 dark:border-blue-900/60 shadow-sm">
-                                  <div className="flex items-center gap-2.5">
-                                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                                      <span className="text-xs font-semibold text-blue-900 dark:text-blue-200">Google Drive დაკავშირებულია</span>
+                              {/* კომპაქტური მართვის პანელი Google Drive-ისთვის */}
+                              <div className="p-3.5 rounded-[12px] bg-white dark:bg-gray-900 border border-gray-200/80 dark:border-gray-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800 text-[11px] font-semibold text-blue-700 dark:text-blue-300">
+                                          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                                          <span>დაკავშირებულია</span>
+                                      </div>
+                                      <span className="px-2.5 py-1 rounded-md bg-gray-100 dark:bg-gray-800 text-[11px] font-semibold text-gray-700 dark:text-gray-300">
+                                          📁 ლოკალური: {props.documents.length}
+                                      </span>
+                                      <span className="px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-950/40 border border-blue-200/40 dark:border-blue-800 text-[11px] font-semibold text-blue-700 dark:text-blue-300">
+                                          ☁️ Drive: {cloudDocs?.length || 0}
+                                      </span>
                                   </div>
-                                  <button 
-                                    type="button"
-                                    onClick={onDriveLogout} 
-                                    className="px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                                  >
-                                    გამოსვლა (Sign Out)
-                                  </button>
+
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                      <button 
+                                        type="button"
+                                        onClick={handleSyncAllToGoogleDrive}
+                                        disabled={isDriveSyncing || props.documents.length === 0}
+                                        className="px-3.5 py-1.5 rounded-[8px] bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-all disabled:opacity-50"
+                                        title="ყველა ლოკალური დოკუმენტის ატვირთვა Google Drive-ზე"
+                                      >
+                                        <UploadCloudIcon className="w-3.5 h-3.5" />
+                                        <span>{isDriveSyncing ? 'იტვირთება...' : 'ყველას ატვირთვა Drive-ზე'}</span>
+                                      </button>
+
+                                      <button 
+                                        type="button"
+                                        onClick={onDriveLogin}
+                                        className="p-1.5 rounded-[8px] bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                        title="ფაილების სიის განახლება"
+                                      >
+                                        <RotateCcwIcon className="w-3.5 h-3.5" />
+                                      </button>
+
+                                      <button 
+                                        type="button"
+                                        onClick={onDriveLogout} 
+                                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                                      >
+                                        გამოსვლა
+                                      </button>
+                                  </div>
                               </div>
 
+                              {/* პროგრესის ზოლი სინქრონიზაციისას */}
+                              {isDriveSyncing && (
+                                <div className="p-3.5 rounded-[10px] bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-xs font-semibold text-blue-800 dark:text-blue-300 flex items-center gap-2">
+                                  <div className="w-3.5 h-3.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                                  <span>{syncStatus}</span>
+                                </div>
+                              )}
+
                               {cloudDocs && cloudDocs.length > 0 ? (
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                      {cloudDocs.map(file => (
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                      {cloudDocs.map(file => {
+                                        const formattedDate = file.modifiedTime ? new Date(file.modifiedTime).toLocaleDateString(undefined, {
+                                          year: 'numeric', month: 'short', day: 'numeric',
+                                        }) : 'დღეს';
+                                        return (
                                           <div 
                                               key={file.id} 
                                               onClick={() => onOpenFromCloud && onOpenFromCloud(file.id, file.name)}
-                                              className="group cursor-pointer flex flex-col bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-blue-500 transition-all p-4"
+                                              className="group cursor-pointer flex flex-col bg-white dark:bg-gray-900 rounded-[12px] border border-gray-200/80 dark:border-gray-800 hover:border-blue-500/60 transition-all p-4 shadow-sm hover:shadow-md relative overflow-hidden"
                                           >
-                                              <FileTextIcon className="w-10 h-10 text-blue-400 mb-3" />
-                                              <p className="font-medium text-sm truncate text-gray-800 dark:text-gray-100">{file.name.replace('.json', '')}</p>
-                                              <p className="text-xs text-gray-500 mt-1">Cloud File</p>
+                                              <div className="flex items-start justify-between gap-2 mb-3">
+                                                <div className="w-10 h-10 rounded-[8px] bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                                                  <FileTextIcon className="w-5 h-5" />
+                                                </div>
+                                                <button
+                                                  type="button"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setConfirmDeleteDoc({ id: file.id, name: file.name.replace(/\.json$/, ''), type: 'googledrive' });
+                                                  }}
+                                                  title="Google Drive-იდან წაშლა"
+                                                  className="p-1.5 rounded-[6px] text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                                                >
+                                                  <Trash2Icon className="w-4 h-4" />
+                                                </button>
+                                              </div>
+
+                                              <h4 className="font-semibold text-xs text-gray-900 dark:text-gray-100 truncate mb-1">
+                                                {file.name.replace(/\.json$/, '')}
+                                              </h4>
+                                              <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-3">
+                                                განახლდა: {formattedDate}
+                                              </p>
+
+                                              <div className="mt-auto pt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-[11px] text-blue-600 dark:text-blue-400 font-semibold">
+                                                <span>გახსნა რედაქტორში</span>
+                                                <ExternalLinkIcon className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                              </div>
                                           </div>
-                                      ))}
+                                        );
+                                      })}
                                   </div>
                               ) : (
-                                  <div className="text-center py-10 text-gray-500 text-xs">
-                                      Google Drive-ზე დოკუმენტები ჯერ არ მოიძებნა.
+                                  <div className="text-center py-12 rounded-[12px] border-2 border-dashed border-gray-200 dark:border-gray-800 p-8 bg-gray-50/50 dark:bg-gray-900/30">
+                                      <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-500 flex items-center justify-center mx-auto mb-3">
+                                        <CloudIcon className="w-6 h-6" />
+                                      </div>
+                                      <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">
+                                        Google Drive-ზე ამ აპლიკაციის დოკუმენტები ჯერ არ არის
+                                      </h4>
+                                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-4 max-w-sm mx-auto leading-relaxed">
+                                        დააჭირეთ ქვემოთ მოცემულ ღილაკს თქვენი ყველა ლოკალური დოკუმენტის Google Drive-ზე ასატვირთად, ან გამოიყენეთ 3-წერტილიანი მენიუ ცალკეული ფაილისთვის.
+                                      </p>
+                                      <button
+                                        type="button"
+                                        onClick={handleSyncAllToGoogleDrive}
+                                        disabled={isDriveSyncing || props.documents.length === 0}
+                                        className="px-5 py-2.5 rounded-[8px] bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs inline-flex items-center gap-2 shadow-sm transition-all disabled:opacity-50"
+                                      >
+                                        <UploadCloudIcon className="w-4 h-4" />
+                                        <span>ყველა დოკუმენტის ატვირთვა Google Drive-ზე</span>
+                                      </button>
                                   </div>
                               )}
                             </>
