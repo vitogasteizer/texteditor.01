@@ -1077,7 +1077,28 @@ const App: React.FC = () => {
     }
   };
 
-  const handleDriveLogin = () => { handleAuthClick(async (token) => { setIsDriveLoggedIn(true); const files = await listDriveFiles(); setCloudDocs(files); }); };
+  const handleDriveLogin = async () => { 
+    try {
+      await handleAuthClick(async (token) => { 
+        setIsDriveLoggedIn(true); 
+        const files = await listDriveFiles(); 
+        setCloudDocs(files); 
+      });
+      setToast('Google Drive წარმატებით დაუკავშირდა');
+      setTimeout(() => setToast(null), 3000);
+    } catch (err: any) {
+      console.error('Drive Login Error:', err);
+      const msg = err?.message || '';
+      if (msg.includes('popup_closed') || msg.includes('popup-closed-by-user')) {
+        setToast('ავტორიზაციის ფანჯარა დაიხურა. გთხოვთ ხელახლა სცადოთ ან გამოიყენოთ Firebase პირადი ღრუბელი.');
+      } else if (msg.includes('unauthorized') || msg.includes('origin')) {
+        setToast('დომენის შეზღუდვა: რეკომენდებულია Firebase პირადი ღრუბლის გამოყენება.');
+      } else {
+        setToast(`Google Drive: ${msg || 'ავტორიზაცია შეწყდა'}`);
+      }
+      setTimeout(() => setToast(null), 5000);
+    }
+  };
   const handleDriveLogout = () => { handleSignOut(); setIsDriveLoggedIn(false); setCloudDocs([]); };
   
   const handleOpenFromCloud = async (fileId: string, name: string) => { 

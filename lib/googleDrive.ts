@@ -1,25 +1,84 @@
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User, signOut } from 'firebase/auth';
+import { 
+  getAuth, 
+  signInWithPopup, 
+  signInWithCredential, 
+  GoogleAuthProvider, 
+  onAuthStateChanged, 
+  User, 
+  signOut 
+} from 'firebase/auth';
 import { app } from './firebase';
+import firebaseConfig from '../firebase-applet-config.json';
 
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
-// Google Drive file scope as configured via set_up_oauth
 provider.addScope('https://www.googleapis.com/auth/drive.file');
 
-// In-memory token & user caching (never persisted in localStorage as mandated by security guidelines)
+const CLIENT_ID: string = (firebaseConfig as any)?.oAuthClientId || '696464881248-qfd563bcmq119cle0jm9nstbui1urhn5.apps.googleusercontent.com';
+
+// In-memory token & user caching
 let cachedAccessToken: string | null = null;
 let cachedUser: User | null = null;
+
+declare global {
+  interface Window {
+    google?: any;
+    gapi?: any;
+  }
+}
+
+/**
+ * ამოწმებს და უზრუნველყოფს Google Identity Services (GIS) სკრიპტის ჩატვირთვას
+ */
+export const ensureGisLoaded = async (): Promise<boolean> => {
+  if (typeof window !== 'undefined' && window.google?.accounts?.oauth2) {
+    return true;
+  }
+
+  return new Promise((resolve) => {
+    if (typeof document === 'undefined') {
+      resolve(false);
+      return;
+    }
+
+    const existing = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+    if (!existing) {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => resolve(Boolean(window.google?.accounts?.oauth2));
+      script.onerror = () => resolve(false);
+      document.head.appendChild(script);
+    } else {
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        if (window.google?.accounts?.oauth2) {
+          clearInterval(interval);
+          resolve(true);
+        } else if (attempts >= 25) {
+          clearInterval(interval);
+          resolve(false);
+        }
+      }, 100);
+    }
+  });
+};
 
 /**
  * ამოწმებს არის თუ არა Google Drive კონფიგურირებული
  */
-export const isDriveConfigured = (): boolean => true;
+export const isDriveConfigured = (): boolean => Boolean(CLIENT_ID);
 
 /**
- * Google Drive ინიციალიზაცია Firebase Auth-ის მეშვეობით
+ * Google Drive ინიციალიზაცია
  */
 export const initGoogleDrive = (onInit: (isInited: boolean) => void) => {
   onInit(true);
+
+  // დარწმუნდით რომ GIS სკრიპტი ჩატვირთულია ფონზე
+  ensureGisLoaded().catch(() => {});
 
   onAuthStateChanged(auth, (user) => {
     cachedUser = user;
@@ -30,9 +89,80 @@ export const initGoogleDrive = (onInit: (isInited: boolean) => void) => {
 };
 
 /**
- * Google ანგარიშით ავტორიზაცია და Google Drive Access Token-ის მიღება
+ * Google ანგარიშით ავტორიზაცია Google Identity Services (GIS) ან Firebase Fallback-ით
  */
-export const handleAuthClick = async (callback?: (token: string, user: User) => void): Promise<{ user: User; accessToken: string }> => {
+export const handleAuthClick = async (
+  callback?: (token: string, user?: any) => void
+): Promise<{ accessToken: string; user?: any }> => {
+  const isGisReady = await ensureGisLoaded();
+
+  // 1. ვცდილობთ პირდაპირ Google Identity Services (GIS) token client-ის გამოყენებას,
+  // რომელიც პირდაპირ Google-ის OAuth ფანჯარას ხსნის და არ საჭიროებს Firebase-ის __/auth/handler დომენს
+  if (isGisReady && window.google?.accounts?.oauth2) {
+    return new Promise((resolve, reject) => {
+      try {
+        let isHandled = false;
+
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          scope: 'https://www.googleapis.com/auth/drive.file',
+          prompt: 'consent',
+          callback: async (tokenResponse: any) => {
+            if (isHandled) return;
+            isHandled = true;
+
+            if (tokenResponse.error) {
+              console.error('Google Identity Services შეცდომა:', tokenResponse);
+              reject(new Error(tokenResponse.error_description || tokenResponse.error));
+              return;
+            }
+
+            const token = tokenResponse.access_token;
+            if (!token) {
+              reject(new Error('Google Drive access token არ დაბრუნდა'));
+              return;
+            }
+
+            cachedAccessToken = token;
+
+            // ვუკავშირებთ Firebase Auth-საც (თუ მხარდაჭერილია)
+            try {
+              const credential = GoogleAuthProvider.credential(null, token);
+              const userCred = await signInWithCredential(auth, credential);
+              cachedUser = userCred.user;
+            } catch (firebaseErr) {
+              console.warn('Firebase Auth სინქრონიზაცია (Google Drive API იმუშავებს ტოკენით):', firebaseErr);
+            }
+
+            if (callback) {
+              callback(token, cachedUser);
+            }
+
+            resolve({ accessToken: token, user: cachedUser });
+          },
+          error_callback: (err: any) => {
+            if (isHandled) return;
+            isHandled = true;
+            console.error('Google Identity Services შეცდომის კოლბექი:', err);
+            reject(new Error(err?.message || 'Google Drive ავტორიზაცია შეწყდა'));
+          },
+        });
+
+        tokenClient.requestAccessToken({ prompt: 'consent' });
+      } catch (err) {
+        console.warn('GIS შეცდომა, ვცდილობთ Firebase Auth პოპაპს:', err);
+        fallbackFirebasePopup(callback).then(resolve).catch(reject);
+      }
+    });
+  }
+
+  // 2. Fallback: Firebase Auth signInWithPopup
+  return fallbackFirebasePopup(callback);
+};
+
+const fallbackFirebasePopup = async (
+  callback?: (token: string, user?: any) => void
+): Promise<{ accessToken: string; user?: any }> => {
   try {
     const result = await signInWithPopup(auth, provider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
@@ -47,10 +177,10 @@ export const handleAuthClick = async (callback?: (token: string, user: User) => 
       callback(cachedAccessToken, result.user);
     }
 
-    return { user: result.user, accessToken: cachedAccessToken };
-  } catch (error: any) {
-    console.error('Google Sign In შეცდომა:', error);
-    throw error;
+    return { accessToken: cachedAccessToken, user: cachedUser };
+  } catch (err: any) {
+    console.error('Firebase Auth Popup შეცდომა:', err);
+    throw err;
   }
 };
 
@@ -78,7 +208,7 @@ export const listDriveFiles = async (): Promise<any[]> => {
   try {
     const query = encodeURIComponent("trashed = false and (mimeType = 'application/json' or name contains '.json')");
     const url = `https://www.googleapis.com/drive/v3/files?pageSize=50&fields=files(id,name,modifiedTime,size)&q=${query}`;
-    
+
     const response = await fetch(url, {
       headers: {
         Authorization: `Bearer ${cachedAccessToken}`,
@@ -100,7 +230,7 @@ export const listDriveFiles = async (): Promise<any[]> => {
 };
 
 /**
- * დოკუმენტის შენახვა Google Drive-ზე (Create ან Update)
+ * დოკუმენტის შენახვა Google Drive-ზე
  */
 export const saveToDrive = async (doc: any): Promise<any> => {
   if (!cachedAccessToken) {
