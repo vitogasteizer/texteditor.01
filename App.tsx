@@ -2461,7 +2461,15 @@ const App: React.FC = () => {
           onDuplicateDocument={handleDuplicateDocument}
           onPreviewDocument={handlePreviewDocument}
           onCreateNewDocument={handleNewDocument}
-          onClose={() => setView('editor')}
+          onClose={() => {
+            if (!currentDocId && documents.length > 0) {
+              handleOpenDocument(documents[0].id);
+            } else if (!currentDocId) {
+              handleNewDocument();
+            } else {
+              setView('editor');
+            }
+          }}
           onExportAllDocuments={handleExportAllDocuments}
           onImportAllDocuments={handleImportAllDocuments}
           currentDocId={currentDocId}

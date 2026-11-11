@@ -1,196 +1,202 @@
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User, signOut } from 'firebase/auth';
+import { app } from './firebase';
 
-import firebaseConfig from '../firebase-applet-config.json';
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+// Google Drive file scope as configured via set_up_oauth
+provider.addScope('https://www.googleapis.com/auth/drive.file');
 
-// Google Cloud Console-ის პარამეტრები გარემოს ცვლადებიდან ან firebase-applet-config.json-იდან
-const CLIENT_ID: string = (typeof process !== 'undefined' && (process.env.VITE_GOOGLE_DRIVE_CLIENT_ID || process.env.GOOGLE_DRIVE_CLIENT_ID)) 
-  || (firebaseConfig as any)?.oAuthClientId || '';
-const API_KEY: string = (typeof process !== 'undefined' && (process.env.VITE_GOOGLE_DRIVE_API_KEY || process.env.GOOGLE_DRIVE_API_KEY)) 
-  || (firebaseConfig as any)?.apiKey || '';
-
-// Discovery doc URL for APIs used by the quickstart
-const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
-
-// Authorization scopes required by the API
-const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-
-declare var gapi: any;
-declare var google: any;
-
-let tokenClient: any = null;
-let gapiInited = false;
-let gisInited = false;
+// In-memory token & user caching (never persisted in localStorage as mandated by security guidelines)
+let cachedAccessToken: string | null = null;
+let cachedUser: User | null = null;
 
 /**
- * ამოწმებს არის თუ არა Google Drive API და OAuth პარამეტრები გამართული
+ * ამოწმებს არის თუ არა Google Drive კონფიგურირებული
  */
-export const isDriveConfigured = (): boolean => {
-    return Boolean(
-        API_KEY && 
-        API_KEY.trim() !== '' && 
-        !API_KEY.includes('YOUR_GOOGLE') && 
-        CLIENT_ID && 
-        CLIENT_ID.trim() !== '' && 
-        !CLIENT_ID.includes('YOUR_GOOGLE')
-    );
-};
+export const isDriveConfigured = (): boolean => true;
 
+/**
+ * Google Drive ინიციალიზაცია Firebase Auth-ის მეშვეობით
+ */
 export const initGoogleDrive = (onInit: (isInited: boolean) => void) => {
-    // თუ API Key ან Client ID არ არის კონფიგურირებული, არ ვგზავნით არავალიდურ მოთხოვნას Drive API-ზე
-    if (!isDriveConfigured()) {
-        onInit(false);
-        return;
+  onInit(true);
+
+  onAuthStateChanged(auth, (user) => {
+    cachedUser = user;
+    if (!user) {
+      cachedAccessToken = null;
     }
-
-    const gapiLoaded = () => {
-        try {
-            if (typeof gapi === 'undefined' || !gapi.load) {
-                onInit(false);
-                return;
-            }
-            gapi.load('client', async () => {
-                try {
-                    await gapi.client.init({
-                        apiKey: API_KEY,
-                        discoveryDocs: [DISCOVERY_DOC],
-                    });
-                    gapiInited = true;
-                    if (gisInited) onInit(true);
-                } catch (initErr) {
-                    console.warn('Google Drive gapi.client.init შეცდომა:', initErr);
-                    gapiInited = false;
-                    onInit(false);
-                }
-            });
-        } catch (e) {
-            console.warn('Google Drive gapi.load შეცდომა:', e);
-            onInit(false);
-        }
-    };
-
-    const gisLoaded = () => {
-        try {
-            if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
-                onInit(false);
-                return;
-            }
-            tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: CLIENT_ID,
-                scope: SCOPES,
-                callback: '',
-            });
-            gisInited = true;
-            if (gapiInited) onInit(true);
-        } catch (gisErr) {
-            console.warn('Google Drive OAuth ინიციალიზაციის შეცდომა:', gisErr);
-            gisInited = false;
-            onInit(false);
-        }
-    };
-
-    // შევამოწმოთ სკრიპტების ჩატვირთვა
-    if (typeof gapi !== 'undefined') gapiLoaded();
-    if (typeof google !== 'undefined') gisLoaded();
+  });
 };
 
-export const handleAuthClick = (callback: (token: any) => void) => {
-    if (!tokenClient) return;
-    tokenClient.callback = async (resp: any) => {
-        if (resp.error !== undefined) {
-            console.error('OAuth შეცდომა:', resp);
-            return;
-        }
-        callback(resp);
-    };
-
-    if (typeof gapi === 'undefined' || !gapi.client || gapi.client.getToken() === null) {
-        tokenClient.requestAccessToken({ prompt: 'consent' });
-    } else {
-        tokenClient.requestAccessToken({ prompt: '' });
+/**
+ * Google ანგარიშით ავტორიზაცია და Google Drive Access Token-ის მიღება
+ */
+export const handleAuthClick = async (callback?: (token: string, user: User) => void): Promise<{ user: User; accessToken: string }> => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    if (!credential?.accessToken) {
+      throw new Error('Google Drive access token არ დაბრუნდა');
     }
+
+    cachedAccessToken = credential.accessToken;
+    cachedUser = result.user;
+
+    if (callback) {
+      callback(cachedAccessToken, result.user);
+    }
+
+    return { user: result.user, accessToken: cachedAccessToken };
+  } catch (error: any) {
+    console.error('Google Sign In შეცდომა:', error);
+    throw error;
+  }
 };
 
-export const handleSignOut = () => {
-    if (typeof gapi === 'undefined' || !gapi.client) return;
-    const token = gapi.client.getToken();
-    if (token !== null) {
-        if (typeof google !== 'undefined' && google.accounts?.oauth2) {
-            google.accounts.oauth2.revoke(token.access_token);
-        }
-        gapi.client.setToken('');
-    }
+/**
+ * სისტემიდან გამოსვლა
+ */
+export const handleSignOut = async (): Promise<void> => {
+  try {
+    await signOut(auth);
+  } finally {
+    cachedAccessToken = null;
+    cachedUser = null;
+  }
 };
 
-export const listDriveFiles = async () => {
-    try {
-        if (typeof gapi === 'undefined' || !gapi.client?.drive?.files) {
-            return [];
-        }
-        const response = await gapi.client.drive.files.list({
-            'pageSize': 20,
-            'fields': 'files(id, name, modifiedTime)',
-            'q': "mimeType = 'application/json' and trashed = false",
-        });
-        return response.result?.files || [];
-    } catch (err) {
-        console.error("Error listing files", err);
-        return [];
+/**
+ * Google Drive-ზე არსებული დოკუმენტების სიის წაკითხვა
+ */
+export const listDriveFiles = async (): Promise<any[]> => {
+  if (!cachedAccessToken) {
+    console.warn('Google Drive access token არ არის მეხსიერებაში');
+    return [];
+  }
+
+  try {
+    const query = encodeURIComponent("trashed = false and (mimeType = 'application/json' or name contains '.json')");
+    const url = `https://www.googleapis.com/drive/v3/files?pageSize=50&fields=files(id,name,modifiedTime,size)&q=${query}`;
+    
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${cachedAccessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('Google Drive list error:', response.status, errText);
+      return [];
     }
+
+    const data = await response.json();
+    return data.files || [];
+  } catch (err) {
+    console.error('Error listing files from Google Drive:', err);
+    return [];
+  }
 };
 
-export const saveToDrive = async (doc: any) => {
-    try {
-        if (typeof gapi === 'undefined' || !gapi.client?.getToken) {
-            throw new Error('Google Drive API არ არის ხელმისაწვდომი');
-        }
-        const tokenObj = gapi.client.getToken();
-        if (!tokenObj || !tokenObj.access_token) {
-            throw new Error('ავტორიზაცია არ არის გავლილი');
-        }
-        const accessToken = tokenObj.access_token;
-        const fileContent = JSON.stringify(doc);
-        const file = new Blob([fileContent], { type: 'application/json' });
-        const metadata = {
-            name: doc.name + '.json',
-            mimeType: 'application/json',
-        };
+/**
+ * დოკუმენტის შენახვა Google Drive-ზე (Create ან Update)
+ */
+export const saveToDrive = async (doc: any): Promise<any> => {
+  if (!cachedAccessToken) {
+    throw new Error('Google Drive-ზე შესანახად გთხოვთ გაიაროთ ავტორიზაცია Google-ით.');
+  }
 
-        const form = new FormData();
-        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-        form.append('file', file);
+  const fileContent = JSON.stringify(doc);
+  const fileName = doc.name && doc.name.endsWith('.json') ? doc.name : `${doc.name || 'document'}.json`;
 
-        let url = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-        let method = 'POST';
+  const metadata = {
+    name: fileName,
+    mimeType: 'application/json',
+  };
 
-        if (doc.googleDriveId) {
-            url = `https://www.googleapis.com/upload/drive/v3/files/${doc.googleDriveId}?uploadType=multipart`;
-            method = 'PATCH';
-        }
+  const boundary = '-------314159265358979323846';
+  const delimiter = `\r\n--${boundary}\r\n`;
+  const closeDelim = `\r\n--${boundary}--`;
 
-        const response = await fetch(url, {
-            method: method,
-            headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
-            body: form,
-        });
-        
-        return await response.json();
-    } catch (e) {
-        console.error("Save to Drive error:", e);
-        return null;
-    }
+  const multipartRequestBody =
+    delimiter +
+    'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+    JSON.stringify(metadata) +
+    delimiter +
+    'Content-Type: application/json\r\n\r\n' +
+    fileContent +
+    closeDelim;
+
+  let url = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+  let method = 'POST';
+
+  if (doc.googleDriveId) {
+    url = `https://www.googleapis.com/upload/drive/v3/files/${doc.googleDriveId}?uploadType=multipart`;
+    method = 'PATCH';
+  }
+
+  const response = await fetch(url, {
+    method,
+    headers: {
+      Authorization: `Bearer ${cachedAccessToken}`,
+      'Content-Type': `multipart/related; boundary=${boundary}`,
+    },
+    body: multipartRequestBody,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Google Drive შენახვის შეცდომა (${response.status}): ${errorText}`);
+  }
+
+  return await response.json();
 };
 
-export const loadFromDrive = async (fileId: string) => {
-    try {
-        if (typeof gapi === 'undefined' || !gapi.client?.drive?.files) {
-            return null;
-        }
-        const response = await gapi.client.drive.files.get({
-            fileId: fileId,
-            alt: 'media',
-        });
-        return response.result;
-    } catch (err) {
-        console.error("Error loading file", err);
-        return null;
-    }
+/**
+ * დოკუმენტის ჩატვირთვა Google Drive-იდან
+ */
+export const loadFromDrive = async (fileId: string): Promise<any> => {
+  if (!cachedAccessToken) {
+    throw new Error('Google Drive-იდან ჩასატვირთად გთხოვთ გაიაროთ ავტორიზაცია Google-ით.');
+  }
+
+  const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+    headers: {
+      Authorization: `Bearer ${cachedAccessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Google Drive ფაილის ჩატვირთვა ვერ მოხერხდა (${response.status})`);
+  }
+
+  return await response.json();
+};
+
+/**
+ * დოკუმენტის წაშლა Google Drive-იდან
+ */
+export const deleteFromDrive = async (fileId: string): Promise<boolean> => {
+  if (!cachedAccessToken) return false;
+
+  try {
+    const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${cachedAccessToken}`,
+      },
+    });
+    return response.ok;
+  } catch (err) {
+    console.error('Google Drive-იდან წაშლის შეცდომა:', err);
+    return false;
+  }
+};
+
+/**
+ * Access Token-ის წაკითხვა
+ */
+export const getAccessToken = async (): Promise<string | null> => {
+  return cachedAccessToken;
 };
